@@ -20,18 +20,12 @@ try {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 檢查環境變數
-if (!process.env.GEMINI_API_KEY) {
-    console.error('❌ 錯誤：未設置 GEMINI_API_KEY 環境變數！');
-    console.error('請在 Railway 項目設置中添加 GEMINI_API_KEY 環境變數');
-}
-
 // 中間件
 app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
 
-// 初始化 Gemini API
+// 初始化 Gemini API（可選：如果設置了環境變數則預先初始化）
 let genAI, model;
 // 使用 Gemini 2.5 Flash 模型
 const GEMINI_MODEL = 'gemini-2.5-flash'; // Gemini 2.5 Flash 模型
@@ -39,12 +33,14 @@ try {
     if (process.env.GEMINI_API_KEY) {
         genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
-        console.log(`✅ Gemini API 初始化成功 (模型: ${GEMINI_MODEL})`);
+        console.log(`✅ Gemini API 預先初始化成功 (模型: ${GEMINI_MODEL})`);
+        console.log('💡 提示：用戶也可以在前端輸入自己的 API 金鑰');
     } else {
-        console.warn('⚠️  Gemini API 未初始化：缺少 API 金鑰');
+        console.log('ℹ️  提示：未設置 GEMINI_API_KEY 環境變數');
+        console.log('💡 這是正常的，用戶可以在前端輸入自己的 API 金鑰');
     }
 } catch (error) {
-    console.error('❌ Gemini API 初始化失敗:', error.message);
+    console.warn('⚠️  Gemini API 預先初始化失敗（不影響使用，用戶可在前端提供 API 金鑰）:', error.message);
 }
 
 // 計算 API（用於八字、紫微斗數、占星的精確計算）
@@ -612,9 +608,9 @@ app.listen(PORT, () => {
     console.log(`🔮 AI 塔羅牌服務器運行在端口 ${PORT}`);
     console.log(`環境檢查:`);
     console.log(`  - PORT: ${PORT}`);
-    console.log(`  - GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? '✅ 已設置' : '❌ 未設置'}`);
+    console.log(`  - GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? '✅ 已設置（可選）' : 'ℹ️  未設置（用戶可在前端提供）'}`);
     if (!process.env.GEMINI_API_KEY) {
-        console.log(`\n⚠️  警告：請在 Railway 項目設置中添加 GEMINI_API_KEY 環境變數`);
+        console.log(`\n💡 提示：用戶可以在前端輸入自己的 API 金鑰，無需設置環境變數`);
     }
 });
 
