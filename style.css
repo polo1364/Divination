@@ -3204,6 +3204,79 @@ html {
     color: #d0d0d0;
 }
 
+.loading-hint {
+    color: #888 !important;
+    font-size: 0.9em;
+    margin-top: 10px;
+}
+
+/* ========== 錯誤顯示 ========== */
+.error-display {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.error-icon {
+    font-size: 4em;
+    margin-bottom: 20px;
+}
+
+.error-display h3 {
+    color: #ff6b6b;
+    margin-bottom: 15px;
+}
+
+.error-display p {
+    color: #d0d0d0;
+    margin-bottom: 30px;
+}
+
+/* ========== 聊天載入動畫 ========== */
+.loading-dots {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+    justify-content: center;
+}
+
+.loading-dots span {
+    width: 8px;
+    height: 8px;
+    background: #ffd700;
+    border-radius: 50%;
+    animation: loading-dot 1.4s infinite ease-in-out;
+}
+
+.loading-dots span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.loading-dots span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes loading-dot {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.error-message .message-content {
+    background: rgba(239, 68, 68, 0.2) !important;
+    border-color: rgba(239, 68, 68, 0.4) !important;
+}
+
+.error-hint {
+    color: #888 !important;
+    font-size: 0.85em;
+    margin-top: 10px !important;
+}
+
 @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }

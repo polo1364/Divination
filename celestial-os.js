@@ -719,31 +719,51 @@ class CelestialOS {
             <div class="detail-loading">
                 <div class="spinner"></div>
                 <p>AI 正在解讀你的命盤...</p>
+                <p class="loading-hint">這可能需要 10-30 秒，請耐心等待</p>
             </div>
         `;
 
         try {
             const apiKey = getApiKey();
             if (!apiKey) {
+                container.innerHTML = '';
                 this.showError('請先設置 API 金鑰');
                 setTimeout(() => openModal(), 500);
                 return;
             }
 
-            // 調用 AI 解讀
+            // 調用 AI 解讀（帶超時處理）
             const result = await getDivinationResult(type, question, data, apiKey);
+            
+            // 清除載入狀態
+            container.innerHTML = '';
             
             // 顯示結果
             this.displayDetailResult(type, question, data, result);
         } catch (error) {
             console.error('解讀失敗:', error);
-            this.showError('解讀失敗：' + error.message);
+            
+            // 清除載入狀態
+            container.innerHTML = `
+                <div class="error-display">
+                    <div class="error-icon">⚠️</div>
+                    <h3>解讀失敗</h3>
+                    <p>${error.message || '未知錯誤'}</p>
+                    <button class="btn-primary" onclick="celestialOS.backToDestinyDashboard()">返回儀表板</button>
+                </div>
+            `;
+            
+            this.showError('解讀失敗：' + (error.message || '請稍後再試'));
         }
     }
 
     // 顯示詳情結果
     displayDetailResult(type, question, data, result) {
         const container = document.getElementById('celestialContent');
+        if (!container) {
+            this.showError('無法顯示結果');
+            return;
+        }
         
         // 使用現有的 displayDivinationResult 函數
         if (typeof displayDivinationResult === 'function') {
@@ -759,6 +779,11 @@ class CelestialOS {
                 main.appendChild(resultSection);
             }
             
+            // 清空容器，顯示結果區域
+            container.innerHTML = '';
+            resultSection.style.display = 'block';
+            
+            // 顯示結果
             displayDivinationResult(type, question, data, result);
             
             // 添加返回按鈕
@@ -770,13 +795,30 @@ class CelestialOS {
                     </div>
                 `);
             }
+            
+            // 滾動到結果區域
+            setTimeout(() => {
+                resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
         } else {
-            // 備用顯示方式
+            // 備用顯示方式：直接在容器中顯示
+            const resultData = result.result || result;
             container.innerHTML = `
                 <div class="detail-result">
                     <button class="back-btn" onclick="celestialOS.backToDestinyDashboard()">← 返回儀表板</button>
                     <h2>${type === 'bazi' ? '八字' : type === 'ziwei' ? '紫微斗數' : '西方占星'}命盤詳情</h2>
-                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                    <div class="result-content">
+                        ${resultData.opening ? `<div class="result-opening">${resultData.opening}</div>` : ''}
+                        ${resultData.analysis ? `<div class="result-analysis">${resultData.analysis}</div>` : ''}
+                        ${resultData.advice && resultData.advice.length > 0 ? `
+                            <div class="result-advice">
+                                <h3>建議</h3>
+                                <ul>
+                                    ${resultData.advice.map(a => `<li>${a}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
                 </div>
             `;
         }
@@ -853,12 +895,16 @@ class CelestialOS {
     async executeDivination(type, question) {
         const messages = document.getElementById('chatMessages');
         
-        // 顯示進行中訊息
+        // 顯示進行中訊息（帶進度指示）
+        const progressMsgId = 'divination-progress-' + Date.now();
         messages.innerHTML += `
-            <div class="message bot-message">
-                <div class="divination-progress">
-                    <div class="spinner-small"></div>
-                    <p>正在進行 ${type === 'tarot' ? '塔羅牌' : type === 'yijing' ? '周易' : type === 'migu' ? '米卦' : '求籤'} 占卜...</p>
+            <div class="message bot-message divination-progress" id="${progressMsgId}">
+                <div class="bot-avatar">🔮</div>
+                <div class="message-content">
+                    <p>正在為你進行 ${type === 'tarot' ? '塔羅牌' : type === 'yijing' ? '周易' : type === 'migu' ? '米卦' : '求籤'} 占卜...</p>
+                    <div class="loading-dots">
+                        <span></span><span></span><span></span>
+                    </div>
                 </div>
             </div>
         `;
@@ -889,12 +935,27 @@ class CelestialOS {
             this.displayDivinationInChat(type, question, data, result);
         } catch (error) {
             console.error('占卜失敗:', error);
+            
+            // 移除進度訊息
+            const progressMsg = document.getElementById(progressMsgId);
+            if (progressMsg) {
+                progressMsg.remove();
+            }
+            
+            // 顯示錯誤訊息
             messages.innerHTML += `
-                <div class="message bot-message error">
-                    <p>占卜失敗：${error.message}</p>
+                <div class="message bot-message error-message">
+                    <div class="bot-avatar">⚠️</div>
+                    <div class="message-content">
+                        <p><strong>占卜失敗</strong></p>
+                        <p>${error.message || '請稍後再試'}</p>
+                        <p class="error-hint">💡 提示：請檢查 API 金鑰是否正確，或網路連接是否正常</p>
+                    </div>
                 </div>
             `;
             messages.scrollTop = messages.scrollHeight;
+            
+            this.showError('占卜失敗：' + (error.message || '請稍後再試'));
         }
     }
 

@@ -1147,26 +1147,43 @@ async function getDivinationResult(type, question, data, apiKey) {
     // 獲取歷史紀錄（用於記憶功能）
     const history = getRecentHistory(5);
     
-    const response = await fetch('/api/divination', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            type: type,
-            question: question,
-            data: data,
-            apiKey: apiKey,
-            history: history // 傳遞歷史紀錄
-        })
-    });
+    // 創建超時控制器（60秒超時）
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    
+    try {
+        const response = await fetch('/api/divination', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                type: type,
+                question: question,
+                data: data,
+                apiKey: apiKey,
+                history: history // 傳遞歷史紀錄
+            }),
+            signal: controller.signal
+        });
 
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'API 請求失敗');
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || errorData.details || `API 請求失敗 (${response.status})`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        clearTimeout(timeoutId);
+        
+        if (error.name === 'AbortError') {
+            throw new Error('請求超時，請檢查網路連接或稍後再試');
+        }
+        
+        throw error;
     }
-
-    return await response.json();
 }
 
 // 顯示占卜結果
