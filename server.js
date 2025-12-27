@@ -335,31 +335,12 @@ app.post('/api/interpret', async (req, res) => {
 
         console.log('📝 收到解讀請求:', { question, spread, cardsCount: cards.length });
 
-        // 使用新的通用 API 邏輯
-        const divinationData = {
-            type: 'tarot',
-            question: question,
-            data: {
-                cards: cards,
-                spread: spread
-            },
-            apiKey: apiKey
-        };
+        // 構建提示詞
+        let prompt = buildDivinationPrompt('tarot', question, { cards, spread });
 
-        // 直接調用新 API 的邏輯
-        const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
-        if (!geminiApiKey) {
-            return res.status(400).json({ 
-                error: '缺少 API 金鑰',
-                details: '請在前端輸入 Gemini API 金鑰'
-            });
-        }
-
-        const GEMINI_MODEL = 'gemini-2.5-flash';
-        const genAI = new GoogleGenerativeAI(geminiApiKey);
-        const currentModel = genAI.getGenerativeModel({ model: GEMINI_MODEL });
-
-        const prompt = buildDivinationPrompt('tarot', question, divinationData.data);
+        console.log('🤖 調用 Gemini API...');
+        
+        // 調用 Gemini API
         const result = await currentModel.generateContent(prompt);
         const response = await result.response;
         let interpretation = response.text();
@@ -383,27 +364,13 @@ app.post('/api/interpret', async (req, res) => {
             score: 75
         };
 
+        console.log('✅ 解讀成功');
+
         res.json({
             question: question,
             cards: cards,
             interpretation: finalResult.analysis || interpretation,
             result: finalResult,
-            spread: spread
-        });
-
-        console.log('🤖 調用 Gemini API...');
-        
-        // 調用 Gemini API（使用動態創建的模型）
-        const result = await currentModel.generateContent(prompt);
-        const response = await result.response;
-        const interpretation = response.text();
-
-        console.log('✅ 解讀成功，返回結果');
-
-        res.json({
-            question: question,
-            cards: cards,
-            interpretation: interpretation,
             spread: spread
         });
 
