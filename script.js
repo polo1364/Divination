@@ -476,12 +476,42 @@ function switchDivinationType(type) {
     }
 }
 
+// 顯示錯誤提示（優化版）
+function showError(message, type = 'error') {
+    // 創建錯誤提示元素
+    const errorDiv = document.createElement('div');
+    errorDiv.className = `error-message ${type}`;
+    errorDiv.textContent = message;
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'error' ? 'rgba(255, 100, 100, 0.9)' : 'rgba(255, 215, 0, 0.9)'};
+        color: #1a1a2e;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        z-index: 10000;
+        animation: slideInRight 0.3s ease-out;
+        max-width: 300px;
+        font-weight: bold;
+    `;
+    
+    document.body.appendChild(errorDiv);
+    
+    // 3秒後自動移除
+    setTimeout(() => {
+        errorDiv.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => errorDiv.remove(), 300);
+    }, 3000);
+}
+
 // 處理占卜
 async function handleDivination() {
     const apiKey = getApiKey();
     if (!apiKey) {
-        alert('請先設置 Gemini API 金鑰！\n\n點擊右上角的設置按鈕來輸入 API 金鑰。');
-        openModal();
+        showError('請先設置 Gemini API 金鑰！', 'error');
+        setTimeout(() => openModal(), 500);
         return;
     }
 
@@ -497,7 +527,8 @@ async function handleDivination() {
         case 'tarot':
             question = document.getElementById('question').value.trim();
             if (!question) {
-                alert('請先輸入您的問題！');
+                showError('請先輸入您的問題！', 'error');
+                document.getElementById('question').focus();
                 return;
             }
             const numCards = currentSpread === 'single' ? 1 : 3;
@@ -510,12 +541,14 @@ async function handleDivination() {
         case 'ziwei':
             question = document.getElementById('baziQuestion').value.trim();
             if (!question) {
-                alert('請先輸入您的問題！');
+                showError('請先輸入您的問題！', 'error');
+                document.getElementById('baziQuestion').focus();
                 return;
             }
             const birthDate = document.getElementById('birthDate').value;
             if (!birthDate) {
-                alert('請輸入出生日期！');
+                showError('請輸入出生日期！', 'error');
+                document.getElementById('birthDate').focus();
                 return;
             }
             const birthTime = document.getElementById('birthTime').value;
@@ -576,17 +609,20 @@ async function handleDivination() {
         case 'astrology':
             question = document.getElementById('astrologyQuestion').value.trim();
             if (!question) {
-                alert('請先輸入您的問題！');
+                showError('請先輸入您的問題！', 'error');
+                document.getElementById('astrologyQuestion').focus();
                 return;
             }
             const astrologyBirthDate = document.getElementById('astrologyBirthDate').value;
             if (!astrologyBirthDate) {
-                alert('請輸入出生日期！');
+                showError('請輸入出生日期！', 'error');
+                document.getElementById('astrologyBirthDate').focus();
                 return;
             }
             const birthPlace = document.getElementById('birthPlace').value.trim();
             if (!birthPlace) {
-                alert('請輸入出生地點！');
+                showError('請輸入出生地點！', 'error');
+                document.getElementById('birthPlace').focus();
                 return;
             }
             
@@ -638,7 +674,8 @@ async function handleDivination() {
         case 'qiuqian':
             question = document.getElementById('yijingQuestion').value.trim();
             if (!question) {
-                alert('請先輸入您的問題！');
+                showError('請先輸入您的問題！', 'error');
+                document.getElementById('yijingQuestion').focus();
                 return;
             }
             // 隨機生成卦象或籤詩
@@ -657,7 +694,7 @@ async function handleDivination() {
         displayDivinationResult(currentDivinationType, question, data, result);
     } catch (error) {
         console.error('解讀錯誤:', error);
-        alert('解讀失敗：' + error.message);
+        showError('解讀失敗：' + error.message, 'error');
     } finally {
         loading.classList.add('hidden');
         divineBtn.disabled = false;
@@ -695,7 +732,7 @@ function displayDivinationResult(type, question, data, result) {
     let html = '';
 
     // 顯示問題
-    html += `<div class="result-question"><strong>您的問題：</strong>${question}</div>`;
+    html += `<div class="result-question">💭 <strong>您的問題：</strong>${question}</div>`;
 
     // 顯示數據（如抽到的牌、出生資訊等）
     if (type === 'tarot' && data.cards) {
