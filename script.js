@@ -731,143 +731,296 @@ function displayDivinationResult(type, question, data, result) {
 
     let html = '';
 
-    // 顯示問題
-    html += `<div class="result-question">💭 <strong>您的問題：</strong>${question}</div>`;
+    // 問題卡片
+    html += `
+        <div class="result-card question-card">
+            <div class="card-header">
+                <span class="card-icon">💭</span>
+                <h3 class="card-title">您的問題</h3>
+            </div>
+            <div class="card-body">
+                <p class="question-text">${question}</p>
+            </div>
+        </div>
+    `;
 
-    // 顯示數據（如抽到的牌、出生資訊等）
+    // 數據卡片 - 根據不同占卜類型
     if (type === 'tarot' && data.cards) {
-        html += '<div class="result-data">';
-        data.cards.forEach(card => {
+        html += '<div class="result-card data-card tarot-cards">';
+        html += '<div class="card-header"><span class="card-icon">🃏</span><h3 class="card-title">抽到的牌</h3></div>';
+        html += '<div class="card-body"><div class="tarot-cards-grid">';
+        data.cards.forEach((card, index) => {
             const cardName = card.displayName || card.name;
-            html += `<div class="card-info">${card.position || '抽到的牌'}：${cardName} ${card.emoji} ${card.orientation ? `(${card.orientation})` : ''}</div>`;
+            const position = card.position || `第${index + 1}張`;
+            const orientation = card.orientation || '';
+            const orientationClass = orientation === '逆位' ? 'reversed' : '';
+            html += `
+                <div class="tarot-result-card ${orientationClass}">
+                    <div class="tarot-card-emoji">${card.emoji}</div>
+                    <div class="tarot-card-name">${cardName}</div>
+                    <div class="tarot-card-position">${position}</div>
+                    ${orientation ? `<div class="tarot-card-orientation ${orientationClass}">${orientation}</div>` : ''}
+                </div>
+            `;
         });
-        html += '</div>';
+        html += '</div></div></div>';
     } else if ((type === 'bazi' || type === 'ziwei') && data.birthDate) {
-        html += `<div class="result-data">`;
-        html += `<div>出生資訊：${data.birthDate} ${data.birthTime || ''}</div>`;
+        html += '<div class="result-card data-card bazi-card">';
+        html += '<div class="card-header"><span class="card-icon">📅</span><h3 class="card-title">出生資訊</h3></div>';
+        html += '<div class="card-body">';
+        html += `<div class="info-item"><span class="info-label">出生日期：</span><span class="info-value">${data.birthDate} ${data.birthTime || ''}</span></div>`;
+        
         if (data.calculation) {
             if (type === 'bazi' && data.calculation.fullBazi) {
-                html += `<div class="bazi-result"><strong>四柱八字：</strong>${data.calculation.fullBazi}</div>`;
-                html += `<div>年柱：${data.calculation.yearPillar} | 月柱：${data.calculation.monthPillar} | 日柱：${data.calculation.dayPillar} | 時柱：${data.calculation.hourPillar}</div>`;
+                html += `<div class="bazi-pillars">
+                    <div class="pillar-card">
+                        <div class="pillar-label">年柱</div>
+                        <div class="pillar-value">${data.calculation.yearPillar}</div>
+                    </div>
+                    <div class="pillar-card">
+                        <div class="pillar-label">月柱</div>
+                        <div class="pillar-value">${data.calculation.monthPillar}</div>
+                    </div>
+                    <div class="pillar-card">
+                        <div class="pillar-label">日柱</div>
+                        <div class="pillar-value">${data.calculation.dayPillar}</div>
+                    </div>
+                    <div class="pillar-card">
+                        <div class="pillar-label">時柱</div>
+                        <div class="pillar-value">${data.calculation.hourPillar}</div>
+                    </div>
+                </div>`;
+                html += `<div class="bazi-full">${data.calculation.fullBazi}</div>`;
                 if (data.calculation.lunarDate) {
-                    html += `<div>農曆：${data.calculation.lunarDate}</div>`;
+                    html += `<div class="info-item"><span class="info-label">農曆：</span><span class="info-value">${data.calculation.lunarDate}</span></div>`;
                 }
                 if (data.calculation.jieQi) {
-                    html += `<div>節氣：${data.calculation.jieQi}</div>`;
+                    html += `<div class="info-item"><span class="info-label">節氣：</span><span class="info-value">${data.calculation.jieQi}</span></div>`;
                 }
             } else if (type === 'ziwei' && data.calculation.mingGong) {
-                html += `<div class="ziwei-result"><strong>${data.calculation.mingGong}</strong></div>`;
+                html += `<div class="ziwei-main">${data.calculation.mingGong}</div>`;
                 if (data.calculation.wuXingJu) {
-                    html += `<div>五行局：${data.calculation.wuXingJu}</div>`;
+                    html += `<div class="info-item"><span class="info-label">五行局：</span><span class="info-value">${data.calculation.wuXingJu}</span></div>`;
                 }
                 if (data.calculation.ziweiPosition) {
-                    html += `<div>${data.calculation.ziweiPosition}</div>`;
+                    html += `<div class="info-item"><span class="info-label">紫微星：</span><span class="info-value">${data.calculation.ziweiPosition}</span></div>`;
                 }
                 if (data.calculation.mainStars) {
-                    html += `<div>主星配置：</div>`;
+                    html += '<div class="stars-grid">';
                     if (typeof data.calculation.mainStars === 'object') {
                         Object.values(data.calculation.mainStars).forEach(star => {
-                            html += `<div>${star}</div>`;
+                            html += `<div class="star-item">${star}</div>`;
                         });
                     }
+                    html += '</div>';
                 }
                 if (data.calculation.lunarDate) {
-                    html += `<div>農曆：${data.calculation.lunarDate}</div>`;
+                    html += `<div class="info-item"><span class="info-label">農曆：</span><span class="info-value">${data.calculation.lunarDate}</span></div>`;
                 }
             }
         }
-        html += `</div>`;
+        html += '</div></div>';
     } else if (type === 'astrology' && data.birthDate) {
-        html += `<div class="result-data">`;
-        html += `<div>出生資訊：${data.birthDate} ${data.birthPlace || ''}</div>`;
+        html += '<div class="result-card data-card astrology-card">';
+        html += '<div class="card-header"><span class="card-icon">🌙</span><h3 class="card-title">星盤資訊</h3></div>';
+        html += '<div class="card-body">';
+        html += `<div class="info-item"><span class="info-label">出生日期：</span><span class="info-value">${data.birthDate}</span></div>`;
+        html += `<div class="info-item"><span class="info-label">出生地點：</span><span class="info-value">${data.birthPlace || ''}</span></div>`;
+        
         if (data.calculation) {
+            html += '<div class="signs-grid">';
             if (data.calculation.sunSign) {
-                html += `<div class="astrology-result"><strong>太陽星座：</strong>${data.calculation.sunSign}`;
-                if (data.calculation.planets && data.calculation.planets.sun) {
-                    html += ` ${data.calculation.planets.sun.degree}°`;
-                }
-                html += `</div>`;
+                html += `<div class="sign-card sun-sign">
+                    <div class="sign-icon">☀️</div>
+                    <div class="sign-label">太陽</div>
+                    <div class="sign-value">${data.calculation.sunSign}${data.calculation.planets && data.calculation.planets.sun ? ` ${data.calculation.planets.sun.degree}°` : ''}</div>
+                </div>`;
             }
             if (data.calculation.moonSign) {
-                html += `<div><strong>月亮星座：</strong>${data.calculation.moonSign}`;
-                if (data.calculation.planets && data.calculation.planets.moon) {
-                    html += ` ${data.calculation.planets.moon.degree}°`;
-                }
-                html += `</div>`;
+                html += `<div class="sign-card moon-sign">
+                    <div class="sign-icon">🌙</div>
+                    <div class="sign-label">月亮</div>
+                    <div class="sign-value">${data.calculation.moonSign}${data.calculation.planets && data.calculation.planets.moon ? ` ${data.calculation.planets.moon.degree}°` : ''}</div>
+                </div>`;
             }
             if (data.calculation.risingSign) {
-                html += `<div><strong>上升星座：</strong>${data.calculation.risingSign}</div>`;
+                html += `<div class="sign-card rising-sign">
+                    <div class="sign-icon">⬆️</div>
+                    <div class="sign-label">上升</div>
+                    <div class="sign-value">${data.calculation.risingSign}</div>
+                </div>`;
             }
+            html += '</div>';
+            
             if (data.calculation.planets) {
-                html += `<div class="planets-section"><strong>行星位置：</strong></div>`;
+                html += '<div class="planets-grid">';
                 const planetNames = {
-                    mercury: '水星',
-                    venus: '金星',
-                    mars: '火星',
-                    jupiter: '木星',
-                    saturn: '土星'
+                    mercury: { name: '水星', icon: '☿️' },
+                    venus: { name: '金星', icon: '♀️' },
+                    mars: { name: '火星', icon: '♂️' },
+                    jupiter: { name: '木星', icon: '♃' },
+                    saturn: { name: '土星', icon: '♄' }
                 };
                 Object.entries(data.calculation.planets).forEach(([key, planet]) => {
                     if (key !== 'sun' && key !== 'moon' && planetNames[key]) {
-                        html += `<div>${planetNames[key]}：${planet.sign} ${planet.degree}°</div>`;
+                        html += `<div class="planet-item">
+                            <span class="planet-icon">${planetNames[key].icon}</span>
+                            <span class="planet-name">${planetNames[key].name}</span>
+                            <span class="planet-value">${planet.sign} ${planet.degree}°</span>
+                        </div>`;
                     }
                 });
+                html += '</div>';
             }
         }
-        html += `</div>`;
+        html += '</div></div>';
     } else if (data.gua) {
-        html += `<div class="result-data">`;
-        html += `<div><strong>${data.guaName || '卦象/籤詩'}：</strong>${data.gua}</div>`;
+        html += '<div class="result-card data-card gua-card">';
+        html += `<div class="card-header"><span class="card-icon">☯️</span><h3 class="card-title">${data.guaName || '卦象/籤詩'}</h3></div>`;
+        html += '<div class="card-body">';
+        html += `<div class="gua-main">${data.gua}</div>`;
         if (data.benGua && data.bianGua) {
-            html += `<div>本卦：${data.benGua}</div>`;
-            html += `<div>變爻：${data.changingLines ? data.changingLines.join('、') : '無'}</div>`;
-            html += `<div>之卦：${data.bianGua}</div>`;
+            html += `<div class="gua-info">
+                <div class="gua-item"><span class="gua-label">本卦：</span><span class="gua-value">${data.benGua}</span></div>
+                <div class="gua-item"><span class="gua-label">變爻：</span><span class="gua-value">${data.changingLines ? data.changingLines.join('、') : '無'}</span></div>
+                <div class="gua-item"><span class="gua-label">之卦：</span><span class="gua-value">${data.bianGua}</span></div>
+            </div>`;
         }
         if (data.number) {
-            html += `<div>籤號：第${data.number}籤</div>`;
+            html += `<div class="qian-number">第 ${data.number} 籤</div>`;
         }
-        html += `</div>`;
+        html += '</div></div>';
     }
 
-    // 顯示解讀結果
+    // 解讀結果卡片
     const resultData = result.result || {};
     
     if (resultData.opening) {
-        html += `<div class="opening">${resultData.opening}</div>`;
+        html += `
+            <div class="result-card opening-card">
+                <div class="card-header">
+                    <span class="card-icon">✨</span>
+                    <h3 class="card-title">開場語</h3>
+                </div>
+                <div class="card-body">
+                    <p class="opening-text">${resultData.opening}</p>
+                </div>
+            </div>
+        `;
     }
 
     if (resultData.summary) {
-        html += `<div class="summary">${resultData.summary}</div>`;
+        html += `
+            <div class="result-card summary-card">
+                <div class="card-header">
+                    <span class="card-icon">📋</span>
+                    <h3 class="card-title">總結</h3>
+                </div>
+                <div class="card-body">
+                    <p class="summary-text">${resultData.summary}</p>
+                </div>
+            </div>
+        `;
     }
 
     if (resultData.analysis) {
-        html += `<div class="analysis">${resultData.analysis}</div>`;
+        html += `
+            <div class="result-card analysis-card">
+                <div class="card-header">
+                    <span class="card-icon">🔍</span>
+                    <h3 class="card-title">詳細分析</h3>
+                </div>
+                <div class="card-body">
+                    <div class="analysis-text">${resultData.analysis}</div>
+                </div>
+            </div>
+        `;
     }
 
     if (resultData.advice && resultData.advice.length > 0) {
-        html += '<div class="advice-section"><h3>💡 建議指引</h3><ul class="advice-list">';
-        resultData.advice.forEach(advice => {
-            html += `<li>${advice}</li>`;
+        html += `
+            <div class="result-card advice-card">
+                <div class="card-header">
+                    <span class="card-icon">💡</span>
+                    <h3 class="card-title">建議指引</h3>
+                </div>
+                <div class="card-body">
+                    <div class="advice-grid">
+        `;
+        resultData.advice.forEach((advice, index) => {
+            html += `
+                <div class="advice-item">
+                    <div class="advice-number">${index + 1}</div>
+                    <div class="advice-text">${advice}</div>
+                </div>
+            `;
         });
-        html += '</ul></div>';
+        html += '</div></div></div>';
     }
 
-    if (resultData.lucky_color || resultData.lucky_direction || resultData.lucky_item) {
-        html += '<div class="lucky-section">';
+    if (resultData.luckyItems) {
+        html += `
+            <div class="result-card lucky-card">
+                <div class="card-header">
+                    <span class="card-icon">🍀</span>
+                    <h3 class="card-title">幸運元素</h3>
+                </div>
+                <div class="card-body">
+                    <div class="lucky-grid">
+        `;
+        Object.entries(resultData.luckyItems).forEach(([key, value]) => {
+            html += `
+                <div class="lucky-item-card">
+                    <div class="lucky-label">${key}</div>
+                    <div class="lucky-value">${value}</div>
+                </div>
+            `;
+        });
+        html += '</div></div></div>';
+    } else if (resultData.lucky_color || resultData.lucky_direction || resultData.lucky_item) {
+        html += `
+            <div class="result-card lucky-card">
+                <div class="card-header">
+                    <span class="card-icon">🍀</span>
+                    <h3 class="card-title">幸運元素</h3>
+                </div>
+                <div class="card-body">
+                    <div class="lucky-grid">
+        `;
         if (resultData.lucky_color) {
-            html += `<div class="lucky-item"><strong>幸運色</strong><span>${resultData.lucky_color}</span></div>`;
+            html += `<div class="lucky-item-card"><div class="lucky-label">幸運色</div><div class="lucky-value">${resultData.lucky_color}</div></div>`;
         }
         if (resultData.lucky_direction) {
-            html += `<div class="lucky-item"><strong>幸運方位</strong><span>${resultData.lucky_direction}</span></div>`;
+            html += `<div class="lucky-item-card"><div class="lucky-label">幸運方位</div><div class="lucky-value">${resultData.lucky_direction}</div></div>`;
         }
         if (resultData.lucky_item) {
-            html += `<div class="lucky-item"><strong>幸運小物</strong><span>${resultData.lucky_item}</span></div>`;
+            html += `<div class="lucky-item-card"><div class="lucky-label">幸運小物</div><div class="lucky-value">${resultData.lucky_item}</div></div>`;
         }
-        html += '</div>';
+        html += '</div></div></div>';
     }
 
-    if (resultData.score) {
-        html += `<div class="score">運勢評分：${resultData.score} / 100</div>`;
+    if (resultData.score !== undefined) {
+        const scorePercent = resultData.score;
+        const scoreColor = scorePercent >= 80 ? '#4ade80' : scorePercent >= 60 ? '#fbbf24' : '#f87171';
+        html += `
+            <div class="result-card score-card">
+                <div class="card-header">
+                    <span class="card-icon">⭐</span>
+                    <h3 class="card-title">運勢評分</h3>
+                </div>
+                <div class="card-body">
+                    <div class="score-display">
+                        <div class="score-circle" style="--score: ${scorePercent}; --color: ${scoreColor};">
+                            <div class="score-value">${scorePercent}</div>
+                            <div class="score-label">分</div>
+                        </div>
+                        <div class="score-bar-container">
+                            <div class="score-bar" style="width: ${scorePercent}%; background: ${scoreColor};"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     resultContent.innerHTML = html;
