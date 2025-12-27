@@ -497,6 +497,26 @@ function buildDivinationPrompt(type, question, data) {
             typeSpecificPrompt += `\n請進行詳細解讀。`;
             break;
 
+        case 'numerology':
+            typeSpecificPrompt = `生命靈數占卜\n\n`;
+            typeSpecificPrompt += `生命靈數：${data.number || ''}\n`;
+            typeSpecificPrompt += `含義：${data.meaning || ''}\n`;
+            typeSpecificPrompt += `\n請根據生命靈數的特質，結合用戶的問題進行解讀。`;
+            break;
+
+        case 'color':
+            typeSpecificPrompt = `顏色占卜\n\n`;
+            typeSpecificPrompt += `選擇的顏色：${data.color || question}\n`;
+            typeSpecificPrompt += `\n請根據顏色的象徵意義，結合用戶的問題進行解讀。`;
+            break;
+
+        case 'time':
+            typeSpecificPrompt = `時間占卜\n\n`;
+            typeSpecificPrompt += `選擇的時間：${data.time || ''}\n`;
+            typeSpecificPrompt += `時段：${data.timeSlot || ''}\n`;
+            typeSpecificPrompt += `\n請根據時間的能量特質，結合用戶的問題進行解讀。`;
+            break;
+
         default:
             typeSpecificPrompt = `占卜解讀\n\n用戶的問題：${question}\n`;
     }

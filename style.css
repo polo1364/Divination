@@ -4405,6 +4405,541 @@ html {
     font-weight: bold;
 }
 
+/* ========== 新功能樣式 ========== */
+
+/* 語音輸入按鈕 */
+.voice-btn {
+    background: rgba(138, 43, 226, 0.3);
+    border: 1px solid rgba(138, 43, 226, 0.5);
+    color: #ffffff;
+    padding: 10px 15px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1.2em;
+}
+
+.voice-btn:hover {
+    background: rgba(138, 43, 226, 0.5);
+    transform: scale(1.1);
+}
+
+.voice-btn.listening {
+    background: rgba(220, 38, 38, 0.5);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.chat-input-area {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* 額外功能卡片 */
+.extra-features {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(138, 43, 226, 0.1) 100%);
+    border: 2px dashed rgba(255, 215, 0, 0.4);
+}
+
+.extra-features:hover {
+    border-color: rgba(255, 215, 0, 0.7);
+    transform: scale(1.02);
+}
+
+/* 功能選單 */
+.extra-features-menu,
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.feature-card {
+    background: rgba(26, 26, 46, 0.8);
+    border: 2px solid rgba(138, 43, 226, 0.4);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.feature-card:hover {
+    background: rgba(138, 43, 226, 0.2);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(138, 43, 226, 0.3);
+}
+
+.feature-icon {
+    font-size: 3em;
+    margin-bottom: 15px;
+}
+
+.feature-card h3 {
+    color: #ffd700;
+    margin-bottom: 10px;
+}
+
+.feature-card p {
+    color: #d0d0d0;
+    font-size: 0.9em;
+}
+
+/* 許願功能 */
+.wish-temple {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.moon-phase-info {
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.3) 0%, rgba(75, 0, 130, 0.3) 100%);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.moon-phase-info h3 {
+    color: #ffd700;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+}
+
+.wish-form {
+    background: rgba(26, 26, 46, 0.8);
+    border: 2px solid rgba(138, 43, 226, 0.4);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.wish-textarea {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(138, 43, 226, 0.5);
+    border-radius: 10px;
+    padding: 15px;
+    color: #ffffff;
+    font-size: 1em;
+    resize: vertical;
+    min-height: 120px;
+    margin-bottom: 15px;
+}
+
+.wish-history {
+    background: rgba(26, 26, 46, 0.6);
+    border-radius: 15px;
+    padding: 25px;
+}
+
+.wish-item {
+    background: rgba(138, 43, 226, 0.15);
+    border-left: 3px solid #ffd700;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+}
+
+.wish-text {
+    color: #ffffff;
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.wish-date {
+    color: #b0b0b0;
+    font-size: 0.9em;
+}
+
+/* 更多占卜方式 */
+.extended-divination,
+.divination-options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    padding: 20px;
+}
+
+.divination-option-card {
+    background: rgba(26, 26, 46, 0.8);
+    border: 2px solid rgba(138, 43, 226, 0.4);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.divination-option-card:hover {
+    background: rgba(138, 43, 226, 0.2);
+    transform: translateY(-5px);
+}
+
+.divination-option-card .option-icon {
+    font-size: 3em;
+    margin-bottom: 15px;
+}
+
+/* 生命靈數 */
+.numerology-result,
+.numerology-content {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.number-display {
+    text-align: center;
+    padding: 40px;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(138, 43, 226, 0.2) 100%);
+    border-radius: 20px;
+    margin-bottom: 30px;
+}
+
+.big-number {
+    font-size: 8em;
+    color: #ffd700;
+    font-weight: bold;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+    margin-bottom: 15px;
+}
+
+.number-label {
+    color: #d0d0d0;
+    font-size: 1.2em;
+}
+
+.number-meaning,
+.number-description {
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 20px;
+}
+
+.number-meaning h3 {
+    color: #ffd700;
+    margin-bottom: 15px;
+}
+
+/* 顏色占卜 */
+.color-divination {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.color-selection {
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.color-item {
+    aspect-ratio: 1;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 3px solid transparent;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.color-item:hover {
+    transform: scale(1.1);
+    border-color: #ffd700;
+    box-shadow: 0 5px 20px rgba(255, 215, 0, 0.5);
+}
+
+.color-result {
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 15px;
+    padding: 25px;
+}
+
+.color-meaning,
+.color-advice {
+    color: #ffffff;
+    line-height: 1.8;
+    margin: 15px 0;
+}
+
+/* 時間占卜 */
+.time-divination {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.time-selection {
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 15px;
+    padding: 25px;
+}
+
+.time-input,
+.time-question {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(138, 43, 226, 0.5);
+    border-radius: 10px;
+    padding: 12px;
+    color: #ffffff;
+    font-size: 1em;
+    margin-bottom: 15px;
+}
+
+.time-result {
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 15px;
+    padding: 25px;
+    margin-top: 20px;
+}
+
+/* 知識庫 */
+.knowledge-base {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.knowledge-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.knowledge-tabs .tab-btn {
+    background: rgba(138, 43, 226, 0.3);
+    border: 1px solid rgba(138, 43, 226, 0.5);
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.knowledge-tabs .tab-btn.active {
+    background: rgba(138, 43, 226, 0.6);
+    border-color: #ffd700;
+}
+
+.knowledge-content {
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 15px;
+    padding: 30px;
+    min-height: 400px;
+}
+
+.knowledge-section h3 {
+    color: #ffd700;
+    margin-bottom: 15px;
+}
+
+.knowledge-section p {
+    color: #d0d0d0;
+    line-height: 1.8;
+    margin-bottom: 15px;
+}
+
+.card-search {
+    margin-top: 20px;
+}
+
+.card-search input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(138, 43, 226, 0.5);
+    border-radius: 10px;
+    padding: 12px;
+    color: #ffffff;
+    font-size: 1em;
+}
+
+.card-results {
+    margin-top: 15px;
+}
+
+.card-result-item {
+    background: rgba(138, 43, 226, 0.15);
+    border-left: 3px solid #ffd700;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.card-result-item:hover {
+    background: rgba(138, 43, 226, 0.3);
+}
+
+.card-result-item strong {
+    color: #ffd700;
+}
+
+.card-detail-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.card-detail-modal .modal-content {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 2px solid rgba(255, 215, 0, 0.4);
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.card-orientations {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.card-orientations > div {
+    background: rgba(138, 43, 226, 0.15);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+/* 運勢對比 */
+.fortune-comparison {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.records-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.record-item {
+    background: rgba(26, 26, 46, 0.8);
+    border: 1px solid rgba(138, 43, 226, 0.4);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.record-item:hover {
+    background: rgba(138, 43, 226, 0.2);
+    border-color: #ffd700;
+}
+
+.comparison-result {
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 15px;
+    padding: 25px;
+}
+
+/* 儀表板操作按鈕 */
+.dashboard-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    background: rgba(138, 43, 226, 0.3);
+    border: 1px solid rgba(138, 43, 226, 0.5);
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1em;
+}
+
+.action-btn:hover {
+    background: rgba(138, 43, 226, 0.5);
+    transform: translateY(-2px);
+}
+
+/* 分享按鈕 */
+.result-actions {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.share-btn {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(138, 43, 226, 0.3) 100%);
+    border: 2px solid rgba(255, 215, 0, 0.5);
+    color: #ffd700;
+    padding: 12px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1em;
+    font-weight: bold;
+}
+
+.share-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.5) 0%, rgba(138, 43, 226, 0.5) 100%);
+    transform: scale(1.05);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .features-grid,
+    .divination-options-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .color-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .card-orientations {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-actions {
+        flex-direction: column;
+    }
+}
+
 /* ========== 解夢結果樣式 ========== */
 .dream-result,
 .calligraphy-result {

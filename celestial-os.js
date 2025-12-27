@@ -386,6 +386,12 @@ class CelestialOS {
                 </div>
                 
                 <div class="dashboard-actions">
+                    <button class="action-btn" onclick="celestialOS.exportDestinyPlate('bazi')">📥 導出八字</button>
+                    <button class="action-btn" onclick="celestialOS.showFortuneComparison()">📊 運勢對比</button>
+                    <button class="action-btn" onclick="celestialOS.showKnowledgeBase()">📚 知識庫</button>
+                </div>
+                
+                <div class="dashboard-actions">
                     <button class="btn-primary" onclick="celestialOS.showMasterConsultant()">🤖 AI 總顧問綜合分析</button>
                     <button class="btn-secondary" onclick="celestialOS.showDailyReport()">📊 今日運勢日報</button>
                 </div>
@@ -441,6 +447,7 @@ class CelestialOS {
                     <div class="chat-input-area">
                         <input type="text" id="questionInput" placeholder="輸入你的問題..." class="chat-input" 
                                onkeypress="if(event.key === 'Enter') celestialOS.sendQuestion()">
+                        <button id="voiceInputBtn" class="voice-btn" title="語音輸入" onclick="celestialOS.startVoiceInput()">🎤</button>
                         <button onclick="celestialOS.sendQuestion()" class="chat-send-btn">🔮 占卜</button>
                     </div>
                     
@@ -567,6 +574,47 @@ class CelestialOS {
         }
         this.currentTemple = null;
         this.currentQuestion = null;
+    }
+
+    // 顯示額外功能選單
+    showExtraFeatures() {
+        const container = document.getElementById('celestialContent');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="extra-features-menu">
+                <div class="temple-header">
+                    <button class="back-btn" onclick="celestialOS.backToTemples()">← 返回神殿</button>
+                    <h2>✨ 更多功能</h2>
+                </div>
+                
+                <div class="features-grid">
+                    <div class="feature-card" onclick="celestialOS.showWishTemple()">
+                        <div class="feature-icon">✨</div>
+                        <h3>許願功能</h3>
+                        <p>在新月/滿月時許願</p>
+                    </div>
+                    
+                    <div class="feature-card" onclick="celestialOS.showKnowledgeBase()">
+                        <div class="feature-icon">📚</div>
+                        <h3>命理知識庫</h3>
+                        <p>學習命理基礎知識</p>
+                    </div>
+                    
+                    <div class="feature-card" onclick="celestialOS.showFortuneComparison()">
+                        <div class="feature-icon">📊</div>
+                        <h3>運勢對比</h3>
+                        <p>比較不同時期的運勢</p>
+                    </div>
+                    
+                    <div class="feature-card" onclick="celestialOS.showExtendedDivination()">
+                        <div class="feature-icon">🔮</div>
+                        <h3>更多占卜方式</h3>
+                        <p>生命靈數、顏色、時間占卜</p>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     // 設置使用者檔案表單
@@ -804,6 +852,7 @@ class CelestialOS {
                 <div class="detail-header">
                     <button class="back-btn" onclick="celestialOS.backToDestinyDashboard()">← 返回儀表板</button>
                     <h2>${typeNames[type] || type}命盤詳情</h2>
+                    ${type === 'bazi' ? `<button class="action-btn" onclick="celestialOS.exportDestinyPlate('bazi')">📥 導出命盤</button>` : ''}
                 </div>
                 
                 <div class="result-content">
@@ -1187,7 +1236,13 @@ class CelestialOS {
         resultHtml += `
                 </div>
             </div>
+            <div class="result-actions">
+                <button class="share-btn" onclick="celestialOS.shareCurrentResult()">📤 分享結果</button>
+            </div>
         `;
+        
+        // 保存當前結果用於分享
+        this.lastDivinationResult = { type, question, data, result };
 
         messages.innerHTML += resultHtml;
         messages.scrollTop = messages.scrollHeight;
@@ -1429,6 +1484,11 @@ class CelestialOS {
     displayDailyReport(result) {
         const content = document.getElementById('dailyReportContent');
         const resultData = result.result || result;
+        
+        // 保存到運勢對比記錄
+        if (typeof fortuneComparison !== 'undefined') {
+            fortuneComparison.saveRecord('daily_report', new Date().toISOString().split('T')[0], resultData);
+        }
 
         content.innerHTML = `
             <div class="report-sections">
@@ -1678,6 +1738,636 @@ class CelestialOS {
     showProfileStatus() {
         const summary = userProfile.getProfileSummary();
         // 可在此處添加狀態更新邏輯
+    }
+
+    // ========== 語音輸入功能 ==========
+    startVoiceInput() {
+        if (typeof voiceInput !== 'undefined' && voiceInput) {
+            voiceInput.start();
+        } else {
+            this.showError('語音輸入功能未初始化');
+        }
+    }
+
+    // ========== 分享功能（靈犀殿） ==========
+    shareCurrentResult() {
+        if (this.lastDivinationResult) {
+            const { type, question, data, result } = this.lastDivinationResult;
+            if (typeof generateShareImage === 'function') {
+                generateShareImage(result);
+            } else {
+                this.generateShareCard(type, question, data, result);
+            }
+        } else {
+            this.showError('沒有可分享的結果');
+        }
+    }
+
+    shareDivinationResult(type, question, data, result) {
+        if (typeof generateShareImage === 'function') {
+            generateShareImage(result);
+        } else {
+            this.generateShareCard(type, question, data, result);
+        }
+    }
+
+    generateShareCard(type, question, data, result) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 1080;
+        canvas.height = 1920;
+        
+        // 背景
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, '#1a1a2e');
+        gradient.addColorStop(1, '#0f3460');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // 標題
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold 80px Microsoft JhengHei';
+        ctx.textAlign = 'center';
+        ctx.fillText('🔮 占卜結果', canvas.width / 2, 150);
+        
+        // 問題
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '50px Microsoft JhengHei';
+        const questionLines = this.wrapText(ctx, question, canvas.width - 200, 50);
+        questionLines.forEach((line, i) => {
+            ctx.fillText(line, canvas.width / 2, 350 + i * 70);
+        });
+        
+        // 結果摘要
+        const resultData = result.result || result;
+        if (resultData.summary) {
+            ctx.fillStyle = '#ffd700';
+            ctx.font = 'bold 60px Microsoft JhengHei';
+            const summaryLines = this.wrapText(ctx, resultData.summary, canvas.width - 200, 60);
+            summaryLines.forEach((line, i) => {
+                ctx.fillText(line, canvas.width / 2, 600 + i * 80);
+            });
+        }
+        
+        // 下載
+        canvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `占卜結果_${new Date().toISOString().slice(0, 10)}.png`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }, 'image/png');
+    }
+
+    wrapText(ctx, text, maxWidth, fontSize) {
+        const words = text.split('');
+        const lines = [];
+        let currentLine = '';
+        for (let char of words) {
+            const testLine = currentLine + char;
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxWidth && currentLine !== '') {
+                lines.push(currentLine);
+                currentLine = char;
+            } else {
+                currentLine = testLine;
+            }
+        }
+        if (currentLine) lines.push(currentLine);
+        return lines;
+    }
+
+    // ========== 命盤導出功能 ==========
+    exportDestinyPlate(type) {
+        const data = userProfile.getCalculatedData(type);
+        if (!data) {
+            this.showError('請先計算命盤');
+            return;
+        }
+        
+        if (typeof DestinyExport !== 'undefined') {
+            if (type === 'bazi') {
+                DestinyExport.exportBaziImage(data);
+            } else {
+                this.showError('該命盤類型暫不支持導出');
+            }
+        } else {
+            this.showError('導出功能未初始化');
+        }
+    }
+
+    // ========== 許願功能 ==========
+    showWishTemple() {
+        const container = document.getElementById('celestialContent');
+        if (!container) return;
+        
+        const moonPhase = WishSystem.getNextMoonPhase();
+        
+        container.innerHTML = `
+            <div class="wish-temple">
+                <div class="temple-header">
+                    <button class="back-btn" onclick="celestialOS.backToTemples()">← 返回神殿</button>
+                    <h2>✨ 許願殿</h2>
+                </div>
+                
+                <div class="wish-content">
+                    <div class="moon-phase-info">
+                        <h3>${moonPhase.isNewMoon ? '🌑 新月時分' : moonPhase.isFullMoon ? '🌕 滿月時分' : '🌙 月相信息'}</h3>
+                        <p>下一個新月：${moonPhase.nextNewMoon}</p>
+                        <p>下一個滿月：${moonPhase.nextFullMoon}</p>
+                    </div>
+                    
+                    <div class="wish-form">
+                        <label>寫下你的願望：</label>
+                        <textarea id="wishText" class="wish-textarea" placeholder="在此寫下你的願望..." rows="5"></textarea>
+                        <button class="btn-primary" onclick="celestialOS.submitWish()">✨ 許願</button>
+                    </div>
+                    
+                    <div id="wishHistory" class="wish-history">
+                        <h3>許願記錄</h3>
+                        <div id="wishList"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        this.loadWishHistory();
+    }
+
+    async submitWish() {
+        const wishText = document.getElementById('wishText').value.trim();
+        if (!wishText) {
+            this.showError('請輸入願望');
+            return;
+        }
+        
+        const moonPhase = WishSystem.getNextMoonPhase();
+        const wish = wishSystem.saveWish(wishText, moonPhase.isNewMoon ? 'newMoon' : 'fullMoon');
+        
+        this.showSuccess('願望已記錄！');
+        document.getElementById('wishText').value = '';
+        this.loadWishHistory();
+    }
+
+    loadWishHistory() {
+        const wishList = document.getElementById('wishList');
+        if (!wishList) return;
+        
+        const wishes = wishSystem.loadWishes();
+        if (wishes.length === 0) {
+            wishList.innerHTML = '<p style="text-align: center; color: #888;">暫無許願記錄</p>';
+            return;
+        }
+        
+        wishList.innerHTML = wishes.slice(0, 10).map(wish => `
+            <div class="wish-item">
+                <p class="wish-text">${wish.wish}</p>
+                <p class="wish-date">${new Date(wish.date).toLocaleDateString('zh-TW')}</p>
+            </div>
+        `).join('');
+    }
+
+    // ========== 更多占卜方式 ==========
+    showExtendedDivination() {
+        const container = document.getElementById('celestialContent');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="extended-divination">
+                <div class="temple-header">
+                    <button class="back-btn" onclick="celestialOS.backToTemples()">← 返回神殿</button>
+                    <h2>🔮 更多占卜方式</h2>
+                </div>
+                
+                <div class="divination-options-grid">
+                    <div class="divination-option-card" onclick="celestialOS.showNumerologyDivination()">
+                        <div class="option-icon">🔢</div>
+                        <h3>生命靈數</h3>
+                        <p>根據出生日期計算生命靈數</p>
+                    </div>
+                    
+                    <div class="divination-option-card" onclick="celestialOS.showColorDivination()">
+                        <div class="option-icon">🎨</div>
+                        <h3>顏色占卜</h3>
+                        <p>選擇顏色獲取指引</p>
+                    </div>
+                    
+                    <div class="divination-option-card" onclick="celestialOS.showTimeDivination()">
+                        <div class="option-icon">⏰</div>
+                        <h3>時間占卜</h3>
+                        <p>選擇時間點分析能量</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async showNumerologyDivination() {
+        const container = document.getElementById('celestialContent');
+        if (!container) return;
+        
+        const profile = userProfile.profile;
+        if (!profile) {
+            this.showError('請先設置使用者檔案');
+            return;
+        }
+        
+        const birthDate = `${profile.birthYear}-${String(profile.birthMonth).padStart(2, '0')}-${String(profile.birthDay).padStart(2, '0')}`;
+        const numerology = ExtendedDivination.numerologyDivination(birthDate);
+        
+        // 顯示基本結果
+        container.innerHTML = `
+            <div class="numerology-result">
+                <div class="temple-header">
+                    <button class="back-btn" onclick="celestialOS.showExtendedDivination()">← 返回</button>
+                    <h2>🔢 生命靈數</h2>
+                </div>
+                
+                <div class="numerology-content">
+                    <div class="number-display">
+                        <div class="big-number">${numerology.number}</div>
+                        <p class="number-label">你的生命靈數</p>
+                    </div>
+                    
+                    <div class="number-meaning">
+                        <h3>基本含義</h3>
+                        <p>${numerology.meaning}</p>
+                    </div>
+                    
+                    <div id="numerologyAI" class="numerology-ai">
+                        <div class="loading-animation">
+                            <div class="spinner"></div>
+                            <p>AI 正在深入解讀...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // 調用 AI 解讀
+        try {
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                document.getElementById('numerologyAI').innerHTML = '<p style="color: #888;">請設置 API 金鑰以獲取 AI 解讀</p>';
+                return;
+            }
+            
+            const question = '請為我詳細解讀生命靈數的意義';
+            const data = numerology;
+            const result = await getDivinationResult('numerology', question, data, apiKey);
+            
+            const resultData = result.result || result;
+            document.getElementById('numerologyAI').innerHTML = `
+                <div class="ai-interpretation">
+                    <h3>🔮 AI 深度解讀</h3>
+                    <p>${resultData.analysis || resultData.opening || resultData.summary || '解讀結果'}</p>
+                    ${resultData.advice && Array.isArray(resultData.advice) ? `
+                        <div class="ai-advice">
+                            <h4>💡 建議</h4>
+                            <ul>
+                                ${resultData.advice.map(a => `<li>${a}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        } catch (error) {
+            document.getElementById('numerologyAI').innerHTML = `<p style="color: #ff6b6b;">解讀失敗：${error.message}</p>`;
+        }
+    }
+
+    showColorDivination() {
+        const container = document.getElementById('celestialContent');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="color-divination">
+                <div class="temple-header">
+                    <button class="back-btn" onclick="celestialOS.showExtendedDivination()">← 返回</button>
+                    <h2>🎨 顏色占卜</h2>
+                </div>
+                
+                <div class="color-selection">
+                    <p>請選擇一個顏色：</p>
+                    <div class="color-grid">
+                        ${['紅', '橙', '黃', '綠', '藍', '紫', '粉', '黑', '白'].map(color => `
+                            <div class="color-item" style="background: ${this.getColorHex(color)}" 
+                                 onclick="celestialOS.selectColor('${color}')">
+                                <span>${color}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div id="colorResult" class="color-result hidden"></div>
+            </div>
+        `;
+    }
+
+    async selectColor(color) {
+        const result = ExtendedDivination.colorDivination(color);
+        const resultDiv = document.getElementById('colorResult');
+        if (!resultDiv) return;
+        
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = `
+            <h3>${color}色的含義</h3>
+            <p class="color-meaning">${result.meaning}</p>
+            <p class="color-advice">💡 ${result.advice}</p>
+            <div id="colorAI" class="color-ai">
+                <div class="loading-animation">
+                    <div class="spinner"></div>
+                    <p>AI 正在深入解讀...</p>
+                </div>
+            </div>
+        `;
+        
+        // 調用 AI 解讀
+        try {
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                document.getElementById('colorAI').innerHTML = '<p style="color: #888;">請設置 API 金鑰以獲取 AI 解讀</p>';
+                return;
+            }
+            
+            const question = `請為我解讀選擇${color}色的意義和指引`;
+            const data = { color: color, ...result };
+            const aiResult = await getDivinationResult('color', question, data, apiKey);
+            
+            const resultData = aiResult.result || aiResult;
+            document.getElementById('colorAI').innerHTML = `
+                <div class="ai-interpretation">
+                    <h4>🔮 AI 深度解讀</h4>
+                    <p>${resultData.analysis || resultData.opening || resultData.summary || '解讀結果'}</p>
+                </div>
+            `;
+        } catch (error) {
+            document.getElementById('colorAI').innerHTML = `<p style="color: #ff6b6b;">解讀失敗：${error.message}</p>`;
+        }
+    }
+
+    getColorHex(color) {
+        const colors = {
+            '紅': '#ff0000', '橙': '#ff8800', '黃': '#ffd700',
+            '綠': '#00ff00', '藍': '#0088ff', '紫': '#8800ff',
+            '粉': '#ff88ff', '黑': '#000000', '白': '#ffffff'
+        };
+        return colors[color] || '#888888';
+    }
+
+    showTimeDivination() {
+        const container = document.getElementById('celestialContent');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="time-divination">
+                <div class="temple-header">
+                    <button class="back-btn" onclick="celestialOS.showExtendedDivination()">← 返回</button>
+                    <h2>⏰ 時間占卜</h2>
+                </div>
+                
+                <div class="time-selection">
+                    <label>選擇時間點：</label>
+                    <input type="datetime-local" id="timeInput" class="time-input">
+                    <label>問題：</label>
+                    <textarea id="timeQuestion" class="time-question" placeholder="輸入你想詢問的問題..." rows="3"></textarea>
+                    <button class="btn-primary" onclick="celestialOS.analyzeTime()">🔮 分析時間能量</button>
+                </div>
+                
+                <div id="timeResult" class="time-result hidden"></div>
+            </div>
+        `;
+    }
+
+    async analyzeTime() {
+        const timeInput = document.getElementById('timeInput').value;
+        const question = document.getElementById('timeQuestion').value.trim();
+        
+        if (!timeInput || !question) {
+            this.showError('請填寫完整信息');
+            return;
+        }
+        
+        const result = ExtendedDivination.timeDivination(timeInput, question);
+        const resultDiv = document.getElementById('timeResult');
+        if (!resultDiv) return;
+        
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = `
+            <h3>時間能量分析</h3>
+            <p><strong>時段：</strong>${result.time}</p>
+            <p><strong>含義：</strong>${result.meaning}</p>
+            <p><strong>建議：</strong>${result.advice}</p>
+            <div id="timeAI" class="time-ai">
+                <div class="loading-animation">
+                    <div class="spinner"></div>
+                    <p>AI 正在深入解讀...</p>
+                </div>
+            </div>
+        `;
+        
+        // 調用 AI 解讀
+        try {
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                document.getElementById('timeAI').innerHTML = '<p style="color: #888;">請設置 API 金鑰以獲取 AI 解讀</p>';
+                return;
+            }
+            
+            const data = { time: timeInput, timeSlot: result.time, ...result };
+            const aiResult = await getDivinationResult('time', question, data, apiKey);
+            
+            const resultData = aiResult.result || aiResult;
+            document.getElementById('timeAI').innerHTML = `
+                <div class="ai-interpretation">
+                    <h4>🔮 AI 深度解讀</h4>
+                    <p>${resultData.analysis || resultData.opening || resultData.summary || '解讀結果'}</p>
+                </div>
+            `;
+        } catch (error) {
+            document.getElementById('timeAI').innerHTML = `<p style="color: #ff6b6b;">解讀失敗：${error.message}</p>`;
+        }
+    }
+
+    // ========== 知識庫功能 ==========
+    showKnowledgeBase() {
+        const container = document.getElementById('celestialContent');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="knowledge-base">
+                <div class="temple-header">
+                    <button class="back-btn" onclick="celestialOS.backToTemples()">← 返回神殿</button>
+                    <h2>📚 命理知識庫</h2>
+                </div>
+                
+                <div class="knowledge-tabs">
+                    <button class="tab-btn active" onclick="celestialOS.showKnowledgeTab('tarot')">🃏 塔羅牌</button>
+                    <button class="tab-btn" onclick="celestialOS.showKnowledgeTab('bazi')">📅 八字</button>
+                    <button class="tab-btn" onclick="celestialOS.showKnowledgeTab('ziwei')">⭐ 紫微</button>
+                    <button class="tab-btn" onclick="celestialOS.showKnowledgeTab('astrology')">🌙 占星</button>
+                </div>
+                
+                <div id="knowledgeContent" class="knowledge-content">
+                    ${this.renderKnowledgeContent('tarot')}
+                </div>
+            </div>
+        `;
+    }
+
+    showKnowledgeTab(type) {
+        const content = document.getElementById('knowledgeContent');
+        if (!content) return;
+        
+        // 更新標籤狀態
+        document.querySelectorAll('.knowledge-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        content.innerHTML = this.renderKnowledgeContent(type);
+    }
+
+    renderKnowledgeContent(type) {
+        if (type === 'tarot') {
+            return `
+                <div class="knowledge-section">
+                    <h3>塔羅牌基礎</h3>
+                    <p>塔羅牌共有78張，分為大阿卡納（22張）和小阿卡納（56張）。</p>
+                    <p>每張牌都有正位和逆位的不同含義。</p>
+                    <div class="card-search">
+                        <input type="text" id="cardSearch" placeholder="搜索塔羅牌..." 
+                               onkeyup="celestialOS.searchTarotCard(this.value)">
+                        <div id="cardResults" class="card-results"></div>
+                    </div>
+                </div>
+            `;
+        } else if (type === 'bazi') {
+            const basics = KnowledgeBase.getBaziBasics();
+            return `<div class="knowledge-section">${basics.content}</div>`;
+        } else if (type === 'ziwei') {
+            const basics = KnowledgeBase.getZiweiBasics();
+            return `<div class="knowledge-section">${basics.content}</div>`;
+        } else if (type === 'astrology') {
+            const basics = KnowledgeBase.getAstrologyBasics();
+            return `<div class="knowledge-section">${basics.content}</div>`;
+        }
+        return '';
+    }
+
+    searchTarotCard(query) {
+        const results = document.getElementById('cardResults');
+        if (!results || !query) {
+            if (results) results.innerHTML = '';
+            return;
+        }
+        
+        if (typeof tarotDefinitions === 'undefined') {
+            results.innerHTML = '<p>塔羅牌定義未載入</p>';
+            return;
+        }
+        
+        const matches = Object.keys(tarotDefinitions).filter(name => 
+            name.includes(query)
+        ).slice(0, 5);
+        
+        if (matches.length === 0) {
+            results.innerHTML = '<p>未找到相關牌</p>';
+            return;
+        }
+        
+        results.innerHTML = matches.map(name => {
+            const card = tarotDefinitions[name];
+            return `
+                <div class="card-result-item" onclick="celestialOS.showCardDetail('${name}')">
+                    <strong>${name}</strong>
+                    <p>${card.meaning || ''}</p>
+                </div>
+            `;
+        }).join('');
+    }
+
+    showCardDetail(cardName) {
+        if (typeof tarotDefinitions === 'undefined' || !tarotDefinitions[cardName]) {
+            this.showError('找不到該牌的信息');
+            return;
+        }
+        
+        const card = tarotDefinitions[cardName];
+        const modal = document.createElement('div');
+        modal.className = 'card-detail-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <button class="close-btn" onclick="this.closest('.card-detail-modal').remove()">×</button>
+                <h2>${cardName}</h2>
+                <p><strong>關鍵字：</strong>${card.keywords?.join('、') || ''}</p>
+                <p><strong>含義：</strong>${card.meaning || ''}</p>
+                <div class="card-orientations">
+                    <div>
+                        <h3>正位</h3>
+                        <p>${card.upright?.meaning || ''}</p>
+                        <p><strong>建議：</strong>${card.upright?.advice || ''}</p>
+                    </div>
+                    <div>
+                        <h3>逆位</h3>
+                        <p>${card.reversed?.meaning || ''}</p>
+                        <p><strong>建議：</strong>${card.reversed?.advice || ''}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    // ========== 運勢對比功能 ==========
+    showFortuneComparison() {
+        const container = document.getElementById('celestialContent');
+        if (!container) return;
+        
+        const records = fortuneComparison.loadRecords();
+        
+        container.innerHTML = `
+            <div class="fortune-comparison">
+                <div class="temple-header">
+                    <button class="back-btn" onclick="celestialOS.backToDestinyDashboard()">← 返回儀表板</button>
+                    <h2>📊 運勢對比</h2>
+                </div>
+                
+                <div class="comparison-content">
+                    ${records.length === 0 ? `
+                        <p style="text-align: center; color: #888;">暫無運勢記錄</p>
+                        <p style="text-align: center; color: #888;">每次查看運勢日報時會自動記錄</p>
+                    ` : `
+                        <div class="records-list">
+                            ${records.slice(0, 10).map((record, index) => `
+                                <div class="record-item" onclick="celestialOS.selectRecordForComparison(${record.id})">
+                                    <span>${new Date(record.date).toLocaleDateString('zh-TW')}</span>
+                                    <span>${record.type}</span>
+                                    <span>${record.data?.score || 'N/A'}分</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div id="comparisonResult" class="comparison-result hidden"></div>
+                    `}
+                </div>
+            </div>
+        `;
+    }
+
+    selectRecordForComparison(recordId) {
+        // 簡化版：只顯示單個記錄
+        const record = fortuneComparison.records.find(r => r.id === recordId);
+        if (!record) return;
+        
+        const resultDiv = document.getElementById('comparisonResult');
+        if (!resultDiv) return;
+        
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = `
+            <h3>${new Date(record.date).toLocaleDateString('zh-TW')} 運勢</h3>
+            <p>類型：${record.type}</p>
+            <p>評分：${record.data?.score || 'N/A'}</p>
+        `;
     }
 }
 

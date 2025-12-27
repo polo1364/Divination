@@ -58,6 +58,20 @@
                         <span class="feature-tag">✍️ 測字</span>
                     </div>
                 </div>
+                
+                <!-- 額外功能入口 -->
+                <div class="temple-card extra-features" onclick="celestialOS.showExtraFeatures()">
+                    <div class="temple-icon">✨</div>
+                    <h2 class="temple-title">更多功能</h2>
+                    <p class="temple-subtitle">Extra Features</p>
+                    <p class="temple-description">許願、知識庫、運勢對比等</p>
+                    <div class="temple-features">
+                        <span class="feature-tag">✨ 許願</span>
+                        <span class="feature-tag">📚 知識庫</span>
+                        <span class="feature-tag">📊 運勢對比</span>
+                        <span class="feature-tag">🔮 更多占卜</span>
+                    </div>
+                </div>
             </div>
 
             <!-- 使用者檔案設置（首次使用時顯示） -->
@@ -586,7 +600,21 @@
 
     <script src="user-profile.js"></script>
     <script src="data-center.js"></script>
+    <script src="features.js"></script>
     <script src="script.js"></script>
+    <script>
+        // 載入塔羅牌定義（用於知識庫）
+        let tarotDefinitions = {};
+        fetch('tarot-definitions.json')
+            .then(response => response.json())
+            .then(data => {
+                tarotDefinitions = data;
+                console.log('✅ 塔羅牌定義載入成功');
+            })
+            .catch(error => {
+                console.warn('⚠️ 無法載入塔羅牌定義:', error);
+            });
+    </script>
     <script src="celestial-os.js"></script>
 </body>
 </html>
