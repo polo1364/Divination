@@ -301,6 +301,21 @@ function buildDivinationPrompt(type, question, data) {
             typeSpecificPrompt += `請以「大師綜合分析」的口吻，整合所有資訊，給出最全面的解答。`;
             break;
 
+        case 'horoscope':
+            typeSpecificPrompt = `星座每日運勢生成\n\n`;
+            typeSpecificPrompt += `星座：${data.zodiac || '未知'}\n`;
+            typeSpecificPrompt += `日期：${data.date || new Date().toISOString().split('T')[0]}\n\n`;
+            typeSpecificPrompt += `【任務】\n`;
+            typeSpecificPrompt += `請為${data.zodiac}生成今日的運勢，內容要簡潔明瞭，適合在跑馬燈中顯示。\n`;
+            typeSpecificPrompt += `請按照以下格式輸出：\n`;
+            typeSpecificPrompt += `整體運勢：[用1-5個⭐表示，例如⭐⭐⭐⭐]\n`;
+            typeSpecificPrompt += `愛情：[簡短建議，不超過20字]\n`;
+            typeSpecificPrompt += `事業：[簡短建議，不超過20字]\n`;
+            typeSpecificPrompt += `財運：[簡短建議，不超過20字]\n`;
+            typeSpecificPrompt += `健康：[簡短建議，不超過20字]\n\n`;
+            typeSpecificPrompt += `請用簡潔、正面、鼓勵的語言，避免過於負面的描述。`;
+            break;
+            
         case 'daily_report':
             typeSpecificPrompt = `每日運勢日報生成\n\n`;
             typeSpecificPrompt += `日期：${data.date || new Date().toISOString().split('T')[0]}\n\n`;

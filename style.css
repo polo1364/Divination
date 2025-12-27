@@ -107,10 +107,147 @@ header {
 
 header {
     position: relative;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+}
+
+/* ========== 星座運勢跑馬燈 ========== */
+.horoscope-marquee {
+    position: relative;
+    width: 100%;
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.15) 0%, rgba(75, 0, 130, 0.15) 100%);
+    border: 1px solid rgba(138, 43, 226, 0.3);
+    border-radius: 15px;
+    padding: 15px 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+}
+
+.marquee-container {
+    position: relative;
+    width: 100%;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.marquee-content {
+    width: 100%;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.marquee-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 10px;
+}
+
+.zodiac-icon {
+    font-size: 3em;
+    line-height: 1;
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+    animation: zodiacGlow 3s ease-in-out infinite;
+}
+
+@keyframes zodiacGlow {
+    0%, 100% { 
+        filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+        transform: scale(1);
+    }
+    50% { 
+        filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
+        transform: scale(1.05);
+    }
+}
+
+.zodiac-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.zodiac-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.zodiac-name {
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.zodiac-rating {
+    font-size: 1.2em;
+    color: #ffd700;
+    letter-spacing: 2px;
+}
+
+.zodiac-fortune {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    font-size: 0.95em;
+    color: #e8e8e8;
+}
+
+.fortune-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    background: rgba(138, 43, 226, 0.2);
+    border-radius: 20px;
+    border: 1px solid rgba(138, 43, 226, 0.3);
+    transition: all 0.3s ease;
+}
+
+.fortune-item:hover {
+    background: rgba(138, 43, 226, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(138, 43, 226, 0.3);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .horoscope-marquee {
+        padding: 12px 15px;
+        margin-bottom: 20px;
+    }
+    
+    .marquee-item {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .zodiac-icon {
+        font-size: 2.5em;
+    }
+    
+    .zodiac-name {
+        font-size: 1.2em;
+    }
+    
+    .zodiac-fortune {
+        flex-direction: column;
+        gap: 10px;
+        font-size: 0.9em;
+    }
+    
+    .fortune-item {
+        justify-content: center;
+    }
 }
 
 .header-content {

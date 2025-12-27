@@ -19,6 +19,21 @@
             </div>
         </header>
 
+        <!-- 星座運勢跑馬燈 -->
+        <div id="horoscopeMarquee" class="horoscope-marquee">
+            <div class="marquee-container">
+                <div class="marquee-content" id="marqueeContent">
+                    <div class="marquee-item">
+                        <div class="zodiac-icon">♈</div>
+                        <div class="zodiac-info">
+                            <span class="zodiac-name">白羊座</span>
+                            <span class="zodiac-fortune">載入中...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <main>
             <!-- 三個神殿導航 -->
             <div id="templeNavigation" class="temple-navigation">
@@ -614,6 +629,7 @@
 
     <script src="user-profile.js"></script>
     <script src="data-center.js"></script>
+    <script src="horoscope-marquee.js"></script>
     <script>
         // 載入 features.js 並檢查是否成功
         const featuresScript = document.createElement('script');
