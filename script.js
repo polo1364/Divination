@@ -128,37 +128,93 @@ function updateApiKeyStatus(isSet) {
     }
 }
 
+// 模態框管理
+function openModal() {
+    const modal = document.getElementById('apiKeyModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // 防止背景滾動
+        // 載入保存的 API 金鑰
+        loadApiKey();
+    }
+}
+
+function closeModal() {
+    const modal = document.getElementById('apiKeyModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = ''; // 恢復滾動
+    }
+}
+
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
     const spreadButtons = document.querySelectorAll('.spread-btn');
     const drawBtn = document.getElementById('drawBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
     const apiKeyInput = document.getElementById('apiKey');
     const toggleApiKeyBtn = document.getElementById('toggleApiKey');
+    const closeModalBtn = document.getElementById('closeModal');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const saveApiKeyBtn = document.getElementById('saveApiKey');
 
-    // 載入保存的 API 金鑰
-    loadApiKey();
+    // 打開設置模態框
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', openModal);
+    }
+
+    // 關閉模態框
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModal);
+    }
+
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', closeModal);
+    }
+
+    // 按 ESC 鍵關閉模態框
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+
+    // 保存 API 金鑰
+    if (saveApiKeyBtn) {
+        saveApiKeyBtn.addEventListener('click', () => {
+            const key = apiKeyInput ? apiKeyInput.value.trim() : '';
+            if (key) {
+                saveApiKey(key);
+                updateApiKeyStatus(true);
+                closeModal();
+            } else {
+                alert('請輸入 API 金鑰');
+            }
+        });
+    }
 
     // API 金鑰輸入監聽
     if (apiKeyInput) {
         apiKeyInput.addEventListener('input', (e) => {
             const key = e.target.value.trim();
-            saveApiKey(key);
             updateApiKeyStatus(key.length > 0);
         });
-
-        // 檢查初始狀態
-        if (apiKeyInput.value.trim()) {
-            updateApiKeyStatus(true);
-        }
     }
 
     // 切換 API 金鑰顯示/隱藏
-    if (toggleApiKeyBtn) {
+    if (toggleApiKeyBtn && apiKeyInput) {
         toggleApiKeyBtn.addEventListener('click', () => {
             const type = apiKeyInput.type === 'password' ? 'text' : 'password';
             apiKeyInput.type = type;
             toggleApiKeyBtn.textContent = type === 'password' ? '👁️' : '🙈';
         });
+    }
+
+    // 檢查是否有保存的 API 金鑰
+    const savedKey = localStorage.getItem('gemini_api_key');
+    if (!savedKey) {
+        // 如果沒有保存的 API 金鑰，自動打開模態框
+        setTimeout(openModal, 500);
     }
 
     // 占卜方式選擇
@@ -198,8 +254,8 @@ async function handleDrawCards() {
     }
 
     if (!apiKey) {
-        alert('請先輸入 Gemini API 金鑰！\n\n您可以在 https://makersuite.google.com/app/apikey 申請。');
-        document.getElementById('apiKey')?.focus();
+        alert('請先設置 Gemini API 金鑰！\n\n點擊右上角的設置按鈕來輸入 API 金鑰。');
+        openModal();
         return;
     }
 
