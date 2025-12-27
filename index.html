@@ -3,40 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 塔羅牌占卜</title>
+    <title>AI 命理占卜 - 多種占卜方式</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
             <div class="header-content">
-                <h1>🔮 AI 塔羅牌占卜</h1>
-                <p class="subtitle">讓 AI 為您解讀塔羅牌的智慧</p>
+                <h1>🔮 AI 命理占卜</h1>
+                <p class="subtitle">融合東方玄學與西方智慧的 AI 占卜平台</p>
             </div>
-            <button id="settingsBtn" class="settings-btn" title="設置 API 金鑰">⚙️</button>
+            <div class="header-actions">
+                <button id="historyBtn" class="icon-btn" title="歷史記錄">📜</button>
+                <button id="settingsBtn" class="icon-btn" title="設置 API 金鑰">⚙️</button>
+            </div>
         </header>
 
         <main>
-
-            <div class="question-section">
-                <label for="question">請輸入您的問題：</label>
-                <textarea id="question" placeholder="例如：我最近的工作運勢如何？" rows="3"></textarea>
-            </div>
-
-            <div class="spread-section">
+            <!-- 占卜方式選擇 -->
+            <div class="divination-type-section">
                 <label>選擇占卜方式：</label>
-                <div class="spread-options">
-                    <button class="spread-btn active" data-spread="single">單張牌</button>
-                    <button class="spread-btn" data-spread="three">三張牌</button>
+                <div class="divination-types">
+                    <button class="divination-type-btn active" data-type="tarot">
+                        <span class="icon">🃏</span>
+                        <span class="name">塔羅牌</span>
+                    </button>
+                    <button class="divination-type-btn" data-type="bazi">
+                        <span class="icon">📅</span>
+                        <span class="name">八字</span>
+                    </button>
+                    <button class="divination-type-btn" data-type="ziwei">
+                        <span class="icon">⭐</span>
+                        <span class="name">紫微斗數</span>
+                    </button>
+                    <button class="divination-type-btn" data-type="astrology">
+                        <span class="icon">🌙</span>
+                        <span class="name">西方占星</span>
+                    </button>
+                    <button class="divination-type-btn" data-type="yijing">
+                        <span class="icon">☯️</span>
+                        <span class="name">周易</span>
+                    </button>
+                    <button class="divination-type-btn" data-type="migu">
+                        <span class="icon">🌾</span>
+                        <span class="name">米卦</span>
+                    </button>
+                    <button class="divination-type-btn" data-type="qiuqian">
+                        <span class="icon">🎋</span>
+                        <span class="name">求籤</span>
+                    </button>
                 </div>
             </div>
 
-            <button id="drawBtn" class="draw-button">抽牌</button>
+            <!-- 動態表單區域 -->
+            <div id="formContainer" class="form-container">
+                <!-- 塔羅牌表單 -->
+                <div id="tarotForm" class="divination-form active">
+                    <div class="question-section">
+                        <label for="question">請輸入您的問題：</label>
+                        <textarea id="question" placeholder="例如：我最近的工作運勢如何？" rows="3"></textarea>
+                    </div>
+                    <div class="spread-section">
+                        <label>選擇牌陣：</label>
+                        <div class="spread-options">
+                            <button class="spread-btn active" data-spread="single">單張牌</button>
+                            <button class="spread-btn" data-spread="three">三張牌</button>
+                        </div>
+                    </div>
+                </div>
 
-            <div id="cardsContainer" class="cards-container"></div>
+                <!-- 八字/紫微斗數表單 -->
+                <div id="baziForm" class="divination-form hidden">
+                    <div class="question-section">
+                        <label for="baziQuestion">請輸入您的問題：</label>
+                        <textarea id="baziQuestion" placeholder="例如：我今年的整體運勢如何？" rows="2"></textarea>
+                    </div>
+                    <div class="birth-info-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">姓名</label>
+                                <input type="text" id="name" placeholder="請輸入姓名">
+                            </div>
+                            <div class="form-group">
+                                <label for="gender">性別</label>
+                                <select id="gender">
+                                    <option value="">請選擇</option>
+                                    <option value="male">男</option>
+                                    <option value="female">女</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="birthDate">出生日期</label>
+                                <input type="date" id="birthDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="birthTime">出生時辰</label>
+                                <input type="time" id="birthTime">
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- 占星表單 -->
+                <div id="astrologyForm" class="divination-form hidden">
+                    <div class="question-section">
+                        <label for="astrologyQuestion">請輸入您的問題：</label>
+                        <textarea id="astrologyQuestion" placeholder="例如：我這個月的愛情運勢如何？" rows="2"></textarea>
+                    </div>
+                    <div class="birth-info-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="astrologyBirthDate">出生日期</label>
+                                <input type="date" id="astrologyBirthDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="birthPlace">出生地點</label>
+                                <input type="text" id="birthPlace" placeholder="例如：台北市">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 周易/米卦/求籤表單 -->
+                <div id="yijingForm" class="divination-form hidden">
+                    <div class="question-section">
+                        <label for="yijingQuestion">請輸入您的問題：</label>
+                        <textarea id="yijingQuestion" placeholder="例如：我這次的投資是否適合？" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <button id="divineBtn" class="divine-button">
+                <span class="button-icon">✨</span>
+                <span class="button-text">開始占卜</span>
+            </button>
+
+            <!-- 結果顯示區域 -->
             <div id="resultSection" class="result-section hidden">
-                <h2>解讀結果</h2>
+                <div class="result-header">
+                    <h2>🔮 占卜結果</h2>
+                    <button id="speakBtn" class="icon-btn-small" title="語音播放">🔊</button>
+                </div>
                 <div id="resultContent" class="result-content"></div>
             </div>
 
@@ -79,7 +188,20 @@
         <div class="modal-overlay" id="modalOverlay"></div>
     </div>
 
+    <!-- 歷史記錄模態框 -->
+    <div id="historyModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📜 占卜歷史</h2>
+                <button class="modal-close" id="closeHistoryModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="historyList" class="history-list"></div>
+            </div>
+        </div>
+        <div class="modal-overlay" id="historyModalOverlay"></div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
-

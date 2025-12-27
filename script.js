@@ -89,6 +89,7 @@ const threeCardPositions = [
 
 let currentSpread = 'single';
 let drawnCards = [];
+let currentDivinationType = 'tarot'; // 當前選擇的占卜方式
 
 // API 金鑰管理
 function getApiKey() {
@@ -217,18 +218,56 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(openModal, 500);
     }
 
-    // 占卜方式選擇
-    spreadButtons.forEach(btn => {
+    // 占卜方式選擇（塔羅牌牌陣）
+    if (spreadButtons.length > 0) {
+        spreadButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                spreadButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentSpread = btn.dataset.spread;
+                resetCards();
+            });
+        });
+    }
+
+    // 占卜類型選擇
+    const divinationTypeButtons = document.querySelectorAll('.divination-type-btn');
+    divinationTypeButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            spreadButtons.forEach(b => b.classList.remove('active'));
+            divinationTypeButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            currentSpread = btn.dataset.spread;
-            resetCards();
+            currentDivinationType = btn.dataset.type;
+            switchDivinationType(currentDivinationType);
         });
     });
 
-    // 抽牌按鈕
-    drawBtn.addEventListener('click', handleDrawCards);
+    // 占卜按鈕
+    const divineBtn = document.getElementById('divineBtn');
+    if (divineBtn) {
+        divineBtn.addEventListener('click', handleDivination);
+    }
+
+    // 歷史記錄按鈕
+    const historyBtn = document.getElementById('historyBtn');
+    if (historyBtn) {
+        historyBtn.addEventListener('click', openHistoryModal);
+    }
+
+    // 關閉歷史記錄模態框
+    const closeHistoryModal = document.getElementById('closeHistoryModal');
+    const historyModalOverlay = document.getElementById('historyModalOverlay');
+    if (closeHistoryModal) {
+        closeHistoryModal.addEventListener('click', closeHistoryModalFunc);
+    }
+    if (historyModalOverlay) {
+        historyModalOverlay.addEventListener('click', closeHistoryModalFunc);
+    }
+
+    // 語音播放按鈕
+    const speakBtn = document.getElementById('speakBtn');
+    if (speakBtn) {
+        speakBtn.addEventListener('click', speakResult);
+    }
 });
 
 // 重置卡片
@@ -378,5 +417,367 @@ function displayResult(data) {
 
     resultContent.innerHTML = html;
     resultSection.classList.remove('hidden');
+    
+    // 保存到歷史記錄
+    saveToHistory({
+        type: 'tarot',
+        question: data.question,
+        result: data,
+        timestamp: new Date().toISOString()
+    });
+}
+
+// 切換占卜類型
+function switchDivinationType(type) {
+    // 隱藏所有表單
+    document.querySelectorAll('.divination-form').forEach(form => {
+        form.classList.add('hidden');
+        form.classList.remove('active');
+    });
+
+    // 顯示對應的表單
+    const formMap = {
+        'tarot': 'tarotForm',
+        'bazi': 'baziForm',
+        'ziwei': 'baziForm', // 共用同一個表單
+        'astrology': 'astrologyForm',
+        'yijing': 'yijingForm',
+        'migu': 'yijingForm', // 共用同一個表單
+        'qiuqian': 'yijingForm' // 共用同一個表單
+    };
+
+    const formId = formMap[type];
+    if (formId) {
+        const form = document.getElementById(formId);
+        if (form) {
+            form.classList.remove('hidden');
+            form.classList.add('active');
+        }
+    }
+}
+
+// 處理占卜
+async function handleDivination() {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+        alert('請先設置 Gemini API 金鑰！\n\n點擊右上角的設置按鈕來輸入 API 金鑰。');
+        openModal();
+        return;
+    }
+
+    const divineBtn = document.getElementById('divineBtn');
+    const loading = document.getElementById('loading');
+    const resultSection = document.getElementById('resultSection');
+
+    // 收集數據
+    let question = '';
+    let data = {};
+
+    switch(currentDivinationType) {
+        case 'tarot':
+            question = document.getElementById('question').value.trim();
+            if (!question) {
+                alert('請先輸入您的問題！');
+                return;
+            }
+            const numCards = currentSpread === 'single' ? 1 : 3;
+            drawnCards = drawRandomCards(numCards);
+            displayCards(drawnCards);
+            data = { cards: drawnCards, spread: currentSpread };
+            break;
+
+        case 'bazi':
+        case 'ziwei':
+            question = document.getElementById('baziQuestion').value.trim();
+            if (!question) {
+                alert('請先輸入您的問題！');
+                return;
+            }
+            const birthDate = document.getElementById('birthDate').value;
+            if (!birthDate) {
+                alert('請輸入出生日期！');
+                return;
+            }
+            data = {
+                name: document.getElementById('name').value.trim(),
+                gender: document.getElementById('gender').value,
+                birthDate: birthDate,
+                birthTime: document.getElementById('birthTime').value
+            };
+            break;
+
+        case 'astrology':
+            question = document.getElementById('astrologyQuestion').value.trim();
+            if (!question) {
+                alert('請先輸入您的問題！');
+                return;
+            }
+            const astrologyBirthDate = document.getElementById('astrologyBirthDate').value;
+            if (!astrologyBirthDate) {
+                alert('請輸入出生日期！');
+                return;
+            }
+            data = {
+                birthDate: astrologyBirthDate,
+                birthPlace: document.getElementById('birthPlace').value.trim()
+            };
+            break;
+
+        case 'yijing':
+        case 'migu':
+        case 'qiuqian':
+            question = document.getElementById('yijingQuestion').value.trim();
+            if (!question) {
+                alert('請先輸入您的問題！');
+                return;
+            }
+            // 隨機生成卦象或籤詩
+            const guaData = generateGua(currentDivinationType);
+            data = guaData;
+            break;
+    }
+
+    // 禁用按鈕並顯示載入
+    divineBtn.disabled = true;
+    loading.classList.remove('hidden');
+    resultSection.classList.add('hidden');
+
+    try {
+        const result = await getDivinationResult(currentDivinationType, question, data, apiKey);
+        displayDivinationResult(currentDivinationType, question, data, result);
+    } catch (error) {
+        console.error('解讀錯誤:', error);
+        alert('解讀失敗：' + error.message);
+    } finally {
+        loading.classList.add('hidden');
+        divineBtn.disabled = false;
+    }
+}
+
+// 獲取占卜結果
+async function getDivinationResult(type, question, data, apiKey) {
+    const response = await fetch('/api/divination', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            type: type,
+            question: question,
+            data: data,
+            apiKey: apiKey
+        })
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'API 請求失敗');
+    }
+
+    return await response.json();
+}
+
+// 顯示占卜結果
+function displayDivinationResult(type, question, data, result) {
+    const resultSection = document.getElementById('resultSection');
+    const resultContent = document.getElementById('resultContent');
+
+    let html = '';
+
+    // 顯示問題
+    html += `<div class="result-question"><strong>您的問題：</strong>${question}</div>`;
+
+    // 顯示數據（如抽到的牌、出生資訊等）
+    if (type === 'tarot' && data.cards) {
+        html += '<div class="result-data">';
+        data.cards.forEach(card => {
+            html += `<div class="card-info">${card.position || '抽到的牌'}：${card.name} ${card.emoji}</div>`;
+        });
+        html += '</div>';
+    } else if ((type === 'bazi' || type === 'ziwei') && data.birthDate) {
+        html += `<div class="result-data">出生資訊：${data.birthDate} ${data.birthTime || ''}</div>`;
+    } else if (type === 'astrology' && data.birthDate) {
+        html += `<div class="result-data">出生資訊：${data.birthDate} ${data.birthPlace || ''}</div>`;
+    } else if (data.gua) {
+        html += `<div class="result-data">${data.guaName}：${data.gua}</div>`;
+    }
+
+    // 顯示解讀結果
+    const resultData = result.result || {};
+    
+    if (resultData.opening) {
+        html += `<div class="opening">${resultData.opening}</div>`;
+    }
+
+    if (resultData.summary) {
+        html += `<div class="summary">${resultData.summary}</div>`;
+    }
+
+    if (resultData.analysis) {
+        html += `<div class="analysis">${resultData.analysis}</div>`;
+    }
+
+    if (resultData.advice && resultData.advice.length > 0) {
+        html += '<div class="advice-section"><h3>💡 建議指引</h3><ul class="advice-list">';
+        resultData.advice.forEach(advice => {
+            html += `<li>${advice}</li>`;
+        });
+        html += '</ul></div>';
+    }
+
+    if (resultData.lucky_color || resultData.lucky_direction || resultData.lucky_item) {
+        html += '<div class="lucky-section">';
+        if (resultData.lucky_color) {
+            html += `<div class="lucky-item"><strong>幸運色</strong><span>${resultData.lucky_color}</span></div>`;
+        }
+        if (resultData.lucky_direction) {
+            html += `<div class="lucky-item"><strong>幸運方位</strong><span>${resultData.lucky_direction}</span></div>`;
+        }
+        if (resultData.lucky_item) {
+            html += `<div class="lucky-item"><strong>幸運小物</strong><span>${resultData.lucky_item}</span></div>`;
+        }
+        html += '</div>';
+    }
+
+    if (resultData.score) {
+        html += `<div class="score">運勢評分：${resultData.score} / 100</div>`;
+    }
+
+    resultContent.innerHTML = html;
+    resultSection.classList.remove('hidden');
+
+    // 保存到歷史記錄
+    saveToHistory({
+        type: type,
+        question: question,
+        data: data,
+        result: result,
+        timestamp: new Date().toISOString()
+    });
+}
+
+// 生成卦象或籤詩
+function generateGua(type) {
+    const yijingGua = [
+        { name: '乾', gua: '乾為天', meaning: '天行健，君子以自強不息' },
+        { name: '坤', gua: '坤為地', meaning: '地勢坤，君子以厚德載物' },
+        { name: '屯', gua: '水雷屯', meaning: '剛柔始交而難生' },
+        { name: '蒙', gua: '山水蒙', meaning: '山下出泉，蒙' },
+        { name: '需', gua: '水天需', meaning: '雲上於天，需' }
+    ];
+
+    const qian = [
+        { number: 1, text: '上上籤', meaning: '大吉大利，萬事順遂' },
+        { number: 2, text: '上籤', meaning: '吉，凡事順利' },
+        { number: 3, text: '中上籤', meaning: '平順，略有波折' },
+        { number: 4, text: '中籤', meaning: '平平，需謹慎' },
+        { number: 5, text: '中下籤', meaning: '小凶，需注意' }
+    ];
+
+    if (type === 'yijing' || type === 'migu') {
+        const randomGua = yijingGua[Math.floor(Math.random() * yijingGua.length)];
+        return {
+            gua: randomGua.gua,
+            guaName: type === 'yijing' ? '卦象' : '米卦',
+            meaning: randomGua.meaning
+        };
+    } else if (type === 'qiuqian') {
+        const randomQian = qian[Math.floor(Math.random() * qian.length)];
+        return {
+            gua: `第${randomQian.number}籤 - ${randomQian.text}`,
+            guaName: '籤詩',
+            meaning: randomQian.meaning
+        };
+    }
+}
+
+// 歷史記錄功能
+function saveToHistory(record) {
+    let history = JSON.parse(localStorage.getItem('divination_history') || '[]');
+    history.unshift(record);
+    // 只保留最近 50 條記錄
+    if (history.length > 50) {
+        history = history.slice(0, 50);
+    }
+    localStorage.setItem('divination_history', JSON.stringify(history));
+}
+
+function openHistoryModal() {
+    const modal = document.getElementById('historyModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        loadHistory();
+    }
+}
+
+function closeHistoryModalFunc() {
+    const modal = document.getElementById('historyModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+}
+
+function loadHistory() {
+    const historyList = document.getElementById('historyList');
+    if (!historyList) return;
+
+    const history = JSON.parse(localStorage.getItem('divination_history') || '[]');
+    
+    if (history.length === 0) {
+        historyList.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">暫無歷史記錄</p>';
+        return;
+    }
+
+    historyList.innerHTML = history.map((record, index) => {
+        const date = new Date(record.timestamp);
+        const typeNames = {
+            'tarot': '塔羅牌',
+            'bazi': '八字',
+            'ziwei': '紫微斗數',
+            'astrology': '西方占星',
+            'yijing': '周易',
+            'migu': '米卦',
+            'qiuqian': '求籤'
+        };
+        return `
+            <div class="history-item" onclick="loadHistoryItem(${index})">
+                <div class="history-type">${typeNames[record.type] || record.type}</div>
+                <div class="history-question">${record.question}</div>
+                <div class="history-date">${date.toLocaleString('zh-TW')}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function loadHistoryItem(index) {
+    const history = JSON.parse(localStorage.getItem('divination_history') || '[]');
+    if (history[index]) {
+        const record = history[index];
+        currentDivinationType = record.type;
+        switchDivinationType(record.type);
+        displayDivinationResult(record.type, record.question, record.data, record.result);
+        closeHistoryModalFunc();
+    }
+}
+
+// 語音播放功能
+function speakResult() {
+    const resultContent = document.getElementById('resultContent');
+    if (!resultContent) return;
+
+    const text = resultContent.innerText || resultContent.textContent;
+    if (!text) return;
+
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-TW';
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        speechSynthesis.speak(utterance);
+    } else {
+        alert('您的瀏覽器不支持語音播放功能');
+    }
 }
 

@@ -33,7 +33,196 @@ try {
     console.error('❌ Gemini API 初始化失敗:', error.message);
 }
 
-// 塔羅牌解讀 API
+// 通用占卜解讀 API（支持多種占卜方式）
+app.post('/api/divination', async (req, res) => {
+    try {
+        const { type, question, data, apiKey } = req.body;
+
+        // 優先使用請求中的 API 金鑰，否則使用環境變數
+        const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
+
+        if (!geminiApiKey) {
+            return res.status(400).json({ 
+                error: '缺少 API 金鑰',
+                details: '請在前端輸入 Gemini API 金鑰，或在服務器環境變數中設置 GEMINI_API_KEY'
+            });
+        }
+
+        // 動態初始化 Gemini API
+        const GEMINI_MODEL = 'gemini-2.5-flash';
+        let currentModel;
+        try {
+            const genAI = new GoogleGenerativeAI(geminiApiKey);
+            currentModel = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+        } catch (error) {
+            console.error('❌ Gemini API 初始化失敗:', error);
+            return res.status(400).json({ 
+                error: 'API 金鑰無效',
+                details: '請檢查您的 Gemini API 金鑰是否正確'
+            });
+        }
+
+        if (!type || !question) {
+            return res.status(400).json({ error: '缺少必要參數' });
+        }
+
+        console.log(`📝 收到${type}解讀請求`);
+
+        // 構建提示詞（使用強烈的人設）
+        const prompt = buildDivinationPrompt(type, question, data);
+
+        console.log('🤖 調用 Gemini API...');
+        
+        // 調用 Gemini API
+        const result = await currentModel.generateContent(prompt);
+        const response = await result.response;
+        let interpretation = response.text();
+
+        // 嘗試解析 JSON（如果 AI 返回了結構化輸出）
+        let structuredResult = null;
+        try {
+            // 嘗試從文本中提取 JSON
+            const jsonMatch = interpretation.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                structuredResult = JSON.parse(jsonMatch[0]);
+            }
+        } catch (e) {
+            // 如果不是 JSON，使用原始文本
+        }
+
+        // 如果成功解析為結構化輸出，使用它；否則使用原始文本
+        const finalResult = structuredResult || {
+            summary: interpretation.substring(0, 100) + '...',
+            analysis: interpretation,
+            advice: [],
+            lucky_item: '',
+            score: 75
+        };
+
+        console.log('✅ 解讀成功');
+
+        res.json({
+            type: type,
+            question: question,
+            data: data,
+            result: finalResult,
+            raw: interpretation
+        });
+
+    } catch (error) {
+        console.error('❌ 解讀失敗:', error);
+        res.status(500).json({ 
+            error: '解讀失敗，請稍後再試',
+            details: error.message 
+        });
+    }
+});
+
+// 構建占卜提示詞
+function buildDivinationPrompt(type, question, data) {
+    const systemPrompt = `你是一位精通東方玄學與西方心理學的資深命理大師。你的語氣神秘、溫和且充滿智慧，能夠給予使用者心靈上的指引。
+
+你的任務是根據使用者提供的資訊進行詳細的運勢分析。
+
+輸出規則：
+1. 開場：用一句富有哲理的話作為開場
+2. 核心分析：針對問題進行深入剖析，指出目前的能量狀態
+3. 未來建議：給出 3 點具體可行的建議（包含心態調整或實際行動）
+4. 幸運要素：給出今日幸運色、幸運方位或幸運小物
+
+請使用繁體中文，避免過於生硬的翻譯腔，帶有一點「天機」的感覺，但最後要正面鼓勵。
+
+絕對禁止：
+- 不要給予醫療建議
+- 不要預測死亡
+- 不要給予具體的投資買賣點位
+
+請以 JSON 格式輸出，格式如下：
+{
+  "summary": "一句話總結運勢",
+  "opening": "富有哲理的開場白",
+  "analysis": "詳細的分析文本（300-500字）",
+  "advice": ["建議1", "建議2", "建議3"],
+  "lucky_color": "幸運色",
+  "lucky_direction": "幸運方位",
+  "lucky_item": "幸運小物",
+  "score": 85
+}
+
+現在開始解讀：\n\n`;
+
+    let typeSpecificPrompt = '';
+
+    switch(type) {
+        case 'tarot':
+            if (data.cards && data.cards.length > 0) {
+                if (data.spread === 'single') {
+                    const card = data.cards[0];
+                    typeSpecificPrompt = `塔羅牌占卜 - 單張牌\n\n`;
+                    typeSpecificPrompt += `用戶的問題：${question}\n`;
+                    typeSpecificPrompt += `抽到的牌：${card.name}（${card.meaning}）\n\n`;
+                } else if (data.spread === 'three') {
+                    typeSpecificPrompt = `塔羅牌占卜 - 三張牌陣（過去-現在-未來）\n\n`;
+                    typeSpecificPrompt += `用戶的問題：${question}\n`;
+                    data.cards.forEach(card => {
+                        typeSpecificPrompt += `${card.position}：${card.name}（${card.meaning}）\n`;
+                    });
+                }
+            }
+            break;
+
+        case 'bazi':
+        case 'ziwei':
+            typeSpecificPrompt = `${type === 'bazi' ? '八字' : '紫微斗數'}命盤分析\n\n`;
+            typeSpecificPrompt += `用戶的問題：${question}\n`;
+            typeSpecificPrompt += `出生資訊：\n`;
+            typeSpecificPrompt += `- 姓名：${data.name || '未提供'}\n`;
+            typeSpecificPrompt += `- 性別：${data.gender || '未提供'}\n`;
+            typeSpecificPrompt += `- 出生日期：${data.birthDate || '未提供'}\n`;
+            if (data.birthTime) {
+                typeSpecificPrompt += `- 出生時辰：${data.birthTime}\n`;
+            }
+            typeSpecificPrompt += `\n請根據以上資訊進行命盤分析。`;
+            break;
+
+        case 'astrology':
+            typeSpecificPrompt = `西方占星分析\n\n`;
+            typeSpecificPrompt += `用戶的問題：${question}\n`;
+            typeSpecificPrompt += `出生資訊：\n`;
+            typeSpecificPrompt += `- 出生日期：${data.birthDate || '未提供'}\n`;
+            if (data.birthPlace) {
+                typeSpecificPrompt += `- 出生地點：${data.birthPlace}\n`;
+            }
+            typeSpecificPrompt += `\n請根據以上資訊進行星盤分析。`;
+            break;
+
+        case 'yijing':
+        case 'migu':
+        case 'qiuqian':
+            const typeNames = {
+                'yijing': '周易',
+                'migu': '米卦',
+                'qiuqian': '求籤'
+            };
+            typeSpecificPrompt = `${typeNames[type]}解讀\n\n`;
+            typeSpecificPrompt += `用戶的問題：${question}\n`;
+            if (data.gua) {
+                typeSpecificPrompt += `卦象/籤詩：${data.gua}\n`;
+            }
+            if (data.meaning) {
+                typeSpecificPrompt += `基本含義：${data.meaning}\n`;
+            }
+            typeSpecificPrompt += `\n請進行詳細解讀。`;
+            break;
+
+        default:
+            typeSpecificPrompt = `占卜解讀\n\n用戶的問題：${question}\n`;
+    }
+
+    return systemPrompt + typeSpecificPrompt;
+}
+
+// 塔羅牌解讀 API（保持向後兼容）
 app.post('/api/interpret', async (req, res) => {
     try {
         const { question, cards, spread, apiKey } = req.body;
@@ -70,30 +259,61 @@ app.post('/api/interpret', async (req, res) => {
 
         console.log('📝 收到解讀請求:', { question, spread, cardsCount: cards.length });
 
-        // 構建提示詞
-        let prompt = `你是一位專業的塔羅牌占卜師，請根據以下信息為用戶進行詳細的塔羅牌解讀。\n\n`;
-        prompt += `用戶的問題：${question}\n\n`;
+        // 使用新的通用 API 邏輯
+        const divinationData = {
+            type: 'tarot',
+            question: question,
+            data: {
+                cards: cards,
+                spread: spread
+            },
+            apiKey: apiKey
+        };
 
-        if (spread === 'single') {
-            const card = cards[0];
-            prompt += `抽到的牌：${card.name}（${card.meaning}）\n\n`;
-            prompt += `請為這張牌提供詳細的解讀，包括：\n`;
-            prompt += `1. 這張牌的基本含義\n`;
-            prompt += `2. 針對用戶問題的具體解讀\n`;
-            prompt += `3. 給用戶的建議和指引\n`;
-            prompt += `請用溫暖、專業且易懂的語氣回答，字數約300-500字。`;
-        } else if (spread === 'three') {
-            prompt += `三張牌陣（過去-現在-未來）：\n`;
-            cards.forEach((card, index) => {
-                prompt += `${card.position}：${card.name}（${card.meaning}）\n`;
+        // 直接調用新 API 的邏輯
+        const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
+        if (!geminiApiKey) {
+            return res.status(400).json({ 
+                error: '缺少 API 金鑰',
+                details: '請在前端輸入 Gemini API 金鑰'
             });
-            prompt += `\n請為這個三張牌陣提供詳細的解讀，包括：\n`;
-            prompt += `1. 每張牌在各自位置上的含義\n`;
-            prompt += `2. 三張牌之間的關聯和整體故事\n`;
-            prompt += `3. 針對用戶問題的綜合解讀\n`;
-            prompt += `4. 給用戶的建議和指引\n`;
-            prompt += `請用溫暖、專業且易懂的語氣回答，字數約500-800字。`;
         }
+
+        const GEMINI_MODEL = 'gemini-2.5-flash';
+        const genAI = new GoogleGenerativeAI(geminiApiKey);
+        const currentModel = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+
+        const prompt = buildDivinationPrompt('tarot', question, divinationData.data);
+        const result = await currentModel.generateContent(prompt);
+        const response = await result.response;
+        let interpretation = response.text();
+
+        // 嘗試解析 JSON
+        let structuredResult = null;
+        try {
+            const jsonMatch = interpretation.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                structuredResult = JSON.parse(jsonMatch[0]);
+            }
+        } catch (e) {
+            // 使用原始文本
+        }
+
+        const finalResult = structuredResult || {
+            summary: interpretation.substring(0, 100) + '...',
+            analysis: interpretation,
+            advice: [],
+            lucky_item: '',
+            score: 75
+        };
+
+        res.json({
+            question: question,
+            cards: cards,
+            interpretation: finalResult.analysis || interpretation,
+            result: finalResult,
+            spread: spread
+        });
 
         console.log('🤖 調用 Gemini API...');
         
