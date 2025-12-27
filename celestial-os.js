@@ -366,7 +366,7 @@ class CelestialOS {
 
         // 構建資料
         let data = {
-            birthDate: `${profile.birthYear}-${String(profile.birthMonth).padStart(2, '0')}-${String(profile.birthDay).padStart(2, '0'))}`,
+            birthDate: `${profile.birthYear}-${String(profile.birthMonth).padStart(2, '0')}-${String(profile.birthDay).padStart(2, '0')}`,
             birthTime: `${String(profile.birthHour).padStart(2, '0')}:${String(profile.birthMinute).padStart(2, '0')}`,
             calculation: calculatedData
         };
