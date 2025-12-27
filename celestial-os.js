@@ -633,7 +633,28 @@ class CelestialOS {
     // 顯示額外功能選單
     showExtraFeatures() {
         const container = document.getElementById('celestialContent');
-        if (!container) return;
+        if (!container) {
+            this.showError('無法顯示更多功能');
+            return;
+        }
+        
+        // 統一處理：隱藏導航，確保容器可見
+        const templeNav = document.getElementById('templeNavigation');
+        if (templeNav) {
+            templeNav.classList.add('hidden');
+        }
+        
+        const profileSetup = document.getElementById('profileSetup');
+        if (profileSetup) {
+            profileSetup.classList.add('hidden');
+        }
+        
+        container.classList.remove('hidden');
+        container.style.display = 'block';
+        container.style.visibility = 'visible';
+        container.style.opacity = '1';
+        
+        this.currentTemple = 'extra';
         
         container.innerHTML = `
             <div class="extra-features-menu">
@@ -669,6 +690,9 @@ class CelestialOS {
                 </div>
             </div>
         `;
+        
+        // 強制重繪
+        void container.offsetHeight;
     }
 
     // 設置使用者檔案表單
@@ -2304,9 +2328,23 @@ class CelestialOS {
     // ========== 許願功能 ==========
     showWishTemple() {
         const container = document.getElementById('celestialContent');
-        if (!container) return;
+        if (!container) {
+            this.showError('無法顯示許願功能');
+            return;
+        }
         
-        const moonPhase = WishSystem.getNextMoonPhase();
+        // 統一處理：確保容器可見
+        container.classList.remove('hidden');
+        container.style.display = 'block';
+        container.style.visibility = 'visible';
+        container.style.opacity = '1';
+        
+        if (typeof WishSystem === 'undefined' && typeof window.WishSystem === 'undefined') {
+            this.showError('功能模組未載入，請刷新頁面');
+            return;
+        }
+        const WishSystemClass = window.WishSystem || WishSystem;
+        const moonPhase = WishSystemClass.getNextMoonPhase();
         
         container.innerHTML = `
             <div class="wish-temple">
@@ -2335,6 +2373,9 @@ class CelestialOS {
                 </div>
             </div>
         `;
+        
+        // 強制重繪
+        void container.offsetHeight;
         
         this.loadWishHistory();
     }
@@ -2418,7 +2459,16 @@ class CelestialOS {
 
     async showNumerologyDivination() {
         const container = document.getElementById('celestialContent');
-        if (!container) return;
+        if (!container) {
+            this.showError('無法顯示生命靈數');
+            return;
+        }
+        
+        // 統一處理：確保容器可見
+        container.classList.remove('hidden');
+        container.style.display = 'block';
+        container.style.visibility = 'visible';
+        container.style.opacity = '1';
         
         const profile = userProfile.profile;
         if (!profile) {
@@ -2463,6 +2513,9 @@ class CelestialOS {
             </div>
         `;
         
+        // 強制重繪
+        void container.offsetHeight;
+        
         // 調用 AI 解讀
         try {
             const apiKey = getApiKey();
@@ -2497,7 +2550,16 @@ class CelestialOS {
 
     showColorDivination() {
         const container = document.getElementById('celestialContent');
-        if (!container) return;
+        if (!container) {
+            this.showError('無法顯示顏色占卜');
+            return;
+        }
+        
+        // 統一處理：確保容器可見
+        container.classList.remove('hidden');
+        container.style.display = 'block';
+        container.style.visibility = 'visible';
+        container.style.opacity = '1';
         
         container.innerHTML = `
             <div class="color-divination">
@@ -2521,6 +2583,9 @@ class CelestialOS {
                 <div id="colorResult" class="color-result hidden"></div>
             </div>
         `;
+        
+        // 強制重繪
+        void container.offsetHeight;
     }
 
     async selectColor(color) {
@@ -2581,7 +2646,16 @@ class CelestialOS {
 
     showTimeDivination() {
         const container = document.getElementById('celestialContent');
-        if (!container) return;
+        if (!container) {
+            this.showError('無法顯示時間占卜');
+            return;
+        }
+        
+        // 統一處理：確保容器可見
+        container.classList.remove('hidden');
+        container.style.display = 'block';
+        container.style.visibility = 'visible';
+        container.style.opacity = '1';
         
         container.innerHTML = `
             <div class="time-divination">
@@ -2601,6 +2675,9 @@ class CelestialOS {
                 <div id="timeResult" class="time-result hidden"></div>
             </div>
         `;
+        
+        // 強制重繪
+        void container.offsetHeight;
     }
 
     async analyzeTime() {
@@ -2661,7 +2738,16 @@ class CelestialOS {
     // ========== 知識庫功能 ==========
     showKnowledgeBase() {
         const container = document.getElementById('celestialContent');
-        if (!container) return;
+        if (!container) {
+            this.showError('無法顯示知識庫');
+            return;
+        }
+        
+        // 統一處理：確保容器可見
+        container.classList.remove('hidden');
+        container.style.display = 'block';
+        container.style.visibility = 'visible';
+        container.style.opacity = '1';
         
         container.innerHTML = `
             <div class="knowledge-base">
@@ -2682,6 +2768,9 @@ class CelestialOS {
                 </div>
             </div>
         `;
+        
+        // 強制重繪
+        void container.offsetHeight;
     }
 
     showKnowledgeTab(type) {
@@ -2795,7 +2884,16 @@ class CelestialOS {
     // ========== 運勢對比功能 ==========
     showFortuneComparison() {
         const container = document.getElementById('celestialContent');
-        if (!container) return;
+        if (!container) {
+            this.showError('無法顯示運勢對比');
+            return;
+        }
+        
+        // 統一處理：確保容器可見
+        container.classList.remove('hidden');
+        container.style.display = 'block';
+        container.style.visibility = 'visible';
+        container.style.opacity = '1';
         
         const fortuneComp = window.fortuneComparison || fortuneComparison;
         if (!fortuneComp) {
@@ -2831,6 +2929,9 @@ class CelestialOS {
                 </div>
             </div>
         `;
+        
+        // 強制重繪
+        void container.offsetHeight;
     }
 
     selectRecordForComparison(recordId) {
