@@ -418,6 +418,9 @@ class CelestialOS {
             return;
         }
         
+        // 標記當前神殿
+        this.currentTemple = 'divination';
+        
         container.innerHTML = `
             <div class="divination-temple">
                 <div class="temple-header">
@@ -466,6 +469,14 @@ class CelestialOS {
                 </div>
             </div>
         `;
+        
+        // 確保 DOM 已更新後再設置焦點
+        setTimeout(() => {
+            const input = document.getElementById('questionInput');
+            if (input) {
+                input.focus();
+            }
+        }, 100);
     }
 
     // 顯示潛意識殿（筆記風格）
@@ -552,8 +563,12 @@ class CelestialOS {
         if (celestialContent) {
             celestialContent.innerHTML = '';
         }
-        document.getElementById('templeNavigation').classList.remove('hidden');
+        const templeNav = document.getElementById('templeNavigation');
+        if (templeNav) {
+            templeNav.classList.remove('hidden');
+        }
         this.currentTemple = null;
+        this.currentQuestion = null;
     }
 
     // 設置使用者檔案表單
@@ -856,39 +871,72 @@ class CelestialOS {
 
     // 發送問題（靈犀殿）
     sendQuestion() {
+        // 重新獲取元素（防止 DOM 更新後引用失效）
         const input = document.getElementById('questionInput');
+        const messages = document.getElementById('chatMessages');
+        const options = document.getElementById('divinationOptions');
+        
+        // 檢查必要元素是否存在
+        if (!input) {
+            this.showError('找不到輸入框，請先進入靈犀殿');
+            return;
+        }
+        
+        if (!messages) {
+            this.showError('找不到聊天區域，請先進入靈犀殿');
+            // 嘗試重新顯示靈犀殿
+            if (this.currentTemple === 'divination') {
+                this.showDivinationTemple();
+            }
+            return;
+        }
+        
         const question = input.value.trim();
-        if (!question) return;
+        if (!question) {
+            this.showError('請輸入你的問題');
+            return;
+        }
 
         // 保存當前問題
         this.currentQuestion = question;
 
-        // 顯示使用者的問題
-        const messages = document.getElementById('chatMessages');
-        messages.innerHTML += `
-            <div class="message user-message">
-                <p>${question}</p>
-            </div>
-        `;
+        try {
+            // 顯示使用者的問題
+            messages.innerHTML += `
+                <div class="message user-message">
+                    <p>${question}</p>
+                </div>
+            `;
 
-        // 顯示 AI 回應
-        messages.innerHTML += `
-            <div class="message bot-message">
-                <p>我理解了你的問題。請選擇一種占卜方式來探索答案：</p>
-            </div>
-        `;
+            // 顯示 AI 回應
+            messages.innerHTML += `
+                <div class="message bot-message">
+                    <p>我理解了你的問題。請選擇一種占卜方式來探索答案：</p>
+                </div>
+            `;
 
-        // 顯示占卜選項
-        document.getElementById('divinationOptions').classList.remove('hidden');
-        input.value = '';
-        
-        // 滾動到底部
-        messages.scrollTop = messages.scrollHeight;
+            // 顯示占卜選項
+            if (options) {
+                options.classList.remove('hidden');
+            }
+            input.value = '';
+            
+            // 滾動到底部
+            messages.scrollTop = messages.scrollHeight;
+        } catch (error) {
+            console.error('發送問題時出錯:', error);
+            this.showError('操作失敗，請重新進入靈犀殿');
+        }
     }
 
     // 選擇占卜類型（靈犀殿）
     selectDivinationType(type) {
         const messages = document.getElementById('chatMessages');
+        if (!messages) {
+            this.showError('請先進入靈犀殿');
+            return;
+        }
+        
         const typeNames = {
             'tarot': '塔羅牌',
             'yijing': '周易',
@@ -910,7 +958,8 @@ class CelestialOS {
         `;
 
         // 隱藏選項
-        document.getElementById('divinationOptions').classList.add('hidden');
+        const options = document.getElementById('divinationOptions');
+        if (options) options.classList.add('hidden');
 
         // 執行占卜
         this.executeDivination(type, this.currentQuestion);
@@ -919,6 +968,10 @@ class CelestialOS {
     // 執行占卜（靈犀殿）
     async executeDivination(type, question) {
         const messages = document.getElementById('chatMessages');
+        if (!messages) {
+            this.showError('請先進入靈犀殿');
+            return;
+        }
         
         // 顯示進行中訊息（帶進度指示）
         const progressMsgId = 'divination-progress-' + Date.now();
@@ -987,6 +1040,8 @@ class CelestialOS {
     // 在聊天中顯示占卜結果
     displayDivinationInChat(type, question, data, result) {
         const messages = document.getElementById('chatMessages');
+        if (!messages) return;
+        
         const resultData = result.result || result;
 
         // 移除進度訊息
