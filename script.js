@@ -646,6 +646,10 @@ function drawRandomCards(count) {
 // 顯示卡片
 function displayCards(cards) {
     const container = document.getElementById('cardsContainer');
+    if (!container) {
+        console.warn('cardsContainer 元素不存在，跳過顯示卡片');
+        return;
+    }
     container.innerHTML = '';
 
     cards.forEach((card, index) => {
