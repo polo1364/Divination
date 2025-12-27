@@ -3231,3 +3231,191 @@ html {
     margin-bottom: 20px;
 }
 
+/* ========== 使用者檔案模態框 ========== */
+.profile-modal-content {
+    background: rgba(26, 26, 46, 0.95);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 700px;
+    margin: 0 auto;
+    border: 2px solid rgba(138, 43, 226, 0.5);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.profile-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid rgba(138, 43, 226, 0.3);
+}
+
+.profile-modal-header h2 {
+    color: #ffd700;
+    margin: 0;
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 2em;
+    cursor: pointer;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+
+.close-btn:hover {
+    background: rgba(255, 100, 100, 0.3);
+    transform: rotate(90deg);
+}
+
+.profile-status-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.profile-status-badge.complete {
+    background: rgba(74, 222, 128, 0.2);
+    color: #4ade80;
+    border: 2px solid #4ade80;
+}
+
+.profile-status-badge.incomplete {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    border: 2px solid #fbbf24;
+}
+
+.profile-details {
+    margin: 30px 0;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(138, 43, 226, 0.2);
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: #d0d0d0;
+    font-weight: 500;
+    min-width: 120px;
+}
+
+.detail-value {
+    color: #ffffff;
+    font-weight: bold;
+    text-align: right;
+    flex: 1;
+}
+
+.calculated-status {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 2px solid rgba(138, 43, 226, 0.3);
+}
+
+.calculated-status h3 {
+    color: #ffd700;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+}
+
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.status-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    border-radius: 12px;
+    background: rgba(138, 43, 226, 0.15);
+    border: 2px solid rgba(138, 43, 226, 0.3);
+    transition: all 0.3s;
+}
+
+.status-item.calculated {
+    background: rgba(74, 222, 128, 0.15);
+    border-color: rgba(74, 222, 128, 0.4);
+}
+
+.status-item.pending {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: rgba(251, 191, 36, 0.4);
+}
+
+.status-icon {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.status-item.calculated .status-icon {
+    color: #4ade80;
+}
+
+.status-item.pending .status-icon {
+    color: #fbbf24;
+}
+
+.status-text {
+    color: #ffffff;
+    font-size: 0.9em;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.profile-warning {
+    color: #fbbf24;
+    text-align: center;
+    padding: 20px;
+    background: rgba(251, 191, 36, 0.1);
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.icon-btn.has-profile {
+    position: relative;
+}
+
+.icon-btn.has-profile::after {
+    content: '✓';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #4ade80;
+    color: #1a1a2e;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+

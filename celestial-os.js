@@ -11,6 +11,184 @@ class CelestialOS {
         this.checkProfile();
         this.setupTempleNavigation();
         this.setupProfileForm();
+        this.setupHeaderButtons();
+    }
+
+    // 設置頂部按鈕事件
+    setupHeaderButtons() {
+        // 使用者檔案按鈕
+        const profileBtn = document.getElementById('profileBtn');
+        if (profileBtn) {
+            profileBtn.addEventListener('click', () => {
+                this.showProfileModal();
+            });
+        }
+
+        // 歷史記錄按鈕
+        const historyBtn = document.getElementById('historyBtn');
+        if (historyBtn) {
+            historyBtn.addEventListener('click', () => {
+                if (typeof openHistoryModal === 'function') {
+                    openHistoryModal();
+                }
+            });
+        }
+
+        // 設置按鈕
+        const settingsBtn = document.getElementById('settingsBtn');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', () => {
+                if (typeof openModal === 'function') {
+                    openModal();
+                }
+            });
+        }
+    }
+
+    // 顯示使用者檔案模態框
+    showProfileModal() {
+        const container = document.getElementById('formContainer');
+        const profile = userProfile.profile;
+        const isComplete = userProfile.isProfileComplete();
+
+        container.innerHTML = `
+            <div class="profile-modal-content">
+                <div class="profile-modal-header">
+                    <h2>👤 使用者檔案</h2>
+                    <button class="close-btn" onclick="celestialOS.closeProfileModal()">×</button>
+                </div>
+                
+                <div class="profile-info">
+                    ${isComplete ? `
+                        <div class="profile-status-badge complete">✓ 檔案完整</div>
+                        <div class="profile-details">
+                            <div class="detail-item">
+                                <span class="detail-label">姓名：</span>
+                                <span class="detail-value">${profile.name || '未設置'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">性別：</span>
+                                <span class="detail-value">${profile.gender === 'male' ? '男' : profile.gender === 'female' ? '女' : '未設置'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">出生日期：</span>
+                                <span class="detail-value">${profile.birthYear}年${profile.birthMonth}月${profile.birthDay}日</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">出生時間：</span>
+                                <span class="detail-value">${String(profile.birthHour).padStart(2, '0')}:${String(profile.birthMinute).padStart(2, '0')}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">出生地：</span>
+                                <span class="detail-value">${profile.birthPlace || '未設置'}</span>
+                            </div>
+                            
+                            <div class="calculated-status">
+                                <h3>命盤計算狀態</h3>
+                                <div class="status-grid">
+                                    <div class="status-item ${userProfile.calculatedData.bazi ? 'calculated' : 'pending'}">
+                                        <span class="status-icon">${userProfile.calculatedData.bazi ? '✓' : '○'}</span>
+                                        <span class="status-text">八字命盤</span>
+                                    </div>
+                                    <div class="status-item ${userProfile.calculatedData.ziwei ? 'calculated' : 'pending'}">
+                                        <span class="status-icon">${userProfile.calculatedData.ziwei ? '✓' : '○'}</span>
+                                        <span class="status-text">紫微斗數</span>
+                                    </div>
+                                    <div class="status-item ${userProfile.calculatedData.astrology ? 'calculated' : 'pending'}">
+                                        <span class="status-icon">${userProfile.calculatedData.astrology ? '✓' : '○'}</span>
+                                        <span class="status-text">西方占星</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-actions">
+                            <button class="btn-secondary" onclick="celestialOS.editProfile()">✏️ 編輯檔案</button>
+                            <button class="btn-secondary" onclick="celestialOS.recalculateDestiny()">🔄 重新計算命盤</button>
+                            <button class="btn-secondary" onclick="celestialOS.exportProfile()">📥 導出檔案</button>
+                        </div>
+                    ` : `
+                        <div class="profile-status-badge incomplete">⚠ 檔案不完整</div>
+                        <p class="profile-warning">請先完成使用者檔案設置才能使用完整功能</p>
+                        <button class="btn-primary" onclick="celestialOS.editProfile()">建立檔案</button>
+                    `}
+                </div>
+            </div>
+        `;
+    }
+
+    // 關閉檔案模態框
+    closeProfileModal() {
+        this.backToTemples();
+    }
+
+    // 編輯使用者檔案
+    editProfile() {
+        // 顯示檔案設置界面
+        document.getElementById('profileSetup').classList.remove('hidden');
+        document.getElementById('templeNavigation').classList.add('hidden');
+        document.getElementById('formContainer').innerHTML = '';
+        
+        // 如果已有檔案，填充表單
+        const profile = userProfile.profile;
+        if (profile.birthYear) {
+            document.getElementById('birthYear').value = profile.birthYear;
+            document.getElementById('birthMonth').value = profile.birthMonth;
+            document.getElementById('birthDay').value = profile.birthDay;
+            document.getElementById('birthHour').value = profile.birthHour;
+            document.getElementById('birthMinute').value = profile.birthMinute;
+            document.getElementById('birthPlace').value = profile.birthPlace || '';
+            document.getElementById('gender').value = profile.gender || '';
+            if (document.getElementById('name')) {
+                document.getElementById('name').value = profile.name || '';
+            }
+        }
+    }
+
+    // 重新計算命盤
+    async recalculateDestiny() {
+        if (!userProfile.isProfileComplete()) {
+            this.showError('請先完成使用者檔案設置');
+            return;
+        }
+
+        if (confirm('確定要重新計算命盤嗎？這可能需要幾秒鐘時間。')) {
+            try {
+                this.showCalculatingState();
+                await dataCenter.calculateAll(userProfile);
+                this.showSuccess('命盤重新計算完成！');
+                this.showProfileModal(); // 刷新顯示
+            } catch (error) {
+                console.error('重新計算失敗:', error);
+                this.showError('重新計算失敗：' + error.message);
+            }
+        }
+    }
+
+    // 導出使用者檔案
+    exportProfile() {
+        const profile = userProfile.profile;
+        const data = {
+            profile: profile,
+            calculatedData: {
+                bazi: userProfile.calculatedData.bazi ? '已計算' : '未計算',
+                ziwei: userProfile.calculatedData.ziwei ? '已計算' : '未計算',
+                astrology: userProfile.calculatedData.astrology ? '已計算' : '未計算'
+            },
+            exportDate: new Date().toISOString()
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `命理檔案_${profile.name || 'user'}_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        this.showSuccess('檔案導出成功！');
     }
 
     // 檢查使用者檔案
@@ -294,7 +472,9 @@ class CelestialOS {
 
     // 保存使用者檔案
     async saveProfile() {
+        const nameInput = document.getElementById('name');
         const formData = {
+            name: nameInput ? nameInput.value.trim() : '',
             birthYear: parseInt(document.getElementById('birthYear').value),
             birthMonth: parseInt(document.getElementById('birthMonth').value),
             birthDay: parseInt(document.getElementById('birthDay').value),
