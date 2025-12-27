@@ -57,7 +57,7 @@ class CelestialOS {
 
     // 顯示使用者檔案模態框
     showProfileModal() {
-        const container = document.getElementById('formContainer');
+        const container = document.getElementById('celestialContent');
         const profile = userProfile.profile;
         const isComplete = userProfile.isProfileComplete();
 
@@ -137,7 +137,10 @@ class CelestialOS {
         // 顯示檔案設置界面
         document.getElementById('profileSetup').classList.remove('hidden');
         document.getElementById('templeNavigation').classList.add('hidden');
-        document.getElementById('formContainer').innerHTML = '';
+        const celestialContent = document.getElementById('celestialContent');
+        if (celestialContent) {
+            celestialContent.innerHTML = '';
+        }
         
         // 如果已有檔案，填充表單
         const profile = userProfile.profile;
@@ -281,7 +284,7 @@ class CelestialOS {
         }
         
         // 確保 formContainer 可見
-        const formContainer = document.getElementById('formContainer');
+        const formContainer = document.getElementById('celestialContent');
         if (formContainer) {
             formContainer.classList.remove('hidden');
             console.log('顯示 formContainer'); // 調試用
@@ -384,7 +387,7 @@ class CelestialOS {
     // 顯示天命殿儀表板
     displayDestinyDashboard() {
         console.log('displayDestinyDashboard 被調用'); // 調試用
-        const container = document.getElementById('formContainer');
+        const container = document.getElementById('celestialContent');
         
         if (!container) {
             console.error('找不到 formContainer 元素');
@@ -395,7 +398,15 @@ class CelestialOS {
         // 確保容器可見
         container.classList.remove('hidden');
         container.style.display = 'block';
+        container.style.visibility = 'visible';
+        container.style.opacity = '1';
         console.log('formContainer 已設置為可見'); // 調試用
+        console.log('formContainer 當前樣式:', {
+            display: container.style.display,
+            visibility: container.style.visibility,
+            opacity: container.style.opacity,
+            classList: Array.from(container.classList)
+        }); // 調試用
         
         container.innerHTML = `
             <div class="destiny-dashboard">
@@ -433,11 +444,24 @@ class CelestialOS {
                 </div>
             </div>
         `;
+        
+        // 再次確保容器可見（設置 innerHTML 後）
+        container.classList.remove('hidden');
+        container.style.display = 'block';
+        container.style.visibility = 'visible';
+        container.style.opacity = '1';
+        
+        console.log('儀表板 HTML 已設置，容器應該可見'); // 調試用
+        console.log('formContainer 內容長度:', container.innerHTML.length); // 調試用
+        console.log('formContainer 實際位置:', container.getBoundingClientRect()); // 調試用
+        
+        // 強制重繪
+        void container.offsetHeight;
     }
 
     // 顯示靈犀殿（對話風格）
     showDivinationTemple() {
-        const container = document.getElementById('formContainer');
+        const container = document.getElementById('celestialContent');
         container.innerHTML = `
             <div class="divination-temple">
                 <div class="temple-header">
@@ -473,7 +497,7 @@ class CelestialOS {
 
     // 顯示潛意識殿（筆記風格）
     showSubconsciousTemple() {
-        const container = document.getElementById('formContainer');
+        const container = document.getElementById('celestialContent');
         container.innerHTML = `
             <div class="subconscious-temple">
                 <div class="temple-header">
@@ -551,7 +575,10 @@ class CelestialOS {
 
     // 返回神殿導航
     backToTemples() {
-        document.getElementById('formContainer').innerHTML = '';
+        const celestialContent = document.getElementById('celestialContent');
+        if (celestialContent) {
+            celestialContent.innerHTML = '';
+        }
         document.getElementById('templeNavigation').classList.remove('hidden');
         this.currentTemple = null;
     }
@@ -603,7 +630,7 @@ class CelestialOS {
     // 顯示計算中狀態
     showCalculatingState() {
         console.log('showCalculatingState 被調用'); // 調試用
-        const container = document.getElementById('formContainer');
+        const container = document.getElementById('celestialContent');
         
         if (!container) {
             console.error('找不到 formContainer 元素');
@@ -668,7 +695,7 @@ class CelestialOS {
         }
 
         // 顯示載入
-        const container = document.getElementById('formContainer');
+        const container = document.getElementById('celestialContent');
         container.innerHTML = `
             <div class="detail-loading">
                 <div class="spinner"></div>
@@ -697,7 +724,7 @@ class CelestialOS {
 
     // 顯示詳情結果
     displayDetailResult(type, question, data, result) {
-        const container = document.getElementById('formContainer');
+        const container = document.getElementById('celestialContent');
         
         // 使用現有的 displayDivinationResult 函數
         if (typeof displayDivinationResult === 'function') {
@@ -928,7 +955,7 @@ class CelestialOS {
             return;
         }
 
-        const container = document.getElementById('formContainer');
+        const container = document.getElementById('celestialContent');
         container.innerHTML = `
             <div class="master-consultant">
                 <div class="consultant-header">
@@ -1081,7 +1108,7 @@ class CelestialOS {
             return;
         }
 
-        const container = document.getElementById('formContainer');
+        const container = document.getElementById('celestialContent');
         container.innerHTML = `
             <div class="daily-report">
                 <div class="report-header">

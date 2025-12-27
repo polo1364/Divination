@@ -2594,6 +2594,11 @@ html {
 }
 
 /* 天命殿儀表板 */
+/* Celestial OS 內容容器 */
+.celestial-content {
+    padding: 20px;
+}
+
 .destiny-dashboard {
     padding: 30px;
 }
