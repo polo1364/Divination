@@ -598,6 +598,15 @@ header h1 {
     margin-bottom: 10px;
 }
 
+/* ========== 傳統模式樣式 ========== */
+.traditional-mode {
+    display: block;
+}
+
+.traditional-mode.hidden {
+    display: none;
+}
+
 .result-section {
     margin-top: 40px;
     padding: 30px;
