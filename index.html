@@ -60,8 +60,144 @@
                 <!-- 塔羅牌表單 -->
                 <div id="tarotForm" class="divination-form active">
                     <div class="question-section">
-                        <label for="question">請輸入您的問題：</label>
-                        <textarea id="question" placeholder="例如：我最近的工作運勢如何？" rows="3"></textarea>
+                        <label for="question">請選擇或輸入您的問題：</label>
+                        <select id="question" class="question-select">
+                            <option value="">-- 請選擇問題類別 --</option>
+                            <optgroup label="💕 愛情">
+                                <option value="我最近的愛情運勢如何？">我最近的愛情運勢如何？</option>
+                                <option value="我和他/她的關係會如何發展？">我和他/她的關係會如何發展？</option>
+                                <option value="我應該如何改善我的感情生活？">我應該如何改善我的感情生活？</option>
+                                <option value="我是否應該主動追求心儀的對象？">我是否應該主動追求心儀的對象？</option>
+                                <option value="這段感情是否值得繼續？">這段感情是否值得繼續？</option>
+                                <option value="我何時會遇到真愛？">我何時會遇到真愛？</option>
+                                <option value="我應該如何挽回失去的感情？">我應該如何挽回失去的感情？</option>
+                                <option value="我與伴侶的未來會如何？">我與伴侶的未來會如何？</option>
+                                <option value="我是否應該接受這段新戀情？">我是否應該接受這段新戀情？</option>
+                                <option value="我如何知道對方是否真心？">我如何知道對方是否真心？</option>
+                                <option value="我應該如何處理感情中的衝突？">我應該如何處理感情中的衝突？</option>
+                                <option value="我的桃花運如何？">我的桃花運如何？</option>
+                                <option value="我是否應該告白？">我是否應該告白？</option>
+                                <option value="這段遠距離戀愛會成功嗎？">這段遠距離戀愛會成功嗎？</option>
+                                <option value="我應該如何修復破裂的關係？">我應該如何修復破裂的關係？</option>
+                            </optgroup>
+                            <optgroup label="💼 工作">
+                                <option value="我最近的工作運勢如何？">我最近的工作運勢如何？</option>
+                                <option value="我是否應該換工作？">我是否應該換工作？</option>
+                                <option value="我在職場上會遇到什麼機會？">我在職場上會遇到什麼機會？</option>
+                                <option value="我與同事/上司的關係如何？">我與同事/上司的關係如何？</option>
+                                <option value="我應該如何提升工作表現？">我應該如何提升工作表現？</option>
+                                <option value="這個專案/計劃會成功嗎？">這個專案/計劃會成功嗎？</option>
+                                <option value="我這次面試會成功嗎？">我這次面試會成功嗎？</option>
+                                <option value="我應該如何處理職場衝突？">我應該如何處理職場衝突？</option>
+                                <option value="我何時會有升職加薪的機會？">我何時會有升職加薪的機會？</option>
+                                <option value="我應該跳槽到新公司嗎？">我應該跳槽到新公司嗎？</option>
+                                <option value="我適合創業嗎？">我適合創業嗎？</option>
+                                <option value="我的職場人際關係如何改善？">我的職場人際關係如何改善？</option>
+                                <option value="我應該接受這個工作機會嗎？">我應該接受這個工作機會嗎？</option>
+                                <option value="我如何提升職場競爭力？">我如何提升職場競爭力？</option>
+                                <option value="我與合作夥伴的關係會如何？">我與合作夥伴的關係會如何？</option>
+                                <option value="我應該轉換跑道嗎？">我應該轉換跑道嗎？</option>
+                            </optgroup>
+                            <optgroup label="💰 財運">
+                                <option value="我最近的財運如何？">我最近的財運如何？</option>
+                                <option value="我應該如何理財？">我應該如何理財？</option>
+                                <option value="這個投資機會適合我嗎？">這個投資機會適合我嗎？</option>
+                                <option value="我何時會有好的財運？">我何時會有好的財運？</option>
+                                <option value="我應該買房/買車嗎？">我應該買房/買車嗎？</option>
+                                <option value="我的偏財運如何？">我的偏財運如何？</option>
+                                <option value="我應該如何規劃財務？">我應該如何規劃財務？</option>
+                                <option value="這個合夥投資會賺錢嗎？">這個合夥投資會賺錢嗎？</option>
+                                <option value="我應該借錢給別人嗎？">我應該借錢給別人嗎？</option>
+                                <option value="我如何增加收入來源？">我如何增加收入來源？</option>
+                                <option value="我應該購買這個理財產品嗎？">我應該購買這個理財產品嗎？</option>
+                                <option value="我的債務問題會解決嗎？">我的債務問題會解決嗎？</option>
+                            </optgroup>
+                            <optgroup label="📚 學業">
+                                <option value="我最近的學業運勢如何？">我最近的學業運勢如何？</option>
+                                <option value="我這次考試會順利嗎？">我這次考試會順利嗎？</option>
+                                <option value="我應該選擇哪個科系/方向？">我應該選擇哪個科系/方向？</option>
+                                <option value="我如何提升學習效率？">我如何提升學習效率？</option>
+                                <option value="我應該出國留學嗎？">我應該出國留學嗎？</option>
+                                <option value="我這次論文/報告會通過嗎？">我這次論文/報告會通過嗎？</option>
+                                <option value="我應該轉系/轉學嗎？">我應該轉系/轉學嗎？</option>
+                                <option value="我如何克服學習困難？">我如何克服學習困難？</option>
+                                <option value="我與老師/同學的關係如何？">我與老師/同學的關係如何？</option>
+                                <option value="我應該繼續升學還是就業？">我應該繼續升學還是就業？</option>
+                                <option value="我這次面試/申請會成功嗎？">我這次面試/申請會成功嗎？</option>
+                            </optgroup>
+                            <optgroup label="👥 人際關係">
+                                <option value="我的人際關係運勢如何？">我的人際關係運勢如何？</option>
+                                <option value="我應該如何改善與他人的關係？">我應該如何改善與他人的關係？</option>
+                                <option value="這個朋友值得深交嗎？">這個朋友值得深交嗎？</option>
+                                <option value="我如何修復破裂的友誼？">我如何修復破裂的友誼？</option>
+                                <option value="我應該如何處理人際衝突？">我應該如何處理人際衝突？</option>
+                                <option value="我的人緣會變好嗎？">我的人緣會變好嗎？</option>
+                                <option value="我應該信任這個人嗎？">我應該信任這個人嗎？</option>
+                                <option value="我如何建立新的友誼？">我如何建立新的友誼？</option>
+                                <option value="我與某人的誤會會解開嗎？">我與某人的誤會會解開嗎？</option>
+                            </optgroup>
+                            <optgroup label="🏠 家庭">
+                                <option value="我的家庭運勢如何？">我的家庭運勢如何？</option>
+                                <option value="我與家人的關係會如何發展？">我與家人的關係會如何發展？</option>
+                                <option value="我應該如何改善家庭和諧？">我應該如何改善家庭和諧？</option>
+                                <option value="我應該搬家嗎？">我應該搬家嗎？</option>
+                                <option value="我與父母的關係會改善嗎？">我與父母的關係會改善嗎？</option>
+                                <option value="我應該買房嗎？">我應該買房嗎？</option>
+                                <option value="我的家庭財務會改善嗎？">我的家庭財務會改善嗎？</option>
+                                <option value="我如何處理家庭糾紛？">我如何處理家庭糾紛？</option>
+                                <option value="我應該與家人同住嗎？">我應該與家人同住嗎？</option>
+                            </optgroup>
+                            <optgroup label="💪 健康">
+                                <option value="我最近的健康運勢如何？">我最近的健康運勢如何？</option>
+                                <option value="我應該如何保持身體健康？">我應該如何保持身體健康？</option>
+                                <option value="我的身體狀況會改善嗎？">我的身體狀況會改善嗎？</option>
+                                <option value="我應該改變生活習慣嗎？">我應該改變生活習慣嗎？</option>
+                                <option value="我這次檢查結果會如何？">我這次檢查結果會如何？</option>
+                                <option value="我應該選擇哪種治療方式？">我應該選擇哪種治療方式？</option>
+                                <option value="我的心理健康如何？">我的心理健康如何？</option>
+                            </optgroup>
+                            <optgroup label="🎯 決策">
+                                <option value="我應該做出這個決定嗎？">我應該做出這個決定嗎？</option>
+                                <option value="這個選擇對我好嗎？">這個選擇對我好嗎？</option>
+                                <option value="我應該如何面對這個困境？">我應該如何面對這個困境？</option>
+                                <option value="我應該現在行動還是等待？">我應該現在行動還是等待？</option>
+                                <option value="我如何做出正確的選擇？">我如何做出正確的選擇？</option>
+                                <option value="我應該改變現狀嗎？">我應該改變現狀嗎？</option>
+                                <option value="我如何克服內心的恐懼？">我如何克服內心的恐懼？</option>
+                            </optgroup>
+                            <optgroup label="✈️ 旅行">
+                                <option value="我這次旅行會順利嗎？">我這次旅行會順利嗎？</option>
+                                <option value="我應該去這個地方旅行嗎？">我應該去這個地方旅行嗎？</option>
+                                <option value="我這次出差會成功嗎？">我這次出差會成功嗎？</option>
+                                <option value="我應該搬家到新城市嗎？">我應該搬家到新城市嗎？</option>
+                            </optgroup>
+                            <optgroup label="🎨 創作">
+                                <option value="我的創作靈感會來嗎？">我的創作靈感會來嗎？</option>
+                                <option value="我這個作品會成功嗎？">我這個作品會成功嗎？</option>
+                                <option value="我應該繼續這個創作方向嗎？">我應該繼續這個創作方向嗎？</option>
+                                <option value="我如何突破創作瓶頸？">我如何突破創作瓶頸？</option>
+                            </optgroup>
+                            <optgroup label="🏆 比賽/競賽">
+                                <option value="我這次比賽會獲勝嗎？">我這次比賽會獲勝嗎？</option>
+                                <option value="我應該參加這個競賽嗎？">我應該參加這個競賽嗎？</option>
+                                <option value="我的表現會如何？">我的表現會如何？</option>
+                            </optgroup>
+                            <optgroup label="🛒 購物/消費">
+                                <option value="我應該購買這個物品嗎？">我應該購買這個物品嗎？</option>
+                                <option value="我這次購物會滿意嗎？">我這次購物會滿意嗎？</option>
+                                <option value="我應該進行這筆交易嗎？">我應該進行這筆交易嗎？</option>
+                            </optgroup>
+                            <optgroup label="🔮 靈性成長">
+                                <option value="我的靈性成長方向如何？">我的靈性成長方向如何？</option>
+                                <option value="我應該開始冥想/修行嗎？">我應該開始冥想/修行嗎？</option>
+                                <option value="我如何找到人生意義？">我如何找到人生意義？</option>
+                                <option value="我的直覺準確嗎？">我的直覺準確嗎？</option>
+                            </optgroup>
+                            <optgroup label="✨ 其他">
+                                <option value="custom">自定義問題...</option>
+                            </optgroup>
+                        </select>
+                        <textarea id="questionCustom" class="question-custom hidden" placeholder="請輸入您的自定義問題..." rows="3"></textarea>
                     </div>
                     <div class="spread-section">
                         <label>選擇牌陣：</label>
@@ -75,8 +211,75 @@
                 <!-- 八字/紫微斗數表單 -->
                 <div id="baziForm" class="divination-form hidden">
                     <div class="question-section">
-                        <label for="baziQuestion">請輸入您的問題：</label>
-                        <textarea id="baziQuestion" placeholder="例如：我今年的整體運勢如何？" rows="2"></textarea>
+                        <label for="baziQuestion">請選擇或輸入您的問題：</label>
+                        <select id="baziQuestion" class="question-select">
+                            <option value="">-- 請選擇問題類別 --</option>
+                            <optgroup label="📅 整體運勢">
+                                <option value="我今年的整體運勢如何？">我今年的整體運勢如何？</option>
+                                <option value="我這個月的運勢如何？">我這個月的運勢如何？</option>
+                                <option value="我的人生方向應該如何？">我的人生方向應該如何？</option>
+                                <option value="我明年的運勢會如何？">我明年的運勢會如何？</option>
+                                <option value="我這十年的大運如何？">我這十年的大運如何？</option>
+                                <option value="我的命格特質是什麼？">我的命格特質是什麼？</option>
+                                <option value="我適合什麼樣的生活方式？">我適合什麼樣的生活方式？</option>
+                                <option value="我的性格優缺點是什麼？">我的性格優缺點是什麼？</option>
+                            </optgroup>
+                            <optgroup label="💕 愛情">
+                                <option value="我的感情運勢如何？">我的感情運勢如何？</option>
+                                <option value="我何時會遇到真愛？">我何時會遇到真愛？</option>
+                                <option value="我的婚姻運勢如何？">我的婚姻運勢如何？</option>
+                                <option value="我的正緣何時會出現？">我的正緣何時會出現？</option>
+                                <option value="我適合什麼類型的伴侶？">我適合什麼類型的伴侶？</option>
+                                <option value="我的桃花運在何時？">我的桃花運在何時？</option>
+                                <option value="我的感情會順利嗎？">我的感情會順利嗎？</option>
+                                <option value="我應該何時結婚？">我應該何時結婚？</option>
+                                <option value="我的婚姻會幸福嗎？">我的婚姻會幸福嗎？</option>
+                            </optgroup>
+                            <optgroup label="💼 事業">
+                                <option value="我的事業運勢如何？">我的事業運勢如何？</option>
+                                <option value="我適合從事什麼行業？">我適合從事什麼行業？</option>
+                                <option value="我何時會有事業突破？">我何時會有事業突破？</option>
+                                <option value="我的事業方向應該如何？">我的事業方向應該如何？</option>
+                                <option value="我適合創業還是就業？">我適合創業還是就業？</option>
+                                <option value="我何時會有升職機會？">我何時會有升職機會？</option>
+                                <option value="我的職場貴人在哪裡？">我的職場貴人在哪裡？</option>
+                                <option value="我應該如何發展事業？">我應該如何發展事業？</option>
+                                <option value="我的工作能力如何？">我的工作能力如何？</option>
+                            </optgroup>
+                            <optgroup label="💰 財運">
+                                <option value="我的財運如何？">我的財運如何？</option>
+                                <option value="我適合投資嗎？">我適合投資嗎？</option>
+                                <option value="我何時會有財運？">我何時會有財運？</option>
+                                <option value="我的財運方向在哪裡？">我的財運方向在哪裡？</option>
+                                <option value="我適合什麼類型的投資？">我適合什麼類型的投資？</option>
+                                <option value="我何時會有偏財運？">我何時會有偏財運？</option>
+                                <option value="我的財務狀況會改善嗎？">我的財務狀況會改善嗎？</option>
+                                <option value="我應該如何理財？">我應該如何理財？</option>
+                            </optgroup>
+                            <optgroup label="👨‍👩‍👧‍👦 家庭">
+                                <option value="我的家庭運勢如何？">我的家庭運勢如何？</option>
+                                <option value="我與家人的關係如何？">我與家人的關係如何？</option>
+                                <option value="我適合什麼時候成家？">我適合什麼時候成家？</option>
+                                <option value="我的子女運如何？">我的子女運如何？</option>
+                                <option value="我應該買房嗎？">我應該買房嗎？</option>
+                            </optgroup>
+                            <optgroup label="💪 健康">
+                                <option value="我的健康運勢如何？">我的健康運勢如何？</option>
+                                <option value="我應該注意哪些健康問題？">我應該注意哪些健康問題？</option>
+                                <option value="我的體質特點是什麼？">我的體質特點是什麼？</option>
+                                <option value="我如何保持身體健康？">我如何保持身體健康？</option>
+                            </optgroup>
+                            <optgroup label="🎓 學業">
+                                <option value="我的學業運勢如何？">我的學業運勢如何？</option>
+                                <option value="我適合學習什麼領域？">我適合學習什麼領域？</option>
+                                <option value="我的考試運如何？">我的考試運如何？</option>
+                                <option value="我應該繼續升學嗎？">我應該繼續升學嗎？</option>
+                            </optgroup>
+                            <optgroup label="✨ 其他">
+                                <option value="custom">自定義問題...</option>
+                            </optgroup>
+                        </select>
+                        <textarea id="baziQuestionCustom" class="question-custom hidden" placeholder="請輸入您的自定義問題..." rows="2"></textarea>
                     </div>
                     <div class="birth-info-section">
                         <div class="form-row">
@@ -109,8 +312,54 @@
                 <!-- 占星表單 -->
                 <div id="astrologyForm" class="divination-form hidden">
                     <div class="question-section">
-                        <label for="astrologyQuestion">請輸入您的問題：</label>
-                        <textarea id="astrologyQuestion" placeholder="例如：我這個月的愛情運勢如何？" rows="2"></textarea>
+                        <label for="astrologyQuestion">請選擇或輸入您的問題：</label>
+                        <select id="astrologyQuestion" class="question-select">
+                            <option value="">-- 請選擇問題類別 --</option>
+                            <optgroup label="💕 愛情">
+                                <option value="我這個月的愛情運勢如何？">我這個月的愛情運勢如何？</option>
+                                <option value="我的感情關係會如何發展？">我的感情關係會如何發展？</option>
+                                <option value="我適合什麼類型的伴侶？">我適合什麼類型的伴侶？</option>
+                                <option value="我何時會遇到真愛？">我何時會遇到真愛？</option>
+                                <option value="我與伴侶的相處模式如何？">我與伴侶的相處模式如何？</option>
+                                <option value="我的桃花運在何時？">我的桃花運在何時？</option>
+                                <option value="我應該如何改善感情關係？">我應該如何改善感情關係？</option>
+                                <option value="我的婚姻時機何時到來？">我的婚姻時機何時到來？</option>
+                            </optgroup>
+                            <optgroup label="💼 工作">
+                                <option value="我這個月的工作運勢如何？">我這個月的工作運勢如何？</option>
+                                <option value="我應該如何提升職場表現？">我應該如何提升職場表現？</option>
+                                <option value="我適合什麼類型的工作？">我適合什麼類型的工作？</option>
+                                <option value="我這次面試會成功嗎？">我這次面試會成功嗎？</option>
+                                <option value="我應該換工作嗎？">我應該換工作嗎？</option>
+                                <option value="我與同事的關係如何？">我與同事的關係如何？</option>
+                                <option value="我何時會有工作機會？">我何時會有工作機會？</option>
+                                <option value="我適合創業嗎？">我適合創業嗎？</option>
+                            </optgroup>
+                            <optgroup label="💰 財運">
+                                <option value="我這個月的財運如何？">我這個月的財運如何？</option>
+                                <option value="我應該如何理財？">我應該如何理財？</option>
+                                <option value="我這個投資會賺錢嗎？">我這個投資會賺錢嗎？</option>
+                                <option value="我何時會有好的財運？">我何時會有好的財運？</option>
+                                <option value="我應該進行這筆交易嗎？">我應該進行這筆交易嗎？</option>
+                            </optgroup>
+                            <optgroup label="🏠 家庭">
+                                <option value="我的家庭運勢如何？">我的家庭運勢如何？</option>
+                                <option value="我與家人的關係如何？">我與家人的關係如何？</option>
+                                <option value="我應該搬家嗎？">我應該搬家嗎？</option>
+                            </optgroup>
+                            <optgroup label="💪 健康">
+                                <option value="我的健康運勢如何？">我的健康運勢如何？</option>
+                                <option value="我應該注意哪些健康問題？">我應該注意哪些健康問題？</option>
+                            </optgroup>
+                            <optgroup label="📚 學業">
+                                <option value="我的學業運勢如何？">我的學業運勢如何？</option>
+                                <option value="我這次考試會順利嗎？">我這次考試會順利嗎？</option>
+                            </optgroup>
+                            <optgroup label="✨ 其他">
+                                <option value="custom">自定義問題...</option>
+                            </optgroup>
+                        </select>
+                        <textarea id="astrologyQuestionCustom" class="question-custom hidden" placeholder="請輸入您的自定義問題..." rows="2"></textarea>
                     </div>
                     <div class="birth-info-section">
                         <div class="form-row">
@@ -129,8 +378,32 @@
                 <!-- 周易/米卦/求籤表單 -->
                 <div id="yijingForm" class="divination-form hidden">
                     <div class="question-section">
-                        <label for="yijingQuestion">請輸入您的問題：</label>
-                        <textarea id="yijingQuestion" placeholder="例如：我這次的投資是否適合？" rows="2"></textarea>
+                        <label for="yijingQuestion">請選擇或輸入您的問題：</label>
+                        <select id="yijingQuestion" class="question-select">
+                            <option value="">-- 請選擇問題類別 --</option>
+                            <optgroup label="🎯 決策">
+                                <option value="我這次的投資是否適合？">我這次的投資是否適合？</option>
+                                <option value="我應該做出這個決定嗎？">我應該做出這個決定嗎？</option>
+                                <option value="這個選擇對我好嗎？">這個選擇對我好嗎？</option>
+                            </optgroup>
+                            <optgroup label="💼 事業">
+                                <option value="這個工作機會適合我嗎？">這個工作機會適合我嗎？</option>
+                                <option value="我應該換工作嗎？">我應該換工作嗎？</option>
+                                <option value="這個專案會成功嗎？">這個專案會成功嗎？</option>
+                            </optgroup>
+                            <optgroup label="💕 愛情">
+                                <option value="我應該主動追求嗎？">我應該主動追求嗎？</option>
+                                <option value="這段感情會有好結果嗎？">這段感情會有好結果嗎？</option>
+                            </optgroup>
+                            <optgroup label="💰 財運">
+                                <option value="這個投資機會好嗎？">這個投資機會好嗎？</option>
+                                <option value="我應該如何理財？">我應該如何理財？</option>
+                            </optgroup>
+                            <optgroup label="✨ 其他">
+                                <option value="custom">自定義問題...</option>
+                            </optgroup>
+                        </select>
+                        <textarea id="yijingQuestionCustom" class="question-custom hidden" placeholder="請輸入您的自定義問題..." rows="2"></textarea>
                     </div>
                 </div>
             </div>

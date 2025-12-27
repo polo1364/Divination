@@ -150,6 +150,12 @@ function closeModal() {
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
+    // 初始化問題選擇器
+    handleQuestionChange('question', 'questionCustom');
+    handleQuestionChange('baziQuestion', 'baziQuestionCustom');
+    handleQuestionChange('astrologyQuestion', 'astrologyQuestionCustom');
+    handleQuestionChange('yijingQuestion', 'yijingQuestionCustom');
+    
     const spreadButtons = document.querySelectorAll('.spread-btn');
     const drawBtn = document.getElementById('drawBtn');
     const settingsBtn = document.getElementById('settingsBtn');
@@ -279,9 +285,51 @@ function resetCards() {
     drawnCards = [];
 }
 
+// 獲取問題值（優先使用自定義輸入，否則使用下拉選單）
+function getQuestionValue(selectId, customId) {
+    const customInput = document.getElementById(customId);
+    const customValue = customInput && !customInput.classList.contains('hidden') 
+        ? customInput.value.trim() 
+        : '';
+    
+    if (customValue) {
+        return customValue;
+    }
+    
+    const select = document.getElementById(selectId);
+    const selectValue = select ? select.value.trim() : '';
+    
+    // 如果選擇的是"custom"，返回空字符串（應該使用自定義輸入）
+    if (selectValue === 'custom') {
+        return '';
+    }
+    
+    return selectValue;
+}
+
+// 處理問題選擇變化
+function handleQuestionChange(selectId, customId) {
+    const select = document.getElementById(selectId);
+    const customInput = document.getElementById(customId);
+    
+    if (!select || !customInput) return;
+    
+    select.addEventListener('change', () => {
+        if (select.value === 'custom') {
+            customInput.classList.remove('hidden');
+            customInput.focus();
+            customInput.required = true;
+        } else {
+            customInput.classList.add('hidden');
+            customInput.value = '';
+            customInput.required = false;
+        }
+    });
+}
+
 // 處理抽牌
 async function handleDrawCards() {
-    const question = document.getElementById('question').value.trim();
+    const question = getQuestionValue('question', 'questionCustom');
     const apiKey = getApiKey();
     const drawBtn = document.getElementById('drawBtn');
     const loading = document.getElementById('loading');
@@ -455,6 +503,18 @@ function switchDivinationType(type) {
         form.classList.remove('active');
     });
 
+    // 重置所有自定義輸入框
+    document.querySelectorAll('.question-custom').forEach(input => {
+        input.classList.add('hidden');
+        input.value = '';
+        input.required = false;
+    });
+
+    // 重置所有問題選擇器
+    document.querySelectorAll('.question-select').forEach(select => {
+        select.value = '';
+    });
+
     // 顯示對應的表單
     const formMap = {
         'tarot': 'tarotForm',
@@ -525,9 +585,9 @@ async function handleDivination() {
 
     switch(currentDivinationType) {
         case 'tarot':
-            question = document.getElementById('question').value.trim();
+            question = getQuestionValue('question', 'questionCustom');
             if (!question) {
-                showError('請先輸入您的問題！', 'error');
+                showError('請先選擇或輸入您的問題！', 'error');
                 document.getElementById('question').focus();
                 return;
             }
@@ -539,9 +599,9 @@ async function handleDivination() {
 
         case 'bazi':
         case 'ziwei':
-            question = document.getElementById('baziQuestion').value.trim();
+            question = getQuestionValue('baziQuestion', 'baziQuestionCustom');
             if (!question) {
-                showError('請先輸入您的問題！', 'error');
+                showError('請先選擇或輸入您的問題！', 'error');
                 document.getElementById('baziQuestion').focus();
                 return;
             }
@@ -607,9 +667,9 @@ async function handleDivination() {
             break;
 
         case 'astrology':
-            question = document.getElementById('astrologyQuestion').value.trim();
+            question = getQuestionValue('astrologyQuestion', 'astrologyQuestionCustom');
             if (!question) {
-                showError('請先輸入您的問題！', 'error');
+                showError('請先選擇或輸入您的問題！', 'error');
                 document.getElementById('astrologyQuestion').focus();
                 return;
             }
@@ -672,9 +732,9 @@ async function handleDivination() {
         case 'yijing':
         case 'migu':
         case 'qiuqian':
-            question = document.getElementById('yijingQuestion').value.trim();
+            question = getQuestionValue('yijingQuestion', 'yijingQuestionCustom');
             if (!question) {
-                showError('請先輸入您的問題！', 'error');
+                showError('請先選擇或輸入您的問題！', 'error');
                 document.getElementById('yijingQuestion').focus();
                 return;
             }
