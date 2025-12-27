@@ -761,67 +761,97 @@ class CelestialOS {
     displayDetailResult(type, question, data, result) {
         const container = document.getElementById('celestialContent');
         if (!container) {
-            this.showError('無法顯示結果');
+            this.showError('無法顯示結果：找不到容器');
             return;
         }
         
-        // 使用現有的 displayDivinationResult 函數
-        if (typeof displayDivinationResult === 'function') {
-            // 確保結果區域存在
-            let resultSection = document.getElementById('resultSection');
-            if (!resultSection) {
-                // 創建結果區域
-                const main = document.querySelector('main');
-                resultSection = document.createElement('div');
-                resultSection.id = 'resultSection';
-                resultSection.className = 'result-section';
-                resultSection.innerHTML = '<div id="resultContent" class="result-content"></div>';
-                main.appendChild(resultSection);
-            }
-            
-            // 清空容器，顯示結果區域
-            container.innerHTML = '';
-            resultSection.style.display = 'block';
-            
-            // 顯示結果
-            displayDivinationResult(type, question, data, result);
-            
-            // 添加返回按鈕
-            const resultContent = document.getElementById('resultContent');
-            if (resultContent) {
-                resultContent.insertAdjacentHTML('afterbegin', `
-                    <div style="margin-bottom: 20px;">
-                        <button class="back-btn" onclick="celestialOS.backToDestinyDashboard()">← 返回儀表板</button>
-                    </div>
-                `);
-            }
-            
-            // 滾動到結果區域
-            setTimeout(() => {
-                resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-        } else {
-            // 備用顯示方式：直接在容器中顯示
-            const resultData = result.result || result;
+        // 確保容器可見
+        container.classList.remove('hidden');
+        container.style.display = 'block';
+        
+        // 解析結果數據
+        const resultData = result.result || result;
+        
+        if (!resultData) {
             container.innerHTML = `
-                <div class="detail-result">
-                    <button class="back-btn" onclick="celestialOS.backToDestinyDashboard()">← 返回儀表板</button>
-                    <h2>${type === 'bazi' ? '八字' : type === 'ziwei' ? '紫微斗數' : '西方占星'}命盤詳情</h2>
-                    <div class="result-content">
-                        ${resultData.opening ? `<div class="result-opening">${resultData.opening}</div>` : ''}
-                        ${resultData.analysis ? `<div class="result-analysis">${resultData.analysis}</div>` : ''}
-                        ${resultData.advice && resultData.advice.length > 0 ? `
-                            <div class="result-advice">
-                                <h3>建議</h3>
-                                <ul>
-                                    ${resultData.advice.map(a => `<li>${a}</li>`).join('')}
-                                </ul>
-                            </div>
-                        ` : ''}
-                    </div>
+                <div class="error-display">
+                    <div class="error-icon">⚠️</div>
+                    <h3>結果數據為空</h3>
+                    <p>AI 沒有返回有效的解讀結果</p>
+                    <button class="btn-primary" onclick="celestialOS.backToDestinyDashboard()">返回儀表板</button>
                 </div>
             `;
+            return;
         }
+        
+        // 直接在容器中顯示結果（不依賴外部函數）
+        const typeNames = {
+            'bazi': '八字',
+            'ziwei': '紫微斗數',
+            'astrology': '西方占星'
+        };
+        
+        container.innerHTML = `
+            <div class="detail-result">
+                <div class="detail-header">
+                    <button class="back-btn" onclick="celestialOS.backToDestinyDashboard()">← 返回儀表板</button>
+                    <h2>${typeNames[type] || type}命盤詳情</h2>
+                </div>
+                
+                <div class="result-content">
+                    ${resultData.opening ? `
+                        <div class="result-opening">
+                            <div class="opening-icon">✨</div>
+                            <p>${resultData.opening}</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${resultData.analysis ? `
+                        <div class="result-analysis">
+                            <h3>🔮 詳細分析</h3>
+                            <p>${resultData.analysis}</p>
+                        </div>
+                    ` : resultData.summary ? `
+                        <div class="result-analysis">
+                            <h3>🔮 運勢總結</h3>
+                            <p>${resultData.summary}</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0 ? `
+                        <div class="result-advice">
+                            <h3>💡 建議</h3>
+                            <ul class="advice-list">
+                                ${resultData.advice.map(a => `<li>${a}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                    
+                    ${resultData.luckyItems ? `
+                        <div class="lucky-section">
+                            <h3>🍀 幸運要素</h3>
+                            <div class="lucky-items">
+                                ${resultData.luckyItems.幸運色 ? `<div class="lucky-item"><strong>幸運色：</strong>${resultData.luckyItems.幸運色}</div>` : ''}
+                                ${resultData.luckyItems.幸運方位 ? `<div class="lucky-item"><strong>幸運方位：</strong>${resultData.luckyItems.幸運方位}</div>` : ''}
+                                ${resultData.luckyItems.幸運小物 ? `<div class="lucky-item"><strong>幸運小物：</strong>${resultData.luckyItems.幸運小物}</div>` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${resultData.score ? `
+                        <div class="score-display">
+                            <div class="score-value">${resultData.score}</div>
+                            <div class="score-label">運勢評分</div>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+        
+        // 滾動到頂部
+        setTimeout(() => {
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
     }
 
     // 返回天命殿儀表板
