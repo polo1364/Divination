@@ -34,16 +34,6 @@ class CelestialOS {
             });
         }
 
-        // 歷史記錄按鈕
-        const historyBtn = document.getElementById('historyBtn');
-        if (historyBtn) {
-            historyBtn.addEventListener('click', () => {
-                if (typeof openHistoryModal === 'function') {
-                    openHistoryModal();
-                }
-            });
-        }
-
         // 設置按鈕
         const settingsBtn = document.getElementById('settingsBtn');
         if (settingsBtn) {
@@ -1202,20 +1192,6 @@ class CelestialOS {
         messages.innerHTML += resultHtml;
         messages.scrollTop = messages.scrollHeight;
 
-        // 保存到歷史記錄
-        try {
-            if (typeof saveToHistory === 'function') {
-                saveToHistory({
-                    type: type,
-                    question: question,
-                    data: data,
-                    result: resultData,
-                    timestamp: new Date().toISOString()
-                });
-            }
-        } catch (error) {
-            console.error('保存歷史記錄失敗:', error);
-        }
 
         // 添加繼續提問提示
         setTimeout(() => {
@@ -1332,8 +1308,7 @@ class CelestialOS {
                 type: 'master_consultant',
                 question: question,
                 data: data,
-                apiKey: apiKey,
-                history: getRecentHistory(5)
+                apiKey: apiKey
             })
         });
 

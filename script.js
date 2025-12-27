@@ -469,22 +469,6 @@ document.addEventListener('DOMContentLoaded', () => {
         divineBtn.addEventListener('click', handleDivination);
     }
 
-    // 歷史記錄按鈕
-    const historyBtn = document.getElementById('historyBtn');
-    if (historyBtn) {
-        historyBtn.addEventListener('click', openHistoryModal);
-    }
-
-    // 關閉歷史記錄模態框
-    const closeHistoryModal = document.getElementById('closeHistoryModal');
-    const historyModalOverlay = document.getElementById('historyModalOverlay');
-    if (closeHistoryModal) {
-        closeHistoryModal.addEventListener('click', closeHistoryModalFunc);
-    }
-    if (historyModalOverlay) {
-        historyModalOverlay.addEventListener('click', closeHistoryModalFunc);
-    }
-
     // 語音播放按鈕
     const speakBtn = document.getElementById('speakBtn');
     if (speakBtn) {
@@ -749,13 +733,6 @@ function displayResult(data) {
     resultContent.innerHTML = html;
     resultSection.classList.remove('hidden');
     
-    // 保存到歷史記錄
-    saveToHistory({
-        type: 'tarot',
-        question: data.question,
-        result: data,
-        timestamp: new Date().toISOString()
-    });
 }
 
 // 切換占卜類型
@@ -1161,23 +1138,8 @@ async function handleDivination() {
     }
 }
 
-// 獲取最近的歷史紀錄（用於記憶功能）
-function getRecentHistory(limit = 5) {
-    try {
-        const history = JSON.parse(localStorage.getItem('divination_history') || '[]');
-        // 返回最近的 N 條紀錄，排除當前這次
-        return history.slice(-limit).filter(h => h.timestamp);
-    } catch (error) {
-        console.error('讀取歷史紀錄錯誤:', error);
-        return [];
-    }
-}
-
 // 獲取占卜結果
 async function getDivinationResult(type, question, data, apiKey) {
-    // 獲取歷史紀錄（用於記憶功能）
-    const history = getRecentHistory(5);
-    
     // 創建超時控制器（60秒超時）
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
@@ -1192,8 +1154,7 @@ async function getDivinationResult(type, question, data, apiKey) {
                 type: type,
                 question: question,
                 data: data,
-                apiKey: apiKey,
-                history: history // 傳遞歷史紀錄
+                apiKey: apiKey
             }),
             signal: controller.signal
         });
@@ -1519,14 +1480,6 @@ function displayDivinationResult(type, question, data, result) {
     resultContent.innerHTML = html;
     resultSection.classList.remove('hidden');
 
-    // 保存到歷史記錄
-    saveToHistory({
-        type: type,
-        question: question,
-        data: data,
-        result: result,
-        timestamp: new Date().toISOString()
-    });
     
     // 滾動到結果區域
     setTimeout(() => {
@@ -1806,76 +1759,6 @@ function generateGua(type) {
 }
 
 // 歷史記錄功能
-function saveToHistory(record) {
-    let history = JSON.parse(localStorage.getItem('divination_history') || '[]');
-    history.unshift(record);
-    // 只保留最近 50 條記錄
-    if (history.length > 50) {
-        history = history.slice(0, 50);
-    }
-    localStorage.setItem('divination_history', JSON.stringify(history));
-}
-
-function openHistoryModal() {
-    const modal = document.getElementById('historyModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        loadHistory();
-    }
-}
-
-function closeHistoryModalFunc() {
-    const modal = document.getElementById('historyModal');
-    if (modal) {
-        modal.classList.add('hidden');
-        document.body.style.overflow = '';
-    }
-}
-
-function loadHistory() {
-    const historyList = document.getElementById('historyList');
-    if (!historyList) return;
-
-    const history = JSON.parse(localStorage.getItem('divination_history') || '[]');
-    
-    if (history.length === 0) {
-        historyList.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">暫無歷史記錄</p>';
-        return;
-    }
-
-    historyList.innerHTML = history.map((record, index) => {
-        const date = new Date(record.timestamp);
-        const typeNames = {
-            'tarot': '塔羅牌',
-            'bazi': '八字',
-            'ziwei': '紫微斗數',
-            'astrology': '西方占星',
-            'yijing': '周易',
-            'migu': '米卦',
-            'qiuqian': '求籤'
-        };
-        return `
-            <div class="history-item" onclick="loadHistoryItem(${index})">
-                <div class="history-type">${typeNames[record.type] || record.type}</div>
-                <div class="history-question">${record.question}</div>
-                <div class="history-date">${date.toLocaleString('zh-TW')}</div>
-            </div>
-        `;
-    }).join('');
-}
-
-function loadHistoryItem(index) {
-    const history = JSON.parse(localStorage.getItem('divination_history') || '[]');
-    if (history[index]) {
-        const record = history[index];
-        currentDivinationType = record.type;
-        switchDivinationType(record.type);
-        displayDivinationResult(record.type, record.question, record.data, record.result);
-        closeHistoryModalFunc();
-    }
-}
-
 // 語音播放功能
 function speakResult() {
     const resultContent = document.getElementById('resultContent');

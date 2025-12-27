@@ -85,7 +85,7 @@ app.post('/api/calculate', (req, res) => {
 // 通用占卜解讀 API（支持多種占卜方式）
 app.post('/api/divination', async (req, res) => {
     try {
-        const { type, question, data, apiKey, history } = req.body;
+        const { type, question, data, apiKey } = req.body;
 
         // 優先使用請求中的 API 金鑰，否則使用環境變數
         const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
@@ -120,7 +120,7 @@ app.post('/api/divination', async (req, res) => {
         // 構建提示詞（使用強烈的人設 + RAG + 冷讀術 + 記憶）
         let prompt;
         try {
-            prompt = buildDivinationPrompt(type, question, data || {}, history || null);
+            prompt = buildDivinationPrompt(type, question, data || {});
             console.log('✅ 提示詞構建成功，長度:', prompt.length);
         } catch (promptError) {
             console.error('❌ 提示詞構建失敗:', promptError);
@@ -190,7 +190,6 @@ app.post('/api/divination', async (req, res) => {
             question: req.body?.question ? req.body.question.substring(0, 50) + '...' : '無',
             hasData: !!req.body?.data,
             hasApiKey: !!req.body?.apiKey,
-            hasHistory: !!req.body?.history
         });
         
         res.status(500).json({ 
@@ -202,7 +201,7 @@ app.post('/api/divination', async (req, res) => {
 });
 
 // 構建占卜提示詞（加入 RAG、冷讀術、記憶功能）
-function buildDivinationPrompt(type, question, data, history = null) {
+function buildDivinationPrompt(type, question, data) {
     const systemPrompt = `你是一位精通東方玄學與西方心理學的資深命理大師，擁有數十年的占卜經驗。你的語氣神秘、溫和且充滿智慧，能夠給予使用者心靈上的指引。
 
 【重要：冷讀術技巧】
@@ -223,19 +222,6 @@ function buildDivinationPrompt(type, question, data, history = null) {
    - "你心裡應該已經有答案了，只是需要一些確認..."
    - "這個指引會在你最需要的時候顯現..."
 
-【記憶功能】
-${history && Array.isArray(history) && history.length > 0 ? `使用者之前的占卜紀錄：
-${history.map((h, i) => {
-    try {
-        const date = h.timestamp ? new Date(h.timestamp) : new Date();
-        const daysAgo = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
-        return `${i + 1}. ${daysAgo}天前：${h.type || '未知'}占卜，問題「${h.question || '無'}」，結果摘要：${h.result?.result?.summary || h.result?.summary || '無'}`;
-    } catch (e) {
-        return `${i + 1}. 歷史紀錄格式錯誤`;
-    }
-}).join('\n')}
-
-請結合上次的脈絡，分析為什麼使用者的狀態會有這樣的轉變，並在解讀中自然地提及這種連續性。` : '這是使用者的第一次占卜，請給予完整的初始解讀。'}
 
 你的任務是根據使用者提供的資訊進行詳細的運勢分析。
 
