@@ -344,26 +344,42 @@ ${history.map((h, i) => {
 
         case 'dream':
             typeSpecificPrompt = `AI 解夢分析\n\n`;
-            typeSpecificPrompt += `夢境內容：${data.dreamText || question}\n\n`;
+            typeSpecificPrompt += `夢境內容：${data.dream || data.dreamText || question}\n\n`;
             typeSpecificPrompt += `【任務】\n`;
-            typeSpecificPrompt += `請運用心理學和象徵學的知識，分析這個夢境。你需要：\n`;
-            typeSpecificPrompt += `1. 分析夢境中的主要象徵符號\n`;
-            typeSpecificPrompt += `2. 探討可能的潛意識訊息\n`;
-            typeSpecificPrompt += `3. 結合使用者的情緒狀態（如果夢境中有體現）\n`;
-            typeSpecificPrompt += `4. 給出心理層面的建議\n\n`;
-            typeSpecificPrompt += `請以心理分析師的角度，溫和且專業地解讀。`;
+            typeSpecificPrompt += `請運用心理學（榮格心理學、佛洛伊德理論）和象徵學的知識，深入分析這個夢境。你需要：\n`;
+            typeSpecificPrompt += `1. 識別並分析夢境中的主要象徵符號（如水象徵情緒、飛行象徵自由等）\n`;
+            typeSpecificPrompt += `2. 探討可能的潛意識訊息和隱藏的心理需求\n`;
+            typeSpecificPrompt += `3. 分析夢境反映的情緒狀態和內心衝突\n`;
+            typeSpecificPrompt += `4. 給出實際可行的心理建議和自我成長方向\n\n`;
+            typeSpecificPrompt += `請以溫和專業的心理分析師角度解讀，帶有神秘感但不迷信。\n\n`;
+            typeSpecificPrompt += `JSON 輸出格式：\n`;
+            typeSpecificPrompt += `{\n`;
+            typeSpecificPrompt += `  "opening": "富有詩意的開場白",\n`;
+            typeSpecificPrompt += `  "analysis": "詳細的夢境分析（300-500字）",\n`;
+            typeSpecificPrompt += `  "symbols": ["象徵1", "象徵2", "象徵3"],\n`;
+            typeSpecificPrompt += `  "emotion": "夢境反映的情緒狀態分析",\n`;
+            typeSpecificPrompt += `  "advice": ["建議1", "建議2", "建議3"]\n`;
+            typeSpecificPrompt += `}`;
             break;
 
         case 'calligraphy':
             typeSpecificPrompt = `測字分析\n\n`;
-            typeSpecificPrompt += `測的字：${data.character || question}\n\n`;
+            typeSpecificPrompt += `測的字：「${data.character || question}」\n\n`;
             typeSpecificPrompt += `【任務】\n`;
-            typeSpecificPrompt += `請運用字形、字義、拆字等方法，分析這個字對使用者的啟示。你需要：\n`;
-            typeSpecificPrompt += `1. 分析字的結構和筆畫\n`;
-            typeSpecificPrompt += `2. 探討字的象徵意義\n`;
-            typeSpecificPrompt += `3. 結合使用者的問題，給出指引\n`;
-            typeSpecificPrompt += `4. 提供相關的建議\n\n`;
-            typeSpecificPrompt += `請以傳統測字師的角度，結合現代心理學，給出分析。`;
+            typeSpecificPrompt += `請運用傳統測字術（拆字法、會意法、形象法）結合現代心理學，分析這個字對使用者的啟示。你需要：\n`;
+            typeSpecificPrompt += `1. 分析字的結構組成（部首、筆畫、拆解後的含義）\n`;
+            typeSpecificPrompt += `2. 探討字形的象徵意義和聯想\n`;
+            typeSpecificPrompt += `3. 解讀這個字背後的能量和訊息\n`;
+            typeSpecificPrompt += `4. 提供基於此字的生活指引和建議\n\n`;
+            typeSpecificPrompt += `請以傳統測字師的神秘感，結合心理學的專業性，給出分析。\n\n`;
+            typeSpecificPrompt += `JSON 輸出格式：\n`;
+            typeSpecificPrompt += `{\n`;
+            typeSpecificPrompt += `  "opening": "關於這個字的玄妙開場",\n`;
+            typeSpecificPrompt += `  "analysis": "詳細的字形分析和象徵解讀（300-500字）",\n`;
+            typeSpecificPrompt += `  "structure": "字的結構拆解分析",\n`;
+            typeSpecificPrompt += `  "advice": ["建議1", "建議2", "建議3"],\n`;
+            typeSpecificPrompt += `  "luckyItems": {"幸運色": "顏色", "幸運數字": "數字"}\n`;
+            typeSpecificPrompt += `}`;
             break;
 
         case 'tarot':

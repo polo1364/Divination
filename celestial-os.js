@@ -221,7 +221,6 @@ class CelestialOS {
     // 設置神殿導航
     setupTempleNavigation() {
         const templeCards = document.querySelectorAll('.temple-card');
-        console.log('找到神殿卡片數量:', templeCards.length); // 調試用
         
         if (templeCards.length === 0) {
             console.warn('未找到神殿卡片，延遲設置事件監聽器');
@@ -264,9 +263,8 @@ class CelestialOS {
         const templeNav = document.getElementById('templeNavigation');
         if (templeNav) {
             templeNav.classList.add('hidden');
-            console.log('隱藏神殿導航'); // 調試用
         } else {
-            console.error('找不到 templeNavigation 元素');
+            // 導航元素可能還未加載
         }
         
         // 隱藏檔案設置界面
@@ -407,9 +405,6 @@ class CelestialOS {
         container.style.visibility = 'visible';
         container.style.opacity = '1';
         
-        console.log('儀表板 HTML 已設置，容器應該可見'); // 調試用
-        console.log('formContainer 內容長度:', container.innerHTML.length); // 調試用
-        console.log('formContainer 實際位置:', container.getBoundingClientRect()); // 調試用
         
         // 強制重繪
         void container.offsetHeight;
@@ -1322,31 +1317,214 @@ class CelestialOS {
     }
 
     // 解夢分析
-    analyzeDream() {
+    async analyzeDream() {
         const dreamText = document.getElementById('dreamText').value.trim();
         if (!dreamText) {
             this.showError('請輸入夢境內容');
             return;
         }
-        alert('解夢功能開發中...');
+        
+        if (dreamText.length < 10) {
+            this.showError('請提供更詳細的夢境描述（至少10個字）');
+            return;
+        }
+        
+        const apiKey = getApiKey();
+        if (!apiKey) {
+            this.showError('請先設置 API 金鑰');
+            setTimeout(() => openModal(), 500);
+            return;
+        }
+        
+        // 顯示載入狀態
+        const dreamTab = document.getElementById('dreamTab');
+        const originalContent = dreamTab.innerHTML;
+        dreamTab.innerHTML = `
+            <div class="analysis-loading">
+                <div class="loading-animation">
+                    <div class="mystical-orb">
+                        <div class="orb-core"></div>
+                        <div class="orb-ring ring-1"></div>
+                        <div class="orb-ring ring-2"></div>
+                    </div>
+                </div>
+                <h3>🌙 AI 正在解析你的夢境...</h3>
+                <p>這可能需要 10-20 秒</p>
+            </div>
+        `;
+        
+        try {
+            const data = {
+                dream: dreamText,
+                timestamp: new Date().toISOString()
+            };
+            
+            const result = await getDivinationResult('dream', dreamText, data, apiKey);
+            this.displayDreamResult(result, dreamText);
+        } catch (error) {
+            console.error('解夢失敗:', error);
+            dreamTab.innerHTML = originalContent;
+            this.showError('解夢分析失敗：' + (error.message || '請稍後再試'));
+        }
+    }
+    
+    // 顯示解夢結果
+    displayDreamResult(result, dreamText) {
+        const dreamTab = document.getElementById('dreamTab');
+        const resultData = result.result || result;
+        
+        dreamTab.innerHTML = `
+            <div class="dream-result">
+                <button class="back-btn" onclick="celestialOS.showSubconsciousTemple()">← 重新解夢</button>
+                
+                <div class="dream-original">
+                    <h4>🌙 你的夢境</h4>
+                    <p>${dreamText}</p>
+                </div>
+                
+                <div class="dream-analysis">
+                    <h4>🔮 夢境解析</h4>
+                    <div class="analysis-text">
+                        ${resultData.opening ? `<div class="dream-opening">${resultData.opening}</div>` : ''}
+                        <p>${resultData.analysis || resultData.summary || '解析結果'}</p>
+                    </div>
+                </div>
+                
+                ${resultData.symbols ? `
+                    <div class="dream-symbols">
+                        <h4>🎭 夢境象徵</h4>
+                        <div class="symbols-grid">
+                            ${Array.isArray(resultData.symbols) ? 
+                                resultData.symbols.map(s => `<div class="symbol-item">${s}</div>`).join('') :
+                                `<div class="symbol-item">${resultData.symbols}</div>`
+                            }
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0 ? `
+                    <div class="dream-advice">
+                        <h4>💡 心理建議</h4>
+                        <ul>
+                            ${resultData.advice.map(a => `<li>${a}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+                
+                ${resultData.emotion ? `
+                    <div class="dream-emotion">
+                        <h4>💭 情緒分析</h4>
+                        <p>${resultData.emotion}</p>
+                    </div>
+                ` : ''}
+            </div>
+        `;
     }
 
     // 測字分析
-    analyzeCalligraphy() {
+    async analyzeCalligraphy() {
         const text = document.getElementById('calligraphyText').value.trim();
         if (!text) {
             this.showError('請輸入一個字');
             return;
         }
-        alert('測字功能開發中...');
+        
+        if (text.length > 1) {
+            this.showError('請只輸入一個字');
+            return;
+        }
+        
+        const apiKey = getApiKey();
+        if (!apiKey) {
+            this.showError('請先設置 API 金鑰');
+            setTimeout(() => openModal(), 500);
+            return;
+        }
+        
+        // 顯示載入狀態
+        const calligraphyTab = document.getElementById('calligraphyTab');
+        const originalContent = calligraphyTab.innerHTML;
+        calligraphyTab.innerHTML = `
+            <div class="analysis-loading">
+                <div class="loading-animation">
+                    <div class="character-display">${text}</div>
+                </div>
+                <h3>✍️ AI 正在分析這個字...</h3>
+                <p>解讀字形結構與象徵意義</p>
+            </div>
+        `;
+        
+        try {
+            const question = `請為我測字分析「${text}」這個字`;
+            const data = {
+                character: text,
+                timestamp: new Date().toISOString()
+            };
+            
+            const result = await getDivinationResult('calligraphy', question, data, apiKey);
+            this.displayCalligraphyResult(result, text);
+        } catch (error) {
+            console.error('測字失敗:', error);
+            calligraphyTab.innerHTML = originalContent;
+            this.showError('測字分析失敗：' + (error.message || '請稍後再試'));
+        }
+    }
+    
+    // 顯示測字結果
+    displayCalligraphyResult(result, character) {
+        const calligraphyTab = document.getElementById('calligraphyTab');
+        const resultData = result.result || result;
+        
+        calligraphyTab.innerHTML = `
+            <div class="calligraphy-result">
+                <button class="back-btn" onclick="celestialOS.showSubconsciousTemple()">← 重新測字</button>
+                
+                <div class="character-showcase">
+                    <div class="big-character">${character}</div>
+                    <p class="character-label">你選擇的字</p>
+                </div>
+                
+                <div class="calligraphy-analysis">
+                    <h4>✍️ 字形分析</h4>
+                    <div class="analysis-text">
+                        ${resultData.opening ? `<div class="calligraphy-opening">${resultData.opening}</div>` : ''}
+                        <p>${resultData.analysis || resultData.summary || '分析結果'}</p>
+                    </div>
+                </div>
+                
+                ${resultData.structure ? `
+                    <div class="character-structure">
+                        <h4>🔍 結構解讀</h4>
+                        <p>${resultData.structure}</p>
+                    </div>
+                ` : ''}
+                
+                ${resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0 ? `
+                    <div class="calligraphy-advice">
+                        <h4>💡 啟示與建議</h4>
+                        <ul>
+                            ${resultData.advice.map(a => `<li>${a}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+                
+                ${resultData.luckyItems ? `
+                    <div class="calligraphy-lucky">
+                        <h4>🍀 幸運指引</h4>
+                        <div class="lucky-items">
+                            ${resultData.luckyItems.幸運色 ? `<span class="lucky-tag">幸運色：${resultData.luckyItems.幸運色}</span>` : ''}
+                            ${resultData.luckyItems.幸運數字 ? `<span class="lucky-tag">幸運數字：${resultData.luckyItems.幸運數字}</span>` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
     }
 
     // 顯示檔案狀態
     showProfileStatus() {
         const summary = userProfile.getProfileSummary();
-        if (summary) {
-            console.log('使用者檔案摘要:', summary);
-        }
+        // 可在此處添加狀態更新邏輯
     }
 }
 

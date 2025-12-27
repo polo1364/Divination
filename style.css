@@ -4396,3 +4396,397 @@ html {
     font-weight: bold;
 }
 
+/* ========== 解夢結果樣式 ========== */
+.dream-result,
+.calligraphy-result {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.dream-result .back-btn,
+.calligraphy-result .back-btn {
+    margin-bottom: 20px;
+}
+
+.dream-original {
+    background: linear-gradient(135deg, rgba(75, 0, 130, 0.3) 0%, rgba(138, 43, 226, 0.2) 100%);
+    border-left: 4px solid #9370db;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+
+.dream-original h4,
+.dream-analysis h4,
+.dream-symbols h4,
+.dream-advice h4,
+.dream-emotion h4 {
+    color: #ffd700;
+    margin-bottom: 12px;
+    font-size: 1.1em;
+}
+
+.dream-original p {
+    color: #d0d0d0;
+    font-style: italic;
+    line-height: 1.7;
+}
+
+.dream-analysis {
+    background: rgba(26, 26, 46, 0.8);
+    border: 2px solid rgba(138, 43, 226, 0.4);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.dream-opening {
+    font-size: 1.1em;
+    color: #b0b0ff;
+    font-style: italic;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(138, 43, 226, 0.3);
+}
+
+.dream-analysis .analysis-text p {
+    color: #d0d0d0;
+    line-height: 1.8;
+}
+
+.dream-symbols {
+    background: rgba(138, 43, 226, 0.15);
+    border: 1px solid rgba(138, 43, 226, 0.3);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.symbols-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.symbol-item {
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.4) 0%, rgba(75, 0, 130, 0.4) 100%);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    padding: 10px 18px;
+    border-radius: 20px;
+    color: #ffffff;
+    font-size: 0.95em;
+}
+
+.dream-advice,
+.calligraphy-advice {
+    background: rgba(26, 26, 46, 0.7);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.dream-advice ul,
+.calligraphy-advice ul {
+    list-style: none;
+    padding: 0;
+}
+
+.dream-advice li,
+.calligraphy-advice li {
+    background: rgba(138, 43, 226, 0.15);
+    border-left: 3px solid #ffd700;
+    padding: 12px 18px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    color: #ffffff;
+    line-height: 1.6;
+}
+
+.dream-emotion {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(138, 43, 226, 0.1) 100%);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 15px;
+    padding: 25px;
+}
+
+.dream-emotion p {
+    color: #d0d0d0;
+    line-height: 1.7;
+}
+
+/* ========== 測字結果樣式 ========== */
+.character-showcase {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.3) 0%, rgba(75, 0, 130, 0.3) 100%);
+    border: 2px solid rgba(255, 215, 0, 0.4);
+    border-radius: 20px;
+}
+
+.big-character {
+    font-size: 6em;
+    color: #ffd700;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+    margin-bottom: 15px;
+    animation: characterPulse 3s ease-in-out infinite;
+}
+
+@keyframes characterPulse {
+    0%, 100% { transform: scale(1); text-shadow: 0 0 30px rgba(255, 215, 0, 0.5); }
+    50% { transform: scale(1.05); text-shadow: 0 0 50px rgba(255, 215, 0, 0.8); }
+}
+
+.character-label {
+    color: #b0b0b0;
+    font-size: 1.1em;
+}
+
+.calligraphy-analysis {
+    background: rgba(26, 26, 46, 0.8);
+    border: 2px solid rgba(138, 43, 226, 0.4);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.calligraphy-analysis h4 {
+    color: #ffd700;
+    margin-bottom: 12px;
+}
+
+.calligraphy-opening {
+    font-size: 1.1em;
+    color: #b0b0ff;
+    font-style: italic;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(138, 43, 226, 0.3);
+}
+
+.calligraphy-analysis .analysis-text p {
+    color: #d0d0d0;
+    line-height: 1.8;
+}
+
+.character-structure {
+    background: rgba(138, 43, 226, 0.15);
+    border: 1px solid rgba(138, 43, 226, 0.3);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.character-structure h4 {
+    color: #ffd700;
+    margin-bottom: 12px;
+}
+
+.character-structure p {
+    color: #d0d0d0;
+    line-height: 1.8;
+}
+
+.calligraphy-lucky {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(138, 43, 226, 0.1) 100%);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 15px;
+    padding: 25px;
+}
+
+.calligraphy-lucky h4 {
+    color: #ffd700;
+    margin-bottom: 15px;
+}
+
+.calligraphy-lucky .lucky-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.lucky-tag {
+    background: rgba(255, 215, 0, 0.2);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    padding: 8px 16px;
+    border-radius: 15px;
+    color: #ffd700;
+    font-size: 0.95em;
+}
+
+/* ========== 分析載入狀態 ========== */
+.analysis-loading {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.analysis-loading h3 {
+    color: #ffd700;
+    margin-top: 25px;
+    margin-bottom: 10px;
+}
+
+.analysis-loading p {
+    color: #b0b0b0;
+}
+
+.analysis-loading .character-display {
+    font-size: 5em;
+    color: #ffd700;
+    animation: float 2s ease-in-out infinite;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+/* ========== 靈犀殿聊天樣式優化 ========== */
+.chat-tarot-cards {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.chat-card-mini {
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.4) 0%, rgba(75, 0, 130, 0.4) 100%);
+    border: 2px solid rgba(255, 215, 0, 0.4);
+    border-radius: 12px;
+    padding: 15px 20px;
+    text-align: center;
+    min-width: 100px;
+}
+
+.chat-card-mini .card-emoji {
+    font-size: 2em;
+    margin-bottom: 8px;
+}
+
+.chat-card-mini .card-name {
+    color: #ffd700;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.chat-interpretation {
+    background: rgba(26, 26, 46, 0.6);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+.chat-interpretation h4,
+.chat-advice h4 {
+    color: #ffd700;
+    margin-bottom: 12px;
+}
+
+.chat-interpretation p {
+    color: #d0d0d0;
+    line-height: 1.7;
+}
+
+.chat-advice {
+    background: rgba(138, 43, 226, 0.15);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.chat-advice ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.chat-advice li {
+    color: #ffffff;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(138, 43, 226, 0.2);
+}
+
+.chat-advice li:last-child {
+    border-bottom: none;
+}
+
+.chat-advice li::before {
+    content: '💡 ';
+}
+
+/* 載入動畫小點 */
+.loading-dots {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.loading-dots span {
+    width: 10px;
+    height: 10px;
+    background: #ffd700;
+    border-radius: 50%;
+    animation: dotPulse 1.4s infinite both;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: 0s; }
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+    0%, 80%, 100% {
+        transform: scale(0.6);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* 錯誤訊息樣式 */
+.error-message {
+    background: rgba(220, 38, 38, 0.2);
+    border: 1px solid rgba(220, 38, 38, 0.5);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.error-hint {
+    color: #b0b0b0;
+    font-size: 0.9em;
+    margin-top: 10px;
+}
+
+/* 結果訊息樣式 */
+.result-message {
+    max-width: 100%;
+}
+
+.result-message .chat-result {
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.2) 0%, rgba(75, 0, 130, 0.2) 100%);
+    border: 1px solid rgba(138, 43, 226, 0.4);
+    border-radius: 15px;
+    padding: 20px;
+}
+
+/* 返回按鈕樣式 */
+.back-btn {
+    background: rgba(138, 43, 226, 0.3);
+    color: #ffffff;
+    border: 1px solid rgba(138, 43, 226, 0.5);
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.95em;
+}
+
+.back-btn:hover {
+    background: rgba(138, 43, 226, 0.5);
+    transform: translateX(-5px);
+}
+
