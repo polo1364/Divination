@@ -9,9 +9,19 @@ class CelestialOS {
 
     init() {
         this.checkProfile();
-        this.setupTempleNavigation();
-        this.setupProfileForm();
-        this.setupHeaderButtons();
+        // 確保 DOM 加載完成後再設置事件監聽器
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.setupTempleNavigation();
+                this.setupProfileForm();
+                this.setupHeaderButtons();
+            });
+        } else {
+            // DOM 已經加載完成
+            this.setupTempleNavigation();
+            this.setupProfileForm();
+            this.setupHeaderButtons();
+        }
     }
 
     // 設置頂部按鈕事件
@@ -208,11 +218,39 @@ class CelestialOS {
     // 設置神殿導航
     setupTempleNavigation() {
         const templeCards = document.querySelectorAll('.temple-card');
-        templeCards.forEach(card => {
-            card.addEventListener('click', () => {
-                const temple = card.dataset.temple;
+        console.log('找到神殿卡片數量:', templeCards.length); // 調試用
+        
+        if (templeCards.length === 0) {
+            console.warn('未找到神殿卡片，延遲設置事件監聽器');
+            // 如果找不到元素，延遲重試
+            setTimeout(() => {
+                this.setupTempleNavigation();
+            }, 100);
+            return;
+        }
+        
+        templeCards.forEach((card, index) => {
+            const temple = card.dataset.temple;
+            console.log(`設置神殿 ${index + 1}: ${temple}`); // 調試用
+            
+            // 檢查是否已經添加過事件監聽器
+            if (card.hasAttribute('data-listener-attached')) {
+                return; // 已經添加過，跳過
+            }
+            
+            // 標記已添加事件監聽器
+            card.setAttribute('data-listener-attached', 'true');
+            
+            // 添加點擊事件監聽器
+            card.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('點擊神殿:', temple); // 調試用
                 this.enterTemple(temple);
             });
+            
+            // 添加鼠標懸停效果
+            card.style.cursor = 'pointer';
         });
     }
 
