@@ -19,11 +19,13 @@ app.use(express.static('.'));
 
 // 初始化 Gemini API
 let genAI, model;
+// 使用 Gemini 2.5 Flash 模型
+const GEMINI_MODEL = 'gemini-2.5-flash'; // Gemini 2.5 Flash 模型
 try {
     if (process.env.GEMINI_API_KEY) {
         genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-        console.log('✅ Gemini API 初始化成功');
+        model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+        console.log(`✅ Gemini API 初始化成功 (模型: ${GEMINI_MODEL})`);
     } else {
         console.warn('⚠️  Gemini API 未初始化：缺少 API 金鑰');
     }
@@ -47,10 +49,13 @@ app.post('/api/interpret', async (req, res) => {
         }
 
         // 動態初始化 Gemini API（使用請求中的 API 金鑰）
+        // 使用 Gemini 2.5 Flash 模型
+        const GEMINI_MODEL = 'gemini-2.5-flash'; // Gemini 2.5 Flash 模型
         let currentModel;
         try {
             const genAI = new GoogleGenerativeAI(geminiApiKey);
-            currentModel = genAI.getGenerativeModel({ model: 'gemini-pro' });
+            currentModel = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+            console.log(`✅ 使用模型: ${GEMINI_MODEL}`);
         } catch (error) {
             console.error('❌ Gemini API 初始化失敗:', error);
             return res.status(400).json({ 
