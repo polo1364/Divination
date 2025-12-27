@@ -106,40 +106,16 @@ class HoroscopeMarquee {
             localStorage.removeItem(cachedKey);
         }
 
-        // 優先使用 Free Astrology API
-        const astrologyApiKey = typeof getAstrologyApiKey === 'function' ? getAstrologyApiKey() : null;
+        // 使用 Gemini API 獲取運勢
         const geminiApiKey = typeof getApiKey === 'function' ? getApiKey() : null;
         
-        if (astrologyApiKey) {
-            // 優先使用 Free Astrology API 獲取運勢
-            console.log('使用 Free Astrology API 獲取運勢...');
-            try {
-                await this.fetchFortunesFromAstrologyAPI(astrologyApiKey, today, cachedKey);
-                console.log('✅ Free Astrology API 獲取成功');
-            } catch (error) {
-                console.error('❌ Free Astrology API 獲取失敗:', error);
-                // 如果失敗，嘗試使用 Gemini API 作為備用
-                if (geminiApiKey) {
-                    console.log('⚠️ 切換到 Gemini API 作為備用...');
-                    try {
-                        await this.fetchFortunesFromAI(geminiApiKey, today, cachedKey);
-                        console.log('✅ Gemini API 備用獲取成功');
-                    } catch (geminiError) {
-                        console.error('❌ Gemini API 也失敗:', geminiError);
-                        throw new Error('所有 API 都無法獲取運勢數據');
-                    }
-                } else {
-                    throw new Error('Free Astrology API 失敗且沒有 Gemini API 備用，請檢查 API 金鑰設置');
-                }
-            }
-        } else if (geminiApiKey) {
-            // 如果沒有 Free Astrology API，使用 Gemini API
-            console.log('⚠️ 未設置 Free Astrology API，使用 Gemini API 作為備用...');
+        if (geminiApiKey) {
+            console.log('使用 Gemini API 獲取運勢...');
             await this.fetchFortunesFromAI(geminiApiKey, today, cachedKey);
         } else {
             // 沒有 API 金鑰
-            console.warn('❌ 沒有設置任何 API 金鑰，無法獲取運勢數據');
-            throw new Error('請設置 Free Astrology API 金鑰（優先）或 Gemini API 金鑰（備用）');
+            console.warn('❌ 沒有設置 Gemini API 金鑰，無法獲取運勢數據');
+            throw new Error('請設置 Gemini API 金鑰');
         }
         
         // 驗證是否獲取到數據
@@ -148,67 +124,6 @@ class HoroscopeMarquee {
         }
     }
 
-    // 從 Free Astrology API 批量獲取運勢
-    async fetchFortunesFromAstrologyAPI(apiKey, date, cacheKey) {
-        try {
-            const fortunes = new Map();
-            
-            console.log(`🔮 開始從 Free Astrology API 獲取 ${this.zodiacs.length} 個星座的運勢...`);
-            
-            // 並行獲取所有星座運勢
-            const promises = this.zodiacs.map(async (zodiac) => {
-                try {
-                    const fortune = await this.fetchFromAstrologyAPI(zodiac, apiKey);
-                    // 驗證數據完整性
-                    if (fortune && (fortune.love || fortune.career || fortune.wealth || fortune.health || fortune.summary)) {
-                        fortunes.set(zodiac.name, fortune);
-                        console.log(`✅ [${zodiac.name}] 運勢獲取成功`);
-                        
-                        // 更新顯示（如果當前正在顯示這個星座）
-                        if (this.marqueeInterval && this.zodiacs[this.currentIndex].name === zodiac.name) {
-                            this.updateDisplay(zodiac, fortune);
-                        }
-                        return { status: 'fulfilled', zodiac: zodiac.name };
-                    } else {
-                        console.warn(`⚠️ [${zodiac.name}] API 返回的數據不完整:`, fortune);
-                        throw new Error('API 返回的數據不完整');
-                    }
-                } catch (error) {
-                    console.error(`❌ [${zodiac.name}] 運勢獲取失敗:`, error);
-                    return { status: 'rejected', zodiac: zodiac.name, error: error.message };
-                }
-            });
-            
-            // 使用 Promise.allSettled 來處理部分失敗的情況
-            const results = await Promise.allSettled(promises);
-            
-            // 檢查成功獲取的數量
-            const successCount = fortunes.size;
-            const failCount = this.zodiacs.length - successCount;
-            console.log(`📊 運勢獲取完成: 成功 ${successCount}/${this.zodiacs.length} 個，失敗 ${failCount} 個`);
-            
-            if (fortunes.size > 0) {
-                this.fortunes = fortunes;
-                
-                // 保存到緩存（只保存成功獲取的）
-                const cacheData = {
-                    date: date, // 保存日期
-                    timestamp: new Date().toISOString(),
-                    source: 'freeastrologyapi', // 標記數據來源
-                    fortunes: Array.from(fortunes.entries())
-                };
-                localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-                console.log(`💾 已保存 ${fortunes.size} 個星座的運勢到緩存: ${cacheKey}`);
-            } else {
-                throw new Error('未能獲取任何星座運勢數據');
-            }
-        } catch (error) {
-            console.error('❌ 批量獲取運勢失敗:', error);
-            // 不生成預設值，讓錯誤傳播
-            throw error;
-        }
-    }
-    
     // 從 AI 獲取運勢（Gemini API 備用方案）
     async fetchFortunesFromAI(apiKey, date, cacheKey) {
         try {
@@ -310,134 +225,6 @@ class HoroscopeMarquee {
         } catch (error) {
             console.error(`[${zodiac.name}] 獲取運勢錯誤:`, error);
             // 不返回預設值，讓錯誤傳播
-            throw error;
-        }
-    }
-    
-    // 從 Free Astrology API 獲取運勢
-    async fetchFromAstrologyAPI(zodiac, apiKey) {
-        // 星座名稱映射到 API 需要的格式
-        const zodiacMap = {
-            '白羊座': 'aries',
-            '金牛座': 'taurus',
-            '雙子座': 'gemini',
-            '巨蟹座': 'cancer',
-            '獅子座': 'leo',
-            '處女座': 'virgo',
-            '天秤座': 'libra',
-            '天蠍座': 'scorpio',
-            '射手座': 'sagittarius',
-            '摩羯座': 'capricorn',
-            '水瓶座': 'aquarius',
-            '雙魚座': 'pisces'
-        };
-        
-        const zodiacSign = zodiacMap[zodiac.name] || zodiac.name.toLowerCase();
-        
-        try {
-            // 使用 Free Astrology API 獲取今日運勢
-            const response = await fetch(`https://json.astrologyapi.com/v1/horoscope/daily/${zodiacSign}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Basic ${btoa(apiKey + ':')}`
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`API 請求失敗: ${response.status}`);
-            }
-
-            const data = await response.json();
-            
-            // 調試：查看實際返回的數據結構
-            console.log(`[${zodiac.name}] Free Astrology API 返回數據:`, data);
-            
-            // 解析 API 返回的實際數據（不添加任何預設值）
-            let loveText = null;
-            let careerText = null;
-            let wealthText = null;
-            let healthText = null;
-            let overallScore = null;
-            let summaryText = null;
-            
-            // 檢查數據結構
-            if (typeof data === 'object' && data !== null) {
-                // 方法1: 檢查是否有分開的字段（最常見的格式）
-                if (data.love) loveText = String(data.love).trim();
-                if (data.career) careerText = String(data.career).trim();
-                if (data.finance) wealthText = String(data.finance).trim();
-                if (data.health) healthText = String(data.health).trim();
-                
-                // 方法2: 檢查其他可能的字段名變體
-                if (!loveText && (data.love_text || data.loveText || data.relationship || data.love_prediction)) {
-                    loveText = String(data.love_text || data.loveText || data.relationship || data.love_prediction).trim();
-                }
-                if (!careerText && (data.career_text || data.careerText || data.work || data.career_prediction)) {
-                    careerText = String(data.career_text || data.careerText || data.work || data.career_prediction).trim();
-                }
-                if (!wealthText && (data.finance_text || data.financeText || data.wealth || data.money || data.finance_prediction)) {
-                    wealthText = String(data.finance_text || data.financeText || data.wealth || data.money || data.finance_prediction).trim();
-                }
-                if (!healthText && (data.health_text || data.healthText || data.health_prediction)) {
-                    healthText = String(data.health_text || data.healthText || data.health_prediction).trim();
-                }
-                
-                // 方法3: 如果有 prediction 文本，嘗試解析（作為備選）
-                if (data.prediction && typeof data.prediction === 'string') {
-                    summaryText = String(data.prediction).trim();
-                    // 嘗試從 prediction 中提取各項運勢（如果沒有獨立字段）
-                    if (!loveText) {
-                        const loveMatch = summaryText.match(/(?:愛情|感情|love|relationship)[：:]\s*([^。\n，,]+)/i);
-                        if (loveMatch) loveText = loveMatch[1].trim();
-                    }
-                    if (!careerText) {
-                        const careerMatch = summaryText.match(/(?:事業|工作|career|work)[：:]\s*([^。\n，,]+)/i);
-                        if (careerMatch) careerText = careerMatch[1].trim();
-                    }
-                    if (!wealthText) {
-                        const wealthMatch = summaryText.match(/(?:財運|財富|finance|money)[：:]\s*([^。\n，,]+)/i);
-                        if (wealthMatch) wealthText = wealthMatch[1].trim();
-                    }
-                    if (!healthText) {
-                        const healthMatch = summaryText.match(/(?:健康|health)[：:]\s*([^。\n，,]+)/i);
-                        if (healthMatch) healthText = healthMatch[1].trim();
-                    }
-                }
-                
-                // 獲取評分
-                if (data.score !== undefined && data.score !== null) {
-                    overallScore = typeof data.score === 'number' ? data.score : parseInt(data.score);
-                    if (isNaN(overallScore)) overallScore = null;
-                }
-                
-                // 獲取摘要（如果沒有 prediction）
-                if (!summaryText && (data.description || data.summary || data.text || data.prediction)) {
-                    summaryText = String(data.description || data.summary || data.text || data.prediction).trim();
-                }
-            } else if (typeof data === 'string') {
-                // 如果返回的是字符串，作為摘要
-                summaryText = data.trim();
-            }
-            
-            // 驗證：至少要有一些實際數據
-            const hasData = loveText || careerText || wealthText || healthText || summaryText;
-            if (!hasData) {
-                console.error(`[${zodiac.name}] API 返回的數據格式無法解析:`, data);
-                throw new Error('API 返回的數據格式無法解析，沒有找到有效的運勢內容');
-            }
-            
-            // 只返回實際獲取到的數據，不添加任何預設值
-            return {
-                overall: overallScore !== null ? this.convertScoreToStars(overallScore) : null,
-                love: loveText,
-                career: careerText,
-                wealth: wealthText,
-                health: healthText,
-                summary: summaryText
-            };
-        } catch (error) {
-            console.error(`Free Astrology API 錯誤:`, error);
             throw error;
         }
     }
@@ -712,82 +499,6 @@ class HoroscopeMarquee {
         return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
     }
     
-    // 強制重新抓取運勢（清除緩存並重新獲取）
-    async refreshFortunes() {
-        const today = new Date().toISOString().split('T')[0];
-        const cachedKey = `horoscope_${today}`;
-        
-        console.log('🔄 開始強制重新抓取運勢...');
-        
-        // 清除今日緩存
-        try {
-            localStorage.removeItem(cachedKey);
-            console.log('🗑️ 已清除今日緩存:', cachedKey);
-        } catch (e) {
-            console.warn('清除緩存失敗:', e);
-        }
-        
-        // 清空當前運勢數據
-        this.fortunes.clear();
-        
-        // 顯示載入中狀態
-        const content = document.getElementById('marqueeContent');
-        if (content) {
-            const todayDate = new Date();
-            const dateStr = `${todayDate.getFullYear()}年${todayDate.getMonth() + 1}月${todayDate.getDate()}日`;
-            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-            const weekday = weekdays[todayDate.getDay()];
-            
-            content.innerHTML = `
-                <div class="marquee-item">
-                    <div class="marquee-date">
-                        <span class="date-text">📅 ${dateStr} 星期${weekday}</span>
-                    </div>
-                    <div class="zodiac-icon">🔄</div>
-                    <div class="zodiac-info">
-                        <div class="zodiac-header">
-                            <span class="zodiac-name">重新載入中...</span>
-                        </div>
-                        <div class="zodiac-fortune">
-                            <span style="color: #ffb74d;">正在從 API 重新獲取運勢數據...</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // 重新載入運勢
-        try {
-            await this.loadTodayFortunes();
-            console.log('✅ 運勢重新載入完成');
-            
-            // 如果輪播已啟動，更新顯示
-            if (this.marqueeInterval) {
-                this.showCurrentZodiac();
-            } else {
-                // 如果輪播未啟動，重新啟動
-                this.startMarquee();
-            }
-        } catch (error) {
-            console.error('❌ 重新載入運勢失敗:', error);
-            // 顯示錯誤狀態
-            if (content) {
-                content.innerHTML = `
-                    <div class="marquee-item">
-                        <div class="zodiac-icon">⚠️</div>
-                        <div class="zodiac-info">
-                            <div class="zodiac-header">
-                                <span class="zodiac-name">載入失敗</span>
-                            </div>
-                            <div class="zodiac-fortune">
-                                <span style="color: #ff6b6b;">${error.message || '無法獲取運勢數據'}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-    }
 }
 
 // 初始化跑馬燈

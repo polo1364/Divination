@@ -298,29 +298,6 @@ function saveApiKey(apiKey) {
     }
 }
 
-function getAstrologyApiKey() {
-    // 優先從 localStorage 讀取
-    const savedKey = localStorage.getItem('astrology_api_key');
-    if (savedKey && savedKey.trim()) {
-        return savedKey.trim();
-    }
-    
-    // 如果沒有保存的，從輸入框讀取
-    const astrologyApiKeyInput = document.getElementById('astrologyApiKey');
-    if (astrologyApiKeyInput && astrologyApiKeyInput.value.trim()) {
-        return astrologyApiKeyInput.value.trim();
-    }
-    
-    return '';
-}
-
-function saveAstrologyApiKey(apiKey) {
-    if (apiKey) {
-        localStorage.setItem('astrology_api_key', apiKey);
-    } else {
-        localStorage.removeItem('astrology_api_key');
-    }
-}
 
 function loadApiKey() {
     const savedKey = localStorage.getItem('gemini_api_key');
@@ -335,18 +312,6 @@ function loadApiKey() {
         }
     }
     
-    // 載入 Astrology API 金鑰
-    const savedAstrologyKey = localStorage.getItem('astrology_api_key');
-    const astrologyApiKeyInput = document.getElementById('astrologyApiKey');
-    if (astrologyApiKeyInput) {
-        if (savedAstrologyKey && savedAstrologyKey.trim()) {
-            astrologyApiKeyInput.value = savedAstrologyKey;
-            updateAstrologyApiKeyStatus(true);
-        } else {
-            astrologyApiKeyInput.value = '';
-            updateAstrologyApiKeyStatus(false);
-        }
-    }
 }
 
 function updateApiKeyStatus(isSet) {
@@ -362,18 +327,6 @@ function updateApiKeyStatus(isSet) {
     }
 }
 
-function updateAstrologyApiKeyStatus(isSet) {
-    const statusEl = document.getElementById('astrologyApiKeyStatus');
-    if (statusEl) {
-        if (isSet) {
-            statusEl.textContent = '✓ 已設置';
-            statusEl.className = 'api-key-status valid';
-        } else {
-            statusEl.textContent = '未設置';
-            statusEl.className = 'api-key-status';
-        }
-    }
-}
 
 // 模態框管理
 function openModal() {
@@ -463,16 +416,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (saveApiKeyBtn) {
         saveApiKeyBtn.addEventListener('click', () => {
             const key = apiKeyInput ? apiKeyInput.value.trim() : '';
-            const astrologyKeyInput = document.getElementById('astrologyApiKey');
-            const astrologyKey = astrologyKeyInput ? astrologyKeyInput.value.trim() : '';
-            
             // 保存 Gemini API 金鑰（即使為空也保存，允許清除）
             saveApiKey(key);
             updateApiKeyStatus(key.length > 0);
-            
-            // 保存 Astrology API 金鑰（即使為空也保存，允許清除）
-            saveAstrologyApiKey(astrologyKey);
-            updateAstrologyApiKeyStatus(astrologyKey.length > 0);
             
             closeModal();
             // 顯示成功提示
@@ -512,24 +458,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // 切換 Astrology API 金鑰顯示/隱藏
-    const toggleAstrologyApiKeyBtn = document.getElementById('toggleAstrologyApiKey');
-    const astrologyApiKeyInput = document.getElementById('astrologyApiKey');
-    if (toggleAstrologyApiKeyBtn && astrologyApiKeyInput) {
-        toggleAstrologyApiKeyBtn.addEventListener('click', () => {
-            const type = astrologyApiKeyInput.type === 'password' ? 'text' : 'password';
-            astrologyApiKeyInput.type = type;
-            toggleAstrologyApiKeyBtn.textContent = type === 'password' ? '👁️' : '🙈';
-        });
-    }
-    
-    // Astrology API 金鑰輸入監聽
-    if (astrologyApiKeyInput) {
-        astrologyApiKeyInput.addEventListener('input', (e) => {
-            const key = e.target.value.trim();
-            updateAstrologyApiKeyStatus(key.length > 0);
-        });
-    }
 
     // 檢查是否有保存的 API 金鑰
     const savedKey = localStorage.getItem('gemini_api_key');
