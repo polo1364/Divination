@@ -1688,6 +1688,156 @@ class CelestialOS {
         `;
     }
 
+    // ========== 視覺冥想功能 ==========
+    async startMeditation(theme) {
+        const apiKey = getApiKey();
+        if (!apiKey) {
+            this.showError('請先設置 API 金鑰');
+            setTimeout(() => openModal(), 500);
+            return;
+        }
+
+        const meditationTab = document.getElementById('meditationTab');
+        if (!meditationTab) {
+            this.showError('找不到冥想標籤頁');
+            return;
+        }
+        
+        const originalContent = meditationTab.innerHTML;
+        
+        // 顯示載入狀態
+        meditationTab.innerHTML = `
+            <div class="meditation-loading">
+                <div class="loading-animation">
+                    <div class="meditation-orb">
+                        <div class="orb-core"></div>
+                        <div class="orb-ring ring-1"></div>
+                        <div class="orb-ring ring-2"></div>
+                        <div class="orb-ring ring-3"></div>
+                    </div>
+                </div>
+                <h3>🧘 AI 正在為你生成冥想引導...</h3>
+                <p>主題：${theme}</p>
+            </div>
+        `;
+
+        try {
+            const question = `請為我生成一個關於「${theme}」主題的視覺冥想引導。我需要：1. 一個生動的視覺場景描述（如：森林、海邊、星空等）2. 逐步的冥想引導步驟 3. 呼吸節奏建議 4. 冥想結束後的建議`;
+            
+            const data = {
+                theme: theme,
+                type: 'meditation',
+                timestamp: new Date().toISOString()
+            };
+
+            const result = await getDivinationResult('meditation', question, data, apiKey);
+            this.displayMeditationResult(result, theme);
+        } catch (error) {
+            console.error('生成冥想引導失敗:', error);
+            meditationTab.innerHTML = originalContent;
+            this.showError('生成冥想引導失敗：' + (error.message || '請稍後再試'));
+        }
+    }
+
+    async startCustomMeditation() {
+        const customTheme = document.getElementById('customMeditationTheme')?.value.trim();
+        if (!customTheme) {
+            this.showError('請輸入冥想主題');
+            return;
+        }
+        await this.startMeditation(customTheme);
+    }
+
+    displayMeditationResult(result, theme) {
+        const meditationTab = document.getElementById('meditationTab');
+        if (!meditationTab) {
+            this.showError('找不到冥想標籤頁');
+            return;
+        }
+        
+        const resultData = result.result || result;
+
+        meditationTab.innerHTML = `
+            <div class="meditation-result">
+                <button class="back-btn" onclick="celestialOS.showSubconsciousTemple()">← 返回冥想</button>
+                
+                <div class="meditation-header">
+                    <div class="meditation-theme-display">
+                        <span class="theme-badge">${theme}</span>
+                        <h3>🧘 你的專屬冥想引導</h3>
+                    </div>
+                </div>
+
+                ${resultData.scene ? `
+                    <div class="meditation-scene">
+                        <h4>🌌 視覺場景</h4>
+                        <div class="scene-description">
+                            ${resultData.scene}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${resultData.guide ? `
+                    <div class="meditation-guide">
+                        <h4>🧘 冥想引導</h4>
+                        <div class="guide-steps">
+                            ${Array.isArray(resultData.guide) ? 
+                                resultData.guide.map((step, index) => `
+                                    <div class="guide-step">
+                                        <span class="step-number">${index + 1}</span>
+                                        <p>${step}</p>
+                                    </div>
+                                `).join('') :
+                                `<div class="guide-step"><p>${resultData.guide}</p></div>`
+                            }
+                        </div>
+                    </div>
+                ` : resultData.analysis ? `
+                    <div class="meditation-guide">
+                        <h4>🧘 冥想引導</h4>
+                        <div class="guide-content">
+                            ${resultData.analysis}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${resultData.breathing ? `
+                    <div class="meditation-breathing">
+                        <h4>💨 呼吸節奏</h4>
+                        <div class="breathing-pattern">
+                            ${resultData.breathing}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0 ? `
+                    <div class="meditation-advice">
+                        <h4>💡 冥想後建議</h4>
+                        <ul>
+                            ${resultData.advice.map(a => `<li>${a}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+
+                ${resultData.duration ? `
+                    <div class="meditation-duration">
+                        <p><strong>建議時長：</strong>${resultData.duration}</p>
+                    </div>
+                ` : ''}
+
+                <div class="meditation-actions">
+                    <button class="btn-primary" onclick="celestialOS.startMeditation('${theme}')">🔄 重新生成</button>
+                    <button class="btn-secondary" onclick="celestialOS.shareMeditation('${theme}')">📤 分享冥想</button>
+                </div>
+            </div>
+        `;
+    }
+
+    shareMeditation(theme) {
+        // 可以實現分享功能
+        this.showSuccess('冥想引導已準備好分享');
+    }
+
     // 測字分析
     async analyzeCalligraphy() {
         const text = document.getElementById('calligraphyText').value.trim();
