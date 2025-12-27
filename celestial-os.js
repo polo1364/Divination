@@ -214,21 +214,64 @@ class CelestialOS {
                 
                 <div class="subconscious-content">
                     <div id="dreamTab" class="tab-content active">
-                        <textarea id="dreamText" class="dream-textarea" placeholder="記錄你的夢境..."></textarea>
-                        <button class="btn-primary" onclick="celestialOS.analyzeDream()">AI 解夢分析</button>
+                        <div class="tab-instruction">
+                            <p>記錄你的夢境，AI 將為你進行深度心理分析</p>
+                        </div>
+                        <textarea id="dreamText" class="dream-textarea" placeholder="請詳細描述你的夢境，包括夢中的場景、人物、情緒等..."></textarea>
+                        <button class="btn-primary" onclick="celestialOS.analyzeDream()">🔮 AI 解夢分析</button>
                     </div>
                     
                     <div id="meditationTab" class="tab-content hidden">
-                        <p>視覺冥想功能開發中...</p>
+                        <div class="meditation-content">
+                            <h3>🧘 視覺冥想</h3>
+                            <p>功能開發中，未來將支持塔羅牌視覺化生成...</p>
+                            <div class="meditation-placeholder">
+                                <div class="placeholder-icon">🎨</div>
+                                <p>即將推出</p>
+                            </div>
+                        </div>
                     </div>
                     
                     <div id="calligraphyTab" class="tab-content hidden">
-                        <input type="text" id="calligraphyText" placeholder="輸入一個字" maxlength="1">
-                        <button class="btn-primary" onclick="celestialOS.analyzeCalligraphy()">測字分析</button>
+                        <div class="tab-instruction">
+                            <p>輸入一個字，AI 將為你進行測字分析</p>
+                        </div>
+                        <div class="calligraphy-input-area">
+                            <input type="text" id="calligraphyText" placeholder="輸入一個字" maxlength="1" 
+                                   style="font-size: 3em; text-align: center; width: 200px; padding: 20px; margin: 20px auto; display: block; background: rgba(255,255,255,0.1); border: 2px solid rgba(138,43,226,0.5); border-radius: 10px; color: #ffffff;">
+                            <button class="btn-primary" onclick="celestialOS.analyzeCalligraphy()">✍️ 測字分析</button>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
+        
+        // 設置標籤切換（在 DOM 更新後）
+        setTimeout(() => {
+            this.setupSubconsciousTabs();
+        }, 100);
+    }
+
+    // 設置潛意識殿標籤切換
+    setupSubconsciousTabs() {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                // 移除所有活動狀態
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => {
+                    c.classList.add('hidden');
+                    c.classList.remove('active');
+                });
+                // 設置當前活動標籤
+                btn.classList.add('active');
+                const tabElement = document.getElementById(tab + 'Tab');
+                if (tabElement) {
+                    tabElement.classList.remove('hidden');
+                    tabElement.classList.add('active');
+                }
+            });
+        });
     }
 
     // 返回神殿導航
@@ -310,12 +353,103 @@ class CelestialOS {
     }
 
     // 查看詳情
-    viewDetail(type) {
-        // 切換到傳統模式並顯示對應的占卜類型
-        document.getElementById('traditionalMode').classList.remove('hidden');
-        if (typeof switchDivinationType === 'function') {
-            switchDivinationType(type);
+    async viewDetail(type) {
+        const calculatedData = userProfile.getCalculatedData(type);
+        if (!calculatedData) {
+            this.showError('該命盤尚未計算，請先計算命盤');
+            return;
         }
+
+        // 獲取使用者檔案資訊
+        const profile = userProfile.profile;
+        const question = '請為我詳細解讀我的命盤';
+
+        // 構建資料
+        let data = {
+            birthDate: `${profile.birthYear}-${String(profile.birthMonth).padStart(2, '0')}-${String(profile.birthDay).padStart(2, '0'))}`,
+            birthTime: `${String(profile.birthHour).padStart(2, '0')}:${String(profile.birthMinute).padStart(2, '0')}`,
+            calculation: calculatedData
+        };
+
+        if (type === 'astrology') {
+            data.birthPlace = profile.birthPlace;
+        } else {
+            data.name = profile.name || '';
+            data.gender = profile.gender;
+        }
+
+        // 顯示載入
+        const container = document.getElementById('formContainer');
+        container.innerHTML = `
+            <div class="detail-loading">
+                <div class="spinner"></div>
+                <p>AI 正在解讀你的命盤...</p>
+            </div>
+        `;
+
+        try {
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                this.showError('請先設置 API 金鑰');
+                setTimeout(() => openModal(), 500);
+                return;
+            }
+
+            // 調用 AI 解讀
+            const result = await getDivinationResult(type, question, data, apiKey);
+            
+            // 顯示結果
+            this.displayDetailResult(type, question, data, result);
+        } catch (error) {
+            console.error('解讀失敗:', error);
+            this.showError('解讀失敗：' + error.message);
+        }
+    }
+
+    // 顯示詳情結果
+    displayDetailResult(type, question, data, result) {
+        const container = document.getElementById('formContainer');
+        
+        // 使用現有的 displayDivinationResult 函數
+        if (typeof displayDivinationResult === 'function') {
+            // 確保結果區域存在
+            let resultSection = document.getElementById('resultSection');
+            if (!resultSection) {
+                // 創建結果區域
+                const main = document.querySelector('main');
+                resultSection = document.createElement('div');
+                resultSection.id = 'resultSection';
+                resultSection.className = 'result-section';
+                resultSection.innerHTML = '<div id="resultContent" class="result-content"></div>';
+                main.appendChild(resultSection);
+            }
+            
+            displayDivinationResult(type, question, data, result);
+            
+            // 添加返回按鈕
+            const resultContent = document.getElementById('resultContent');
+            if (resultContent) {
+                resultContent.insertAdjacentHTML('afterbegin', `
+                    <div style="margin-bottom: 20px;">
+                        <button class="back-btn" onclick="celestialOS.backToDestinyDashboard()">← 返回儀表板</button>
+                    </div>
+                `);
+            }
+        } else {
+            // 備用顯示方式
+            container.innerHTML = `
+                <div class="detail-result">
+                    <button class="back-btn" onclick="celestialOS.backToDestinyDashboard()">← 返回儀表板</button>
+                    <h2>${type === 'bazi' ? '八字' : type === 'ziwei' ? '紫微斗數' : '西方占星'}命盤詳情</h2>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                </div>
+            `;
+        }
+    }
+
+    // 返回天命殿儀表板
+    backToDestinyDashboard() {
+        this.displayDestinyDashboard();
     }
 
     // 發送問題（靈犀殿）
@@ -323,6 +457,9 @@ class CelestialOS {
         const input = document.getElementById('questionInput');
         const question = input.value.trim();
         if (!question) return;
+
+        // 保存當前問題
+        this.currentQuestion = question;
 
         // 顯示使用者的問題
         const messages = document.getElementById('chatMessages');
@@ -332,28 +469,430 @@ class CelestialOS {
             </div>
         `;
 
+        // 顯示 AI 回應
+        messages.innerHTML += `
+            <div class="message bot-message">
+                <p>我理解了你的問題。請選擇一種占卜方式來探索答案：</p>
+            </div>
+        `;
+
         // 顯示占卜選項
         document.getElementById('divinationOptions').classList.remove('hidden');
         input.value = '';
+        
+        // 滾動到底部
+        messages.scrollTop = messages.scrollHeight;
     }
 
     // 選擇占卜類型（靈犀殿）
     selectDivinationType(type) {
-        // 切換到傳統模式並執行對應的占卜
-        document.getElementById('traditionalMode').classList.remove('hidden');
-        if (typeof switchDivinationType === 'function') {
-            switchDivinationType(type);
+        const messages = document.getElementById('chatMessages');
+        const typeNames = {
+            'tarot': '塔羅牌',
+            'yijing': '周易',
+            'migu': '米卦',
+            'qiuqian': '求籤'
+        };
+
+        // 顯示選擇的占卜方式
+        messages.innerHTML += `
+            <div class="message user-message">
+                <p>我選擇：${typeNames[type]}</p>
+            </div>
+        `;
+
+        messages.innerHTML += `
+            <div class="message bot-message">
+                <p>好的，讓我們開始 ${typeNames[type]} 占卜...</p>
+            </div>
+        `;
+
+        // 隱藏選項
+        document.getElementById('divinationOptions').classList.add('hidden');
+
+        // 執行占卜
+        this.executeDivination(type, this.currentQuestion);
+    }
+
+    // 執行占卜（靈犀殿）
+    async executeDivination(type, question) {
+        const messages = document.getElementById('chatMessages');
+        
+        // 顯示進行中訊息
+        messages.innerHTML += `
+            <div class="message bot-message">
+                <div class="divination-progress">
+                    <div class="spinner-small"></div>
+                    <p>正在進行 ${type === 'tarot' ? '塔羅牌' : type === 'yijing' ? '周易' : type === 'migu' ? '米卦' : '求籤'} 占卜...</p>
+                </div>
+            </div>
+        `;
+        messages.scrollTop = messages.scrollHeight;
+
+        try {
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                this.showError('請先設置 API 金鑰');
+                return;
+            }
+
+            // 生成占卜資料
+            let data = {};
+            if (type === 'tarot') {
+                const numCards = 3; // 靈犀殿使用三張牌
+                drawnCards = drawRandomCards(numCards);
+                data = { cards: drawnCards, spread: 'three' };
+            } else {
+                const guaData = generateGua(type);
+                data = guaData;
+            }
+
+            // 調用 AI 解讀
+            const result = await getDivinationResult(type, question, data, apiKey);
+            
+            // 顯示結果
+            this.displayDivinationInChat(type, question, data, result);
+        } catch (error) {
+            console.error('占卜失敗:', error);
+            messages.innerHTML += `
+                <div class="message bot-message error">
+                    <p>占卜失敗：${error.message}</p>
+                </div>
+            `;
+            messages.scrollTop = messages.scrollHeight;
         }
     }
 
-    // 顯示 AI 總顧問
-    showMasterConsultant() {
-        alert('AI 總顧問功能開發中...');
+    // 在聊天中顯示占卜結果
+    displayDivinationInChat(type, question, data, result) {
+        const messages = document.getElementById('chatMessages');
+        const resultData = result.result || result;
+
+        // 移除進度訊息
+        const progressMsg = messages.querySelector('.divination-progress');
+        if (progressMsg) {
+            progressMsg.parentElement.remove();
+        }
+
+        // 顯示結果
+        let resultHtml = `
+            <div class="message bot-message result-message">
+                <div class="chat-result">
+        `;
+
+        // 顯示占卜資料（如塔羅牌）
+        if (type === 'tarot' && data.cards) {
+            resultHtml += `
+                <div class="chat-tarot-cards">
+                    ${data.cards.map(card => `
+                        <div class="chat-card-mini">
+                            <div class="card-emoji">${card.emoji}</div>
+                            <div class="card-name">${card.displayName || card.name}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 顯示 AI 解讀
+        resultHtml += `
+                    <div class="chat-interpretation">
+                        <h4>🔮 解讀</h4>
+                        <p>${resultData.opening || resultData.analysis || '解讀結果'}</p>
+                    </div>
+        `;
+
+        if (resultData.advice && resultData.advice.length > 0) {
+            resultHtml += `
+                    <div class="chat-advice">
+                        <h4>💡 建議</h4>
+                        <ul>
+                            ${resultData.advice.map(a => `<li>${a}</li>`).join('')}
+                        </ul>
+                    </div>
+            `;
+        }
+
+        resultHtml += `
+                </div>
+            </div>
+        `;
+
+        messages.innerHTML += resultHtml;
+        messages.scrollTop = messages.scrollHeight;
+
+        // 添加繼續提問按鈕
+        setTimeout(() => {
+            messages.innerHTML += `
+                <div class="message bot-message">
+                    <p>還有其他問題嗎？請繼續提問。</p>
+                </div>
+            `;
+            messages.scrollTop = messages.scrollHeight;
+        }, 1000);
+    }
+
+    // 顯示 AI 總顧問（交叉驗證系統）
+    async showMasterConsultant() {
+        if (!userProfile.isProfileComplete()) {
+            this.showError('請先完成使用者檔案設置');
+            return;
+        }
+
+        const container = document.getElementById('formContainer');
+        container.innerHTML = `
+            <div class="master-consultant">
+                <div class="consultant-header">
+                    <button class="back-btn" onclick="celestialOS.backToDestinyDashboard()">← 返回儀表板</button>
+                    <h2>🤖 AI 總顧問 - 綜合命理分析</h2>
+                    <p class="consultant-subtitle">整合八字、紫微、占星、塔羅的交叉驗證分析</p>
+                </div>
+                
+                <div class="consultant-input">
+                    <label>請輸入你想詢問的問題：</label>
+                    <textarea id="consultantQuestion" class="consultant-textarea" placeholder="例如：我今年創業會成功嗎？"></textarea>
+                    <button class="btn-primary" onclick="celestialOS.consultMaster()">開始綜合分析</button>
+                </div>
+                
+                <div id="consultantResult" class="consultant-result hidden"></div>
+            </div>
+        `;
+    }
+
+    // 執行總顧問分析
+    async consultMaster() {
+        const question = document.getElementById('consultantQuestion').value.trim();
+        if (!question) {
+            this.showError('請輸入你的問題');
+            return;
+        }
+
+        const resultDiv = document.getElementById('consultantResult');
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = `
+            <div class="consultant-loading">
+                <div class="spinner"></div>
+                <p>AI 總顧問正在綜合分析中...</p>
+            </div>
+        `;
+
+        try {
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                this.showError('請先設置 API 金鑰');
+                return;
+            }
+
+            // 收集所有命理資料
+            const baziData = userProfile.getCalculatedData('bazi');
+            const ziweiData = userProfile.getCalculatedData('ziwei');
+            const astrologyData = userProfile.getCalculatedData('astrology');
+
+            // 如果沒有計算資料，先計算
+            if (!baziData || !ziweiData || !astrologyData) {
+                resultDiv.innerHTML = '<p>正在計算命盤資料...</p>';
+                await dataCenter.calculateAll(userProfile);
+            }
+
+            // 為問題抽取一張塔羅牌（增加隨機性）
+            const numCards = 1;
+            const tarotCard = drawRandomCards(numCards)[0];
+            
+            // 構建綜合分析資料
+            const comprehensiveData = {
+                question: question,
+                bazi: userProfile.getCalculatedData('bazi'),
+                ziwei: userProfile.getCalculatedData('ziwei'),
+                astrology: userProfile.getCalculatedData('astrology'),
+                tarot: {
+                    card: tarotCard,
+                    meaning: tarotCard.meaning
+                },
+                profile: userProfile.getProfileSummary()
+            };
+
+            // 調用 AI 總顧問 API
+            const result = await this.callMasterConsultant(question, comprehensiveData, apiKey);
+            
+            // 顯示結果
+            this.displayConsultantResult(result, tarotCard);
+        } catch (error) {
+            console.error('總顧問分析失敗:', error);
+            resultDiv.innerHTML = `<div class="error-message">分析失敗：${error.message}</div>`;
+        }
+    }
+
+    // 調用總顧問 API
+    async callMasterConsultant(question, data, apiKey) {
+        const response = await fetch('/api/divination', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                type: 'master_consultant',
+                question: question,
+                data: data,
+                apiKey: apiKey,
+                history: getRecentHistory(5)
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'API 請求失敗');
+        }
+
+        return await response.json();
+    }
+
+    // 顯示總顧問結果
+    displayConsultantResult(result, tarotCard) {
+        const resultDiv = document.getElementById('consultantResult');
+        const resultData = result.result || result;
+
+        resultDiv.innerHTML = `
+            <div class="consultant-analysis">
+                <div class="analysis-section">
+                    <h3>🎴 塔羅指引</h3>
+                    <div class="tarot-card-mini">
+                        <div class="card-emoji">${tarotCard.emoji}</div>
+                        <div class="card-name">${tarotCard.displayName || tarotCard.name}</div>
+                    </div>
+                </div>
+                
+                <div class="analysis-section">
+                    <h3>📊 綜合分析</h3>
+                    <div class="analysis-content">
+                        ${resultData.analysis || resultData.opening || '分析結果載入中...'}
+                    </div>
+                </div>
+                
+                <div class="analysis-section">
+                    <h3>💡 建議</h3>
+                    <ul class="advice-list">
+                        ${(resultData.advice || []).map(a => `<li>${a}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                ${resultData.summary ? `
+                    <div class="analysis-summary">
+                        <h3>✨ 總結</h3>
+                        <p>${resultData.summary}</p>
+                    </div>
+                ` : ''}
+            </div>
+        `;
     }
 
     // 顯示今日運勢日報
-    showDailyReport() {
-        alert('今日運勢日報功能開發中...');
+    async showDailyReport() {
+        if (!userProfile.isProfileComplete()) {
+            this.showError('請先完成使用者檔案設置');
+            return;
+        }
+
+        const container = document.getElementById('formContainer');
+        container.innerHTML = `
+            <div class="daily-report">
+                <div class="report-header">
+                    <button class="back-btn" onclick="celestialOS.backToDestinyDashboard()">← 返回儀表板</button>
+                    <h2>📊 今日運勢日報</h2>
+                    <p class="report-date">${new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</p>
+                </div>
+                
+                <div id="dailyReportContent" class="report-content">
+                    <div class="report-loading">
+                        <div class="spinner"></div>
+                        <p>正在生成你的專屬運勢日報...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        try {
+            await this.generateDailyReport();
+        } catch (error) {
+            console.error('生成日報失敗:', error);
+            this.showError('生成日報失敗：' + error.message);
+        }
+    }
+
+    // 生成每日運勢日報
+    async generateDailyReport() {
+        const apiKey = getApiKey();
+        if (!apiKey) {
+            this.showError('請先設置 API 金鑰');
+            return;
+        }
+
+        // 確保命盤已計算
+        if (!userProfile.calculatedData.bazi || !userProfile.calculatedData.ziwei) {
+            const content = document.getElementById('dailyReportContent');
+            content.innerHTML = '<p>正在計算命盤...</p>';
+            await dataCenter.calculateAll(userProfile);
+        }
+
+        const question = '請為我生成今日的運勢日報，包括整體運勢、愛情、事業、財運、健康等方面的建議';
+        
+        const data = {
+            type: 'daily_report',
+            bazi: userProfile.getCalculatedData('bazi'),
+            ziwei: userProfile.getCalculatedData('ziwei'),
+            astrology: userProfile.getCalculatedData('astrology'),
+            date: new Date().toISOString().split('T')[0]
+        };
+
+        try {
+            const result = await getDivinationResult('daily_report', question, data, apiKey);
+            this.displayDailyReport(result);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // 顯示每日運勢日報
+    displayDailyReport(result) {
+        const content = document.getElementById('dailyReportContent');
+        const resultData = result.result || result;
+
+        content.innerHTML = `
+            <div class="report-sections">
+                ${resultData.analysis ? `
+                    <div class="report-section">
+                        <h3>📈 整體運勢</h3>
+                        <p>${resultData.analysis}</p>
+                    </div>
+                ` : ''}
+                
+                ${resultData.advice ? `
+                    <div class="report-section">
+                        <h3>💡 今日建議</h3>
+                        <ul class="advice-list">
+                            ${resultData.advice.map(a => `<li>${a}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+                
+                ${resultData.luckyItems || resultData.lucky_color ? `
+                    <div class="report-section">
+                        <h3>🍀 幸運元素</h3>
+                        <div class="lucky-items">
+                            ${resultData.luckyItems ? 
+                                Object.entries(resultData.luckyItems).map(([key, value]) => 
+                                    `<div class="lucky-item"><span class="lucky-label">${key}：</span><span class="lucky-value">${value}</span></div>`
+                                ).join('') :
+                                `
+                                    ${resultData.lucky_color ? `<div class="lucky-item"><span class="lucky-label">幸運色：</span><span class="lucky-value">${resultData.lucky_color}</span></div>` : ''}
+                                    ${resultData.lucky_direction ? `<div class="lucky-item"><span class="lucky-label">幸運方位：</span><span class="lucky-value">${resultData.lucky_direction}</span></div>` : ''}
+                                    ${resultData.lucky_item ? `<div class="lucky-item"><span class="lucky-label">幸運小物：</span><span class="lucky-value">${resultData.lucky_item}</span></div>` : ''}
+                                `
+                            }
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
     }
 
     // 解夢分析

@@ -237,6 +237,101 @@ ${history.map((h, i) => {
     let typeSpecificPrompt = '';
 
     switch(type) {
+        case 'master_consultant':
+            typeSpecificPrompt = `AI 總顧問 - 綜合命理分析\n\n`;
+            typeSpecificPrompt += `用戶的問題：${question}\n\n`;
+            typeSpecificPrompt += `【綜合命理資料】\n`;
+            
+            if (data.bazi) {
+                typeSpecificPrompt += `八字命盤：${data.bazi.fullBazi || '已計算'}\n`;
+                typeSpecificPrompt += `- 年柱：${data.bazi.yearPillar || ''}\n`;
+                typeSpecificPrompt += `- 月柱：${data.bazi.monthPillar || ''}\n`;
+                typeSpecificPrompt += `- 日柱：${data.bazi.dayPillar || ''}\n`;
+                typeSpecificPrompt += `- 時柱：${data.bazi.hourPillar || ''}\n\n`;
+            }
+            
+            if (data.ziwei) {
+                typeSpecificPrompt += `紫微斗數：${data.ziwei.mingGong || '已計算'}\n`;
+                typeSpecificPrompt += `- 主星：${data.ziwei.mainStar || ''}\n\n`;
+            }
+            
+            if (data.astrology) {
+                typeSpecificPrompt += `西方占星：\n`;
+                typeSpecificPrompt += `- 太陽星座：${data.astrology.sunSign || ''}\n`;
+                if (data.astrology.moonSign) {
+                    typeSpecificPrompt += `- 月亮星座：${data.astrology.moonSign}\n`;
+                }
+                if (data.astrology.risingSign) {
+                    typeSpecificPrompt += `- 上升星座：${data.astrology.risingSign}\n`;
+                }
+                typeSpecificPrompt += `\n`;
+            }
+            
+            if (data.tarot) {
+                typeSpecificPrompt += `塔羅牌指引：${data.tarot.card.displayName || data.tarot.card.name}（${data.tarot.meaning}）\n\n`;
+            }
+            
+            typeSpecificPrompt += `【任務】\n`;
+            typeSpecificPrompt += `請綜合以上所有命理資料，進行交叉驗證分析。你需要：\n`;
+            typeSpecificPrompt += `1. 比較不同命理系統的結論，找出共同點和矛盾點\n`;
+            typeSpecificPrompt += `2. 分析塔羅牌與命盤的關聯性\n`;
+            typeSpecificPrompt += `3. 給出綜合性的建議，平衡不同系統的觀點\n`;
+            typeSpecificPrompt += `4. 如果發現矛盾，要解釋為什麼會有這種差異\n`;
+            typeSpecificPrompt += `5. 最終給出一個綜合性的結論和建議\n\n`;
+            typeSpecificPrompt += `請以「大師綜合分析」的口吻，整合所有資訊，給出最全面的解答。`;
+            break;
+
+        case 'daily_report':
+            typeSpecificPrompt = `每日運勢日報生成\n\n`;
+            typeSpecificPrompt += `日期：${data.date || new Date().toISOString().split('T')[0]}\n\n`;
+            
+            if (data.bazi) {
+                typeSpecificPrompt += `八字命盤：${data.bazi.fullBazi || '已計算'}\n`;
+            }
+            if (data.ziwei) {
+                typeSpecificPrompt += `紫微斗數：${data.ziwei.mingGong || '已計算'}\n`;
+            }
+            if (data.astrology) {
+                typeSpecificPrompt += `占星：${data.astrology.sunSign || ''}\n`;
+            }
+            
+            typeSpecificPrompt += `\n【任務】\n`;
+            typeSpecificPrompt += `請根據今天的星象、流日、流月，結合使用者的命盤，生成一份詳細的今日運勢日報。\n`;
+            typeSpecificPrompt += `內容應包括：\n`;
+            typeSpecificPrompt += `1. 整體運勢（1-5星評分）\n`;
+            typeSpecificPrompt += `2. 愛情運勢\n`;
+            typeSpecificPrompt += `3. 事業運勢\n`;
+            typeSpecificPrompt += `4. 財運\n`;
+            typeSpecificPrompt += `5. 健康運勢\n`;
+            typeSpecificPrompt += `6. 今日幸運元素（顏色、方位、數字等）\n`;
+            typeSpecificPrompt += `7. 今日注意事項\n\n`;
+            typeSpecificPrompt += `請以日報的格式，簡潔明瞭地呈現。`;
+            break;
+
+        case 'dream':
+            typeSpecificPrompt = `AI 解夢分析\n\n`;
+            typeSpecificPrompt += `夢境內容：${data.dreamText || question}\n\n`;
+            typeSpecificPrompt += `【任務】\n`;
+            typeSpecificPrompt += `請運用心理學和象徵學的知識，分析這個夢境。你需要：\n`;
+            typeSpecificPrompt += `1. 分析夢境中的主要象徵符號\n`;
+            typeSpecificPrompt += `2. 探討可能的潛意識訊息\n`;
+            typeSpecificPrompt += `3. 結合使用者的情緒狀態（如果夢境中有體現）\n`;
+            typeSpecificPrompt += `4. 給出心理層面的建議\n\n`;
+            typeSpecificPrompt += `請以心理分析師的角度，溫和且專業地解讀。`;
+            break;
+
+        case 'calligraphy':
+            typeSpecificPrompt = `測字分析\n\n`;
+            typeSpecificPrompt += `測的字：${data.character || question}\n\n`;
+            typeSpecificPrompt += `【任務】\n`;
+            typeSpecificPrompt += `請運用字形、字義、拆字等方法，分析這個字對使用者的啟示。你需要：\n`;
+            typeSpecificPrompt += `1. 分析字的結構和筆畫\n`;
+            typeSpecificPrompt += `2. 探討字的象徵意義\n`;
+            typeSpecificPrompt += `3. 結合使用者的問題，給出指引\n`;
+            typeSpecificPrompt += `4. 提供相關的建議\n\n`;
+            typeSpecificPrompt += `請以傳統測字師的角度，結合現代心理學，給出分析。`;
+            break;
+
         case 'tarot':
             if (data.cards && data.cards.length > 0) {
                 // RAG：從定義庫中獲取牌的詳細資訊
