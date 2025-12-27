@@ -91,6 +91,188 @@ let currentSpread = 'single';
 let drawnCards = [];
 let currentDivinationType = 'tarot'; // 當前選擇的占卜方式
 
+// 音效管理
+let audioContext = null;
+try {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+} catch (error) {
+    console.log('音效初始化失敗:', error);
+}
+
+// 洗牌互動狀態
+let shuffleState = {
+    isShuffling: false,
+    progress: 0,
+    requiredProgress: 100,
+    touchStartTime: 0,
+    touchStartX: 0,
+    touchStartY: 0
+};
+
+// 播放音效
+function playSound(type) {
+    if (!audioContext) return;
+    
+    try {
+        let frequency, duration, waveType;
+        switch(type) {
+            case 'shuffle':
+                frequency = 200;
+                duration = 0.1;
+                waveType = 'sawtooth';
+                break;
+            case 'cardFlip':
+                frequency = 800;
+                duration = 0.15;
+                waveType = 'sine';
+                break;
+            case 'ambient':
+                frequency = 150;
+                duration = 0.05;
+                waveType = 'sawtooth';
+                break;
+            default:
+                return;
+        }
+        
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = waveType;
+        
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + duration);
+    } catch (error) {
+        console.log('音效播放失敗:', error);
+    }
+}
+
+// 初始化洗牌互動
+function initShuffleInteraction() {
+    const shuffleArea = document.getElementById('shuffleArea');
+    const shuffleProgress = document.getElementById('shuffleProgress');
+    const progressBar = document.querySelector('.shuffle-progress-bar');
+    
+    if (!shuffleArea) return;
+    
+    // 觸摸開始
+    shuffleArea.addEventListener('touchstart', (e) => {
+        if (currentDivinationType !== 'tarot') return;
+        e.preventDefault();
+        shuffleState.isShuffling = true;
+        shuffleState.touchStartTime = Date.now();
+        shuffleState.touchStartX = e.touches[0].clientX;
+        shuffleState.touchStartY = e.touches[0].clientY;
+        shuffleArea.classList.add('shuffling');
+        playSound('shuffle');
+    });
+    
+    // 觸摸移動（滑動切牌）
+    shuffleArea.addEventListener('touchmove', (e) => {
+        if (!shuffleState.isShuffling) return;
+        e.preventDefault();
+        const deltaX = Math.abs(e.touches[0].clientX - shuffleState.touchStartX);
+        const deltaY = Math.abs(e.touches[0].clientY - shuffleState.touchStartY);
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        
+        shuffleState.progress = Math.min(100, shuffleState.progress + distance * 0.1);
+        
+        if (shuffleProgress) {
+            shuffleProgress.textContent = Math.floor(shuffleState.progress) + '%';
+        }
+        if (progressBar) {
+            progressBar.style.width = shuffleState.progress + '%';
+        }
+        
+        if (Math.floor(shuffleState.progress) % 10 === 0) {
+            playSound('shuffle');
+        }
+        
+        shuffleState.touchStartX = e.touches[0].clientX;
+        shuffleState.touchStartY = e.touches[0].clientY;
+    });
+    
+    // 觸摸結束
+    shuffleArea.addEventListener('touchend', (e) => {
+        if (!shuffleState.isShuffling) return;
+        e.preventDefault();
+        shuffleState.isShuffling = false;
+        shuffleArea.classList.remove('shuffling');
+        
+        if (shuffleState.progress >= shuffleState.requiredProgress) {
+            shuffleArea.classList.add('hidden');
+            startDivinationAfterShuffle();
+        } else {
+            shuffleState.progress = 0;
+            if (shuffleProgress) shuffleProgress.textContent = '0%';
+            if (progressBar) progressBar.style.width = '0%';
+        }
+    });
+    
+    // 滑鼠事件（桌面端）
+    let mouseDown = false;
+    let lastX = 0, lastY = 0;
+    
+    shuffleArea.addEventListener('mousedown', (e) => {
+        if (currentDivinationType !== 'tarot') return;
+        mouseDown = true;
+        shuffleState.isShuffling = true;
+        shuffleState.touchStartTime = Date.now();
+        shuffleState.touchStartX = e.clientX;
+        shuffleState.touchStartY = e.clientY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        shuffleArea.classList.add('shuffling');
+        playSound('shuffle');
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!mouseDown || !shuffleState.isShuffling) return;
+        const deltaX = Math.abs(e.clientX - lastX);
+        const deltaY = Math.abs(e.clientY - lastY);
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        
+        shuffleState.progress = Math.min(100, shuffleState.progress + distance * 0.1);
+        
+        if (shuffleProgress) {
+            shuffleProgress.textContent = Math.floor(shuffleState.progress) + '%';
+        }
+        if (progressBar) {
+            progressBar.style.width = shuffleState.progress + '%';
+        }
+        
+        if (Math.floor(shuffleState.progress) % 10 === 0) {
+            playSound('shuffle');
+        }
+        
+        lastX = e.clientX;
+        lastY = e.clientY;
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (!mouseDown) return;
+        mouseDown = false;
+        shuffleState.isShuffling = false;
+        shuffleArea.classList.remove('shuffling');
+        
+        if (shuffleState.progress >= shuffleState.requiredProgress) {
+            shuffleArea.classList.add('hidden');
+            startDivinationAfterShuffle();
+        } else {
+            shuffleState.progress = 0;
+            if (shuffleProgress) shuffleProgress.textContent = '0%';
+            if (progressBar) progressBar.style.width = '0%';
+        }
+    });
+}
+
 // API 金鑰管理
 function getApiKey() {
     const apiKeyInput = document.getElementById('apiKey');
@@ -578,6 +760,116 @@ function switchDivinationType(type) {
         if (form) {
             form.classList.remove('hidden');
             form.classList.add('active');
+        }
+    }
+}
+
+// 重複定義已移除，請使用文件頂部的定義（第 112-246 行）
+
+// 洗牌完成後開始占卜
+async function startDivinationAfterShuffle() {
+    // 播放翻牌音效
+    playSound('cardFlip');
+    
+    // 抽牌
+    const numCards = currentSpread === 'single' ? 1 : 3;
+    drawnCards = drawRandomCards(numCards);
+    displayCards(drawnCards);
+    
+    // 心理延遲：3-5秒的過場動畫
+    const loading = document.getElementById('loading');
+    const loadingText = loading.querySelector('p');
+    
+    loading.classList.remove('hidden');
+    
+    // 階段性顯示文字，增加期待感
+    const stages = [
+        { text: '🔮 牌面正在顯現...', delay: 1000 },
+        { text: '✨ 能量正在匯聚...', delay: 2000 },
+        { text: '🌟 AI 正在解讀中...', delay: 3000 }
+    ];
+    
+    for (let i = 0; i < stages.length; i++) {
+        const stage = stages[i];
+        const prevDelay = i > 0 ? stages[i - 1].delay : 0;
+        await new Promise(resolve => setTimeout(resolve, stage.delay - prevDelay));
+        if (loadingText) {
+            loadingText.textContent = stage.text;
+        }
+        playSound('ambient');
+    }
+    
+    // 繼續原有的占卜流程
+    await continueDivination();
+}
+
+// 繼續占卜（從洗牌後開始）
+async function continueDivination() {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+        showError('請先設置 Gemini API 金鑰！', 'error');
+        setTimeout(() => openModal(), 500);
+        return;
+    }
+
+    const divineBtn = document.getElementById('divineBtn');
+    const loading = document.getElementById('loading');
+    const resultSection = document.getElementById('resultSection');
+    
+    // 收集數據
+    const question = getQuestionValue('question', 'questionCustom');
+    if (!question) {
+        showError('請先選擇或輸入您的問題！', 'error');
+        return;
+    }
+    
+    const numCards = currentSpread === 'single' ? 1 : 3;
+    const data = { cards: drawnCards, spread: currentSpread };
+    
+    // 執行占卜
+    await performDivination(question, data, apiKey, divineBtn, loading, resultSection);
+}
+
+// 心理延遲動畫（3-5秒過場）
+async function performPsychologicalDelay() {
+    const loading = document.getElementById('loading');
+    const loadingText = loading.querySelector('p');
+    
+    loading.classList.remove('hidden');
+    
+    const stages = [
+        { text: '🔮 正在連接宇宙能量...', delay: 1200 },
+        { text: '✨ 牌面正在顯現...', delay: 1200 },
+        { text: '🌟 AI 正在解讀中...', delay: 1500 }
+    ];
+    
+    for (let i = 0; i < stages.length; i++) {
+        const stage = stages[i];
+        const prevDelay = i > 0 ? stages[i - 1].delay : 0;
+        if (loadingText) {
+            loadingText.textContent = stage.text;
+        }
+        playSound('ambient');
+        await new Promise(resolve => setTimeout(resolve, stage.delay - prevDelay));
+    }
+}
+
+// 執行占卜（統一函數）
+async function performDivination(question, data, apiKey, divineBtn, loading, resultSection) {
+    try {
+        if (divineBtn) divineBtn.disabled = true;
+        if (resultSection) resultSection.classList.add('hidden');
+        
+        const result = await getDivinationResult(currentDivinationType, question, data, apiKey);
+        displayDivinationResult(currentDivinationType, question, data, result);
+    } catch (error) {
+        console.error('解讀錯誤:', error);
+        showError('解讀失敗：' + error.message, 'error');
+    } finally {
+        if (loading) loading.classList.add('hidden');
+        if (divineBtn) {
+            divineBtn.disabled = false;
+            divineBtn.style.display = '';
         }
     }
 }
