@@ -81,8 +81,8 @@
                     <p class="setup-description">只需輸入一次，系統將自動計算所有命理資料</p>
                     <form id="profileForm" class="profile-form">
                         <div class="form-group">
-                            <label for="name">姓名（可選）</label>
-                            <input type="text" id="name" placeholder="輸入您的姓名">
+                            <label for="profileName">姓名（可選）</label>
+                            <input type="text" id="profileName" placeholder="輸入您的姓名">
                         </div>
                         <div class="form-row">
                             <div class="form-group">
@@ -415,8 +415,8 @@
                     <div class="birth-info-section">
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="name">姓名</label>
-                                <input type="text" id="name" placeholder="請輸入姓名">
+                                <label for="baziName">姓名</label>
+                                <input type="text" id="baziName" placeholder="請輸入姓名">
                             </div>
                             <div class="form-group">
                                 <label for="gender">性別</label>
@@ -600,7 +600,28 @@
 
     <script src="user-profile.js"></script>
     <script src="data-center.js"></script>
-    <script src="features.js"></script>
+    <script>
+        // 載入 features.js 並檢查是否成功
+        const featuresScript = document.createElement('script');
+        featuresScript.src = 'features.js';
+        featuresScript.onerror = function() {
+            console.error('❌ 無法載入 features.js，部分功能可能無法使用');
+            // 創建空對象以避免錯誤
+            window.voiceInput = null;
+            window.wishSystem = null;
+            window.fortuneComparison = null;
+            window.VoiceInput = null;
+            window.WishSystem = null;
+            window.ExtendedDivination = null;
+            window.KnowledgeBase = null;
+            window.FortuneComparison = null;
+            window.DestinyExport = null;
+        };
+        featuresScript.onload = function() {
+            console.log('✅ features.js 載入成功');
+        };
+        document.head.appendChild(featuresScript);
+    </script>
     <script src="script.js"></script>
     <script>
         // 載入塔羅牌定義（用於知識庫）

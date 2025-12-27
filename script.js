@@ -1005,7 +1005,7 @@ async function handleDivination() {
                 if (calcResponse.ok) {
                     const calcData = await calcResponse.json();
                     data = {
-                        name: document.getElementById('name').value.trim(),
+                        name: document.getElementById('baziName') ? document.getElementById('baziName').value.trim() : '',
                         gender: document.getElementById('gender').value,
                         birthDate: birthDate,
                         birthTime: birthTime,
@@ -1018,7 +1018,7 @@ async function handleDivination() {
                         ? calculateBazi(birthDateTime)
                         : calculateZiwei(birthDateTime);
                     data = {
-                        name: document.getElementById('name').value.trim(),
+                        name: document.getElementById('baziName') ? document.getElementById('baziName').value.trim() : '',
                         gender: document.getElementById('gender').value,
                         birthDate: birthDate,
                         birthTime: birthTime,

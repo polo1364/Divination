@@ -142,8 +142,8 @@ class CelestialOS {
             document.getElementById('birthMinute').value = profile.birthMinute;
             document.getElementById('birthPlace').value = profile.birthPlace || '';
             document.getElementById('gender').value = profile.gender || '';
-            if (document.getElementById('name')) {
-                document.getElementById('name').value = profile.name || '';
+            if (document.getElementById('profileName')) {
+                document.getElementById('profileName').value = profile.name || '';
             }
         }
     }
@@ -233,7 +233,10 @@ class CelestialOS {
             card.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                this.enterTemple(temple);
+                if (temple) {
+                    this.enterTemple(temple);
+                }
+                // 如果沒有 data-temple 屬性，卡片應該有自己的 onclick 處理（如額外功能卡片）
             });
             
             card.style.cursor = 'pointer';
@@ -243,7 +246,7 @@ class CelestialOS {
     // 進入神殿
     enterTemple(temple) {
         if (!temple) {
-            console.error('神殿類型未指定');
+            console.warn('神殿類型未指定，跳過');
             return;
         }
         
@@ -630,7 +633,7 @@ class CelestialOS {
 
     // 保存使用者檔案
     async saveProfile() {
-        const nameInput = document.getElementById('name');
+        const nameInput = document.getElementById('profileName');
         const formData = {
             name: nameInput ? nameInput.value.trim() : '',
             birthYear: parseInt(document.getElementById('birthYear').value),
@@ -1486,8 +1489,8 @@ class CelestialOS {
         const resultData = result.result || result;
         
         // 保存到運勢對比記錄
-        if (typeof fortuneComparison !== 'undefined') {
-            fortuneComparison.saveRecord('daily_report', new Date().toISOString().split('T')[0], resultData);
+        if (typeof window.fortuneComparison !== 'undefined' && window.fortuneComparison) {
+            window.fortuneComparison.saveRecord('daily_report', new Date().toISOString().split('T')[0], resultData);
         }
 
         content.innerHTML = `
@@ -1742,10 +1745,10 @@ class CelestialOS {
 
     // ========== 語音輸入功能 ==========
     startVoiceInput() {
-        if (typeof voiceInput !== 'undefined' && voiceInput) {
-            voiceInput.start();
+        if (typeof window.voiceInput !== 'undefined' && window.voiceInput) {
+            window.voiceInput.start();
         } else {
-            this.showError('語音輸入功能未初始化');
+            this.showError('語音輸入功能未初始化，請刷新頁面');
         }
     }
 
@@ -1848,7 +1851,12 @@ class CelestialOS {
         
         if (typeof DestinyExport !== 'undefined') {
             if (type === 'bazi') {
-                DestinyExport.exportBaziImage(data);
+                const DestinyExportClass = window.DestinyExport || DestinyExport;
+                if (DestinyExportClass) {
+                    DestinyExportClass.exportBaziImage(data);
+                } else {
+                    this.showError('導出功能未載入');
+                }
             } else {
                 this.showError('該命盤類型暫不支持導出');
             }
@@ -1903,7 +1911,12 @@ class CelestialOS {
         }
         
         const moonPhase = WishSystem.getNextMoonPhase();
-        const wish = wishSystem.saveWish(wishText, moonPhase.isNewMoon ? 'newMoon' : 'fullMoon');
+        const wishSys = window.wishSystem || wishSystem;
+        if (!wishSys) {
+            this.showError('許願系統未初始化');
+            return;
+        }
+        const wish = wishSys.saveWish(wishText, moonPhase.isNewMoon ? 'newMoon' : 'fullMoon');
         
         this.showSuccess('願望已記錄！');
         document.getElementById('wishText').value = '';
@@ -1914,7 +1927,11 @@ class CelestialOS {
         const wishList = document.getElementById('wishList');
         if (!wishList) return;
         
-        const wishes = wishSystem.loadWishes();
+        const wishSys = window.wishSystem || wishSystem;
+        if (!wishSys) {
+            return;
+        }
+        const wishes = wishSys.loadWishes();
         if (wishes.length === 0) {
             wishList.innerHTML = '<p style="text-align: center; color: #888;">暫無許願記錄</p>';
             return;
@@ -1974,7 +1991,12 @@ class CelestialOS {
         }
         
         const birthDate = `${profile.birthYear}-${String(profile.birthMonth).padStart(2, '0')}-${String(profile.birthDay).padStart(2, '0')}`;
-        const numerology = ExtendedDivination.numerologyDivination(birthDate);
+        const ExtendedDivinationClass = window.ExtendedDivination || ExtendedDivination;
+        if (!ExtendedDivinationClass) {
+            this.showError('占卜功能未載入');
+            return;
+        }
+        const numerology = ExtendedDivinationClass.numerologyDivination(birthDate);
         
         // 顯示基本結果
         container.innerHTML = `
@@ -2066,7 +2088,12 @@ class CelestialOS {
     }
 
     async selectColor(color) {
-        const result = ExtendedDivination.colorDivination(color);
+        const ExtendedDivinationClass = window.ExtendedDivination || ExtendedDivination;
+        if (!ExtendedDivinationClass) {
+            this.showError('占卜功能未載入');
+            return;
+        }
+        const result = ExtendedDivinationClass.colorDivination(color);
         const resultDiv = document.getElementById('colorResult');
         if (!resultDiv) return;
         
@@ -2149,7 +2176,12 @@ class CelestialOS {
             return;
         }
         
-        const result = ExtendedDivination.timeDivination(timeInput, question);
+        const ExtendedDivinationClass = window.ExtendedDivination || ExtendedDivination;
+        if (!ExtendedDivinationClass) {
+            this.showError('占卜功能未載入');
+            return;
+        }
+        const result = ExtendedDivinationClass.timeDivination(timeInput, question);
         const resultDiv = document.getElementById('timeResult');
         if (!resultDiv) return;
         
@@ -2242,13 +2274,19 @@ class CelestialOS {
                 </div>
             `;
         } else if (type === 'bazi') {
-            const basics = KnowledgeBase.getBaziBasics();
+            const KnowledgeBaseClass = window.KnowledgeBase || KnowledgeBase;
+            if (!KnowledgeBaseClass) return '<p>知識庫未載入</p>';
+            const basics = KnowledgeBaseClass.getBaziBasics();
             return `<div class="knowledge-section">${basics.content}</div>`;
         } else if (type === 'ziwei') {
-            const basics = KnowledgeBase.getZiweiBasics();
+            const KnowledgeBaseClass = window.KnowledgeBase || KnowledgeBase;
+            if (!KnowledgeBaseClass) return '<p>知識庫未載入</p>';
+            const basics = KnowledgeBaseClass.getZiweiBasics();
             return `<div class="knowledge-section">${basics.content}</div>`;
         } else if (type === 'astrology') {
-            const basics = KnowledgeBase.getAstrologyBasics();
+            const KnowledgeBaseClass = window.KnowledgeBase || KnowledgeBase;
+            if (!KnowledgeBaseClass) return '<p>知識庫未載入</p>';
+            const basics = KnowledgeBaseClass.getAstrologyBasics();
             return `<div class="knowledge-section">${basics.content}</div>`;
         }
         return '';
@@ -2323,7 +2361,12 @@ class CelestialOS {
         const container = document.getElementById('celestialContent');
         if (!container) return;
         
-        const records = fortuneComparison.loadRecords();
+        const fortuneComp = window.fortuneComparison || fortuneComparison;
+        if (!fortuneComp) {
+            container.innerHTML = '<p style="text-align: center; color: #888;">運勢對比功能未載入</p>';
+            return;
+        }
+        const records = fortuneComp.loadRecords();
         
         container.innerHTML = `
             <div class="fortune-comparison">
@@ -2356,7 +2399,9 @@ class CelestialOS {
 
     selectRecordForComparison(recordId) {
         // 簡化版：只顯示單個記錄
-        const record = fortuneComparison.records.find(r => r.id === recordId);
+        const fortuneComp = window.fortuneComparison || fortuneComparison;
+        if (!fortuneComp) return;
+        const record = fortuneComp.records.find(r => r.id === recordId);
         if (!record) return;
         
         const resultDiv = document.getElementById('comparisonResult');
