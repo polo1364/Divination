@@ -146,6 +146,26 @@ header {
     align-items: center;
     gap: 20px;
     padding: 10px;
+    position: relative;
+}
+
+.marquee-date {
+    position: absolute;
+    top: -8px;
+    right: 10px;
+    font-size: 0.85em;
+    color: #bd93f9;
+    background: rgba(138, 43, 226, 0.25);
+    padding: 5px 12px;
+    border-radius: 15px;
+    border: 1px solid rgba(138, 43, 226, 0.4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+.date-text {
+    font-weight: 500;
+    white-space: nowrap;
 }
 
 .zodiac-icon {

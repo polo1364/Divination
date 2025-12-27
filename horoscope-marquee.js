@@ -27,6 +27,11 @@ class HoroscopeMarquee {
         // 載入今日運勢
         await this.loadTodayFortunes();
         
+        // 確保運勢數據已準備好後再開始輪播
+        if (this.fortunes.size === 0) {
+            this.generateDefaultFortunes();
+        }
+        
         // 開始輪播
         this.startMarquee();
         
@@ -49,6 +54,10 @@ class HoroscopeMarquee {
                 // 檢查是否過期（超過24小時）
                 if (new Date() - new Date(data.timestamp) < 24 * 60 * 60 * 1000) {
                     this.fortunes = new Map(data.fortunes);
+                    // 如果正在運行，更新當前顯示
+                    if (this.marqueeInterval) {
+                        this.showCurrentZodiac();
+                    }
                     return;
                 }
             }
@@ -66,6 +75,11 @@ class HoroscopeMarquee {
             // 否則使用預設運勢
             this.generateDefaultFortunes();
         }
+        
+        // 確保運勢數據已準備好
+        if (this.fortunes.size === 0) {
+            this.generateDefaultFortunes();
+        }
     }
 
     // 從 AI 獲取運勢
@@ -81,7 +95,7 @@ class HoroscopeMarquee {
                     fortunes.set(zodiac.name, fortune);
                     
                     // 更新顯示（如果當前正在顯示這個星座）
-                    if (this.zodiacs[this.currentIndex].name === zodiac.name) {
+                    if (this.marqueeInterval && this.zodiacs[this.currentIndex].name === zodiac.name) {
                         this.updateDisplay(zodiac, fortune);
                     }
                 } catch (error) {
@@ -260,8 +274,15 @@ class HoroscopeMarquee {
 
     // 開始跑馬燈
     startMarquee() {
+        // 清除現有的定時器
         if (this.marqueeInterval) {
             clearInterval(this.marqueeInterval);
+            this.marqueeInterval = null;
+        }
+        
+        // 確保運勢數據已準備好
+        if (this.fortunes.size === 0) {
+            this.generateDefaultFortunes();
         }
         
         // 立即顯示第一個
@@ -273,6 +294,8 @@ class HoroscopeMarquee {
                 this.nextZodiac();
             }
         }, this.displayDuration);
+        
+        console.log('跑馬燈已啟動，將每', this.displayDuration / 1000, '秒切換一次星座');
     }
 
     // 顯示當前星座
@@ -291,9 +314,18 @@ class HoroscopeMarquee {
         content.style.opacity = '0';
         content.style.transform = 'translateX(-20px)';
 
+        // 獲取今日日期
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+        const weekday = weekdays[today.getDay()];
+
         setTimeout(() => {
             content.innerHTML = `
                 <div class="marquee-item">
+                    <div class="marquee-date">
+                        <span class="date-text">📅 ${dateStr} 星期${weekday}</span>
+                    </div>
                     <div class="zodiac-icon">${zodiac.icon}</div>
                     <div class="zodiac-info">
                         <div class="zodiac-header">
@@ -321,6 +353,7 @@ class HoroscopeMarquee {
     // 下一個星座
     nextZodiac() {
         this.currentIndex = (this.currentIndex + 1) % this.zodiacs.length;
+        console.log('切換到星座:', this.zodiacs[this.currentIndex].name, '索引:', this.currentIndex);
         this.showCurrentZodiac();
     }
 
