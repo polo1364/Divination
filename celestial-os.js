@@ -256,30 +256,70 @@ class CelestialOS {
 
     // 進入神殿
     enterTemple(temple) {
+        console.log('進入神殿方法被調用，神殿類型:', temple); // 調試用
+        
+        if (!temple) {
+            console.error('神殿類型未指定');
+            return;
+        }
+        
         this.currentTemple = temple;
         
         // 隱藏神殿導航
-        document.getElementById('templeNavigation').classList.add('hidden');
+        const templeNav = document.getElementById('templeNavigation');
+        if (templeNav) {
+            templeNav.classList.add('hidden');
+            console.log('隱藏神殿導航'); // 調試用
+        } else {
+            console.error('找不到 templeNavigation 元素');
+        }
+        
+        // 隱藏檔案設置界面
+        const profileSetup = document.getElementById('profileSetup');
+        if (profileSetup) {
+            profileSetup.classList.add('hidden');
+        }
+        
+        // 確保 formContainer 可見
+        const formContainer = document.getElementById('formContainer');
+        if (formContainer) {
+            formContainer.classList.remove('hidden');
+            console.log('顯示 formContainer'); // 調試用
+        } else {
+            console.error('找不到 formContainer 元素');
+        }
         
         // 根據神殿類型顯示對應內容
         switch(temple) {
             case 'destiny':
+                console.log('調用 showDestinyTemple'); // 調試用
                 this.showDestinyTemple();
                 break;
             case 'divination':
+                console.log('調用 showDivinationTemple'); // 調試用
                 this.showDivinationTemple();
                 break;
             case 'subconscious':
+                console.log('調用 showSubconsciousTemple'); // 調試用
                 this.showSubconsciousTemple();
                 break;
+            default:
+                console.error('未知的神殿類型:', temple);
+                this.showError('未知的神殿類型');
         }
     }
 
     // 顯示天命殿（Dashboard 風格）
     showDestinyTemple() {
+        console.log('showDestinyTemple 被調用'); // 調試用
+        
         // 首先檢查使用者檔案是否完整
-        if (!userProfile.isProfileComplete()) {
+        const isComplete = userProfile.isProfileComplete();
+        console.log('使用者檔案是否完整:', isComplete); // 調試用
+        
+        if (!isComplete) {
             // 檔案不完整，提示用戶先設置
+            console.log('檔案不完整，顯示設置界面'); // 調試用
             this.showError('請先完成使用者檔案設置');
             // 顯示檔案設置界面
             document.getElementById('profileSetup').classList.remove('hidden');
@@ -289,18 +329,24 @@ class CelestialOS {
             return;
         }
 
+        console.log('檔案完整，檢查命盤計算狀態'); // 調試用
+        
         // 檢查是否已計算命盤
         const hasCalculated = userProfile.calculatedData.bazi || 
                              userProfile.calculatedData.ziwei || 
                              userProfile.calculatedData.astrology;
+        
+        console.log('命盤是否已計算:', hasCalculated); // 調試用
 
         if (!hasCalculated) {
             // 顯示計算中狀態
+            console.log('顯示計算中狀態'); // 調試用
             this.showCalculatingState();
             // 開始計算
             this.calculateAllDestinyData();
         } else {
             // 顯示已計算的命盤
+            console.log('顯示已計算的命盤'); // 調試用
             this.displayDestinyDashboard();
         }
     }
@@ -337,7 +383,20 @@ class CelestialOS {
 
     // 顯示天命殿儀表板
     displayDestinyDashboard() {
+        console.log('displayDestinyDashboard 被調用'); // 調試用
         const container = document.getElementById('formContainer');
+        
+        if (!container) {
+            console.error('找不到 formContainer 元素');
+            this.showError('無法顯示儀表板：找不到容器元素');
+            return;
+        }
+        
+        // 確保容器可見
+        container.classList.remove('hidden');
+        container.style.display = 'block';
+        console.log('formContainer 已設置為可見'); // 調試用
+        
         container.innerHTML = `
             <div class="destiny-dashboard">
                 <div class="dashboard-header">
@@ -543,16 +602,28 @@ class CelestialOS {
 
     // 顯示計算中狀態
     showCalculatingState() {
+        console.log('showCalculatingState 被調用'); // 調試用
         const container = document.getElementById('formContainer');
-        if (container) {
-            container.innerHTML = `
-                <div class="calculating-state" style="text-align: center; padding: 60px 20px;">
-                    <div class="spinner" style="width: 60px; height: 60px; margin: 0 auto 20px;"></div>
-                    <h2 style="color: #ffd700; margin-bottom: 10px;">正在計算你的命盤...</h2>
-                    <p style="color: #d0d0d0;">這可能需要幾秒鐘時間，請稍候</p>
-                </div>
-            `;
+        
+        if (!container) {
+            console.error('找不到 formContainer 元素');
+            this.showError('無法顯示計算狀態：找不到容器元素');
+            return;
         }
+        
+        // 確保容器可見
+        container.classList.remove('hidden');
+        container.style.display = 'block';
+        console.log('formContainer 已設置為可見（計算中）'); // 調試用
+        
+        container.innerHTML = `
+            <div class="calculating-state" style="text-align: center; padding: 60px 20px;">
+                <div class="spinner" style="width: 60px; height: 60px; margin: 0 auto 20px; border: 4px solid rgba(255, 215, 0, 0.3); border-top-color: #ffd700; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <h2 style="color: #ffd700; margin-bottom: 10px;">正在計算你的命盤...</h2>
+                <p style="color: #d0d0d0;">這可能需要幾秒鐘時間，請稍候</p>
+            </div>
+        `;
+        console.log('計算中狀態已設置'); // 調試用
     }
 
     // 顯示成功訊息
