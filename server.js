@@ -160,12 +160,20 @@ function buildDivinationPrompt(type, question, data) {
                     const card = data.cards[0];
                     typeSpecificPrompt = `塔羅牌占卜 - 單張牌\n\n`;
                     typeSpecificPrompt += `用戶的問題：${question}\n`;
-                    typeSpecificPrompt += `抽到的牌：${card.name}（${card.meaning}）\n\n`;
+                    typeSpecificPrompt += `抽到的牌：${card.displayName || card.name}（${card.meaning}）\n`;
+                    if (card.orientation) {
+                        typeSpecificPrompt += `正逆位：${card.orientation}\n`;
+                    }
+                    typeSpecificPrompt += `\n`;
                 } else if (data.spread === 'three') {
                     typeSpecificPrompt = `塔羅牌占卜 - 三張牌陣（過去-現在-未來）\n\n`;
                     typeSpecificPrompt += `用戶的問題：${question}\n`;
                     data.cards.forEach(card => {
-                        typeSpecificPrompt += `${card.position}：${card.name}（${card.meaning}）\n`;
+                        typeSpecificPrompt += `${card.position}：${card.displayName || card.name}（${card.meaning}）`;
+                        if (card.orientation) {
+                            typeSpecificPrompt += ` - ${card.orientation}`;
+                        }
+                        typeSpecificPrompt += `\n`;
                     });
                 }
             }
@@ -182,7 +190,21 @@ function buildDivinationPrompt(type, question, data) {
             if (data.birthTime) {
                 typeSpecificPrompt += `- 出生時辰：${data.birthTime}\n`;
             }
-            typeSpecificPrompt += `\n請根據以上資訊進行命盤分析。`;
+            if (data.calculation) {
+                if (type === 'bazi' && data.calculation.fullBazi) {
+                    typeSpecificPrompt += `\n計算結果（四柱）：\n`;
+                    typeSpecificPrompt += `- 年柱：${data.calculation.yearPillar}\n`;
+                    typeSpecificPrompt += `- 月柱：${data.calculation.monthPillar}\n`;
+                    typeSpecificPrompt += `- 日柱：${data.calculation.dayPillar}\n`;
+                    typeSpecificPrompt += `- 時柱：${data.calculation.hourPillar}\n`;
+                    typeSpecificPrompt += `完整八字：${data.calculation.fullBazi}\n`;
+                } else if (type === 'ziwei' && data.calculation.mingGong) {
+                    typeSpecificPrompt += `\n計算結果：\n`;
+                    typeSpecificPrompt += `- ${data.calculation.mingGong}\n`;
+                    typeSpecificPrompt += `- 主星：${data.calculation.mainStar}\n`;
+                }
+            }
+            typeSpecificPrompt += `\n請根據以上資訊進行詳細的命盤分析。`;
             break;
 
         case 'astrology':
@@ -193,7 +215,13 @@ function buildDivinationPrompt(type, question, data) {
             if (data.birthPlace) {
                 typeSpecificPrompt += `- 出生地點：${data.birthPlace}\n`;
             }
-            typeSpecificPrompt += `\n請根據以上資訊進行星盤分析。`;
+            if (data.calculation) {
+                typeSpecificPrompt += `\n計算結果：\n`;
+                if (data.calculation.sunSign) {
+                    typeSpecificPrompt += `- 太陽星座：${data.calculation.sunSign}\n`;
+                }
+            }
+            typeSpecificPrompt += `\n請根據以上資訊進行詳細的星盤分析，包括行星落點、宮位和相位。`;
             break;
 
         case 'yijing':
@@ -207,10 +235,18 @@ function buildDivinationPrompt(type, question, data) {
             typeSpecificPrompt = `${typeNames[type]}解讀\n\n`;
             typeSpecificPrompt += `用戶的問題：${question}\n`;
             if (data.gua) {
-                typeSpecificPrompt += `卦象/籤詩：${data.gua}\n`;
+                typeSpecificPrompt += `${data.guaName || '卦象/籤詩'}：${data.gua}\n`;
+            }
+            if (data.benGua && data.bianGua) {
+                typeSpecificPrompt += `本卦：${data.benGua}\n`;
+                typeSpecificPrompt += `變爻：${data.changingLines ? data.changingLines.join('、') : '無'}\n`;
+                typeSpecificPrompt += `之卦：${data.bianGua}\n`;
             }
             if (data.meaning) {
                 typeSpecificPrompt += `基本含義：${data.meaning}\n`;
+            }
+            if (data.number) {
+                typeSpecificPrompt += `籤號：第${data.number}籤\n`;
             }
             typeSpecificPrompt += `\n請進行詳細解讀。`;
             break;
