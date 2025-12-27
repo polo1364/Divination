@@ -61,6 +61,18 @@ class CelestialOS {
 
     // 顯示天命殿（Dashboard 風格）
     showDestinyTemple() {
+        // 首先檢查使用者檔案是否完整
+        if (!userProfile.isProfileComplete()) {
+            // 檔案不完整，提示用戶先設置
+            this.showError('請先完成使用者檔案設置');
+            // 顯示檔案設置界面
+            document.getElementById('profileSetup').classList.remove('hidden');
+            document.getElementById('templeNavigation').classList.remove('hidden');
+            // 返回神殿導航
+            this.backToTemples();
+            return;
+        }
+
         // 檢查是否已計算命盤
         const hasCalculated = userProfile.calculatedData.bazi || 
                              userProfile.calculatedData.ziwei || 
@@ -79,12 +91,31 @@ class CelestialOS {
 
     // 計算所有天命殿資料
     async calculateAllDestinyData() {
+        // 再次檢查檔案完整性（雙重保險）
+        if (!userProfile.isProfileComplete()) {
+            this.showError('使用者檔案不完整，請先完成檔案設置');
+            setTimeout(() => {
+                this.backToTemples();
+                document.getElementById('profileSetup').classList.remove('hidden');
+            }, 1500);
+            return;
+        }
+
         try {
             const results = await dataCenter.calculateAll(userProfile);
             this.displayDestinyDashboard();
         } catch (error) {
             console.error('計算命盤失敗:', error);
-            this.showError('計算命盤失敗，請稍後再試');
+            const errorMsg = error.message || '計算命盤失敗，請稍後再試';
+            this.showError(errorMsg);
+            
+            // 如果是檔案不完整錯誤，顯示設置界面
+            if (errorMsg.includes('檔案不完整') || errorMsg.includes('使用者檔案不完整')) {
+                setTimeout(() => {
+                    this.backToTemples();
+                    document.getElementById('profileSetup').classList.remove('hidden');
+                }, 1500);
+            }
         }
     }
 
@@ -251,8 +282,16 @@ class CelestialOS {
 
     // 顯示計算中狀態
     showCalculatingState() {
-        // 可以在這裡顯示載入動畫
-        console.log('計算命盤中...');
+        const container = document.getElementById('formContainer');
+        if (container) {
+            container.innerHTML = `
+                <div class="calculating-state" style="text-align: center; padding: 60px 20px;">
+                    <div class="spinner" style="width: 60px; height: 60px; margin: 0 auto 20px;"></div>
+                    <h2 style="color: #ffd700; margin-bottom: 10px;">正在計算你的命盤...</h2>
+                    <p style="color: #d0d0d0;">這可能需要幾秒鐘時間，請稍候</p>
+                </div>
+            `;
+        }
     }
 
     // 顯示成功訊息
