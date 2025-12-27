@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 塔羅牌占卜</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔮 AI 塔羅牌占卜</h1>
+            <p class="subtitle">讓 AI 為您解讀塔羅牌的智慧</p>
+        </header>
+
+        <main>
+            <div class="question-section">
+                <label for="question">請輸入您的問題：</label>
+                <textarea id="question" placeholder="例如：我最近的工作運勢如何？" rows="3"></textarea>
+            </div>
+
+            <div class="spread-section">
+                <label>選擇占卜方式：</label>
+                <div class="spread-options">
+                    <button class="spread-btn active" data-spread="single">單張牌</button>
+                    <button class="spread-btn" data-spread="three">三張牌</button>
+                </div>
+            </div>
+
+            <button id="drawBtn" class="draw-button">抽牌</button>
+
+            <div id="cardsContainer" class="cards-container"></div>
+
+            <div id="resultSection" class="result-section hidden">
+                <h2>解讀結果</h2>
+                <div id="resultContent" class="result-content"></div>
+            </div>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>AI 正在為您解讀中...</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
