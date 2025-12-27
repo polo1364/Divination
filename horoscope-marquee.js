@@ -24,21 +24,51 @@ class HoroscopeMarquee {
     }
 
     async init() {
+        // 清理所有舊的緩存
+        this.cleanAllOldCache();
+        
         // 載入今日運勢
         await this.loadTodayFortunes();
         
-        // 確保運勢數據已準備好後再開始輪播
-        if (this.fortunes.size === 0) {
-            this.generateDefaultFortunes();
-        }
-        
-        // 開始輪播
+        // 開始輪播（即使沒有數據也會顯示載入中）
         this.startMarquee();
         
-        // 每小時更新一次運勢
+        // 設置定時檢查：每小時檢查一次是否需要更新
         setInterval(() => {
             this.loadTodayFortunes();
         }, 60 * 60 * 1000);
+        
+        // 設置定時檢查：每天凌晨檢查並清理舊緩存
+        setInterval(() => {
+            this.cleanAllOldCache();
+            this.loadTodayFortunes();
+        }, 24 * 60 * 60 * 1000); // 每24小時檢查一次
+    }
+    
+    // 清理舊的緩存（只保留今天的）
+    cleanOldCache(today) {
+        try {
+            // 獲取所有以 horoscope_ 開頭的緩存鍵
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith('horoscope_')) {
+                    const keyDate = key.replace('horoscope_', '');
+                    // 如果不是今天的，刪除
+                    if (keyDate !== today) {
+                        localStorage.removeItem(key);
+                        console.log('刪除舊緩存:', key);
+                    }
+                }
+            });
+        } catch (e) {
+            console.warn('清理舊緩存失敗:', e);
+        }
+    }
+    
+    // 清理所有舊的緩存（只保留今天的）
+    cleanAllOldCache() {
+        const today = new Date().toISOString().split('T')[0];
+        this.cleanOldCache(today);
     }
 
     // 載入今日所有星座運勢
@@ -46,23 +76,34 @@ class HoroscopeMarquee {
         const today = new Date().toISOString().split('T')[0];
         const cachedKey = `horoscope_${today}`;
         
-        // 檢查緩存
+        // 清理舊的緩存（隔天的數據）
+        this.cleanOldCache(today);
+        
+        // 檢查今日緩存
         try {
             const cached = localStorage.getItem(cachedKey);
             if (cached) {
                 const data = JSON.parse(cached);
-                // 檢查是否過期（超過24小時）
-                if (new Date() - new Date(data.timestamp) < 24 * 60 * 60 * 1000) {
+                // 檢查緩存日期是否為今天
+                const cacheDate = new Date(data.timestamp).toISOString().split('T')[0];
+                if (cacheDate === today) {
                     this.fortunes = new Map(data.fortunes);
+                    console.log(`從緩存載入今日運勢，共 ${this.fortunes.size} 個星座`);
                     // 如果正在運行，更新當前顯示
                     if (this.marqueeInterval) {
                         this.showCurrentZodiac();
                     }
                     return;
+                } else {
+                    // 緩存不是今天的，刪除它
+                    localStorage.removeItem(cachedKey);
+                    console.log('刪除過期緩存:', cachedKey);
                 }
             }
         } catch (e) {
             console.warn('讀取運勢緩存失敗:', e);
+            // 如果緩存損壞，刪除它
+            localStorage.removeItem(cachedKey);
         }
 
         // 優先使用 Free Astrology API，如果沒有則使用 Gemini API
@@ -71,18 +112,35 @@ class HoroscopeMarquee {
         
         if (astrologyApiKey) {
             // 使用 Free Astrology API
-            await this.fetchFortunesFromAstrologyAPI(astrologyApiKey, today, cachedKey);
+            try {
+                await this.fetchFortunesFromAstrologyAPI(astrologyApiKey, today, cachedKey);
+            } catch (error) {
+                console.error('Free Astrology API 獲取失敗:', error);
+                // 如果失敗，嘗試使用 Gemini API
+                if (geminiApiKey) {
+                    console.log('切換到 Gemini API 作為備用');
+                    try {
+                        await this.fetchFortunesFromAI(geminiApiKey, today, cachedKey);
+                    } catch (geminiError) {
+                        console.error('Gemini API 也失敗:', geminiError);
+                        throw new Error('所有 API 都無法獲取運勢數據');
+                    }
+                } else {
+                    throw new Error('Free Astrology API 失敗且沒有 Gemini API 備用');
+                }
+            }
         } else if (geminiApiKey) {
-            // 使用 Gemini API 作為備用
+            // 使用 Gemini API
             await this.fetchFortunesFromAI(geminiApiKey, today, cachedKey);
         } else {
-            // 否則使用預設運勢
-            this.generateDefaultFortunes();
+            // 沒有 API 金鑰，不生成預設值
+            console.warn('沒有設置任何 API 金鑰，無法獲取運勢數據');
+            throw new Error('請設置 Free Astrology API 或 Gemini API 金鑰');
         }
         
-        // 確保運勢數據已準備好
+        // 驗證是否獲取到數據
         if (this.fortunes.size === 0) {
-            this.generateDefaultFortunes();
+            throw new Error('未能獲取任何運勢數據');
         }
     }
 
@@ -95,30 +153,49 @@ class HoroscopeMarquee {
             const promises = this.zodiacs.map(async (zodiac) => {
                 try {
                     const fortune = await this.fetchFromAstrologyAPI(zodiac, apiKey);
-                    fortunes.set(zodiac.name, fortune);
-                    
-                    // 更新顯示（如果當前正在顯示這個星座）
-                    if (this.marqueeInterval && this.zodiacs[this.currentIndex].name === zodiac.name) {
-                        this.updateDisplay(zodiac, fortune);
+                    // 驗證數據完整性
+                    if (fortune && (fortune.love || fortune.career || fortune.wealth || fortune.health)) {
+                        fortunes.set(zodiac.name, fortune);
+                        
+                        // 更新顯示（如果當前正在顯示這個星座）
+                        if (this.marqueeInterval && this.zodiacs[this.currentIndex].name === zodiac.name) {
+                            this.updateDisplay(zodiac, fortune);
+                        }
+                    } else {
+                        throw new Error('API 返回的數據不完整');
                     }
                 } catch (error) {
-                    console.warn(`獲取${zodiac.name}運勢失敗:`, error);
-                    fortunes.set(zodiac.name, this.getDefaultFortune(zodiac));
+                    console.error(`獲取${zodiac.name}運勢失敗:`, error);
+                    // 不設置預設值，讓用戶知道 API 失敗
+                    throw error;
                 }
             });
             
-            await Promise.all(promises);
+            // 使用 Promise.allSettled 來處理部分失敗的情況
+            const results = await Promise.allSettled(promises);
             
-            this.fortunes = fortunes;
+            // 檢查成功獲取的數量
+            const successCount = results.filter(r => r.status === 'fulfilled').length;
+            console.log(`成功獲取 ${successCount}/${this.zodiacs.length} 個星座的運勢`);
             
-            // 保存到緩存
-            localStorage.setItem(cacheKey, JSON.stringify({
-                timestamp: new Date().toISOString(),
-                fortunes: Array.from(fortunes.entries())
-            }));
+            if (fortunes.size > 0) {
+                this.fortunes = fortunes;
+                
+                // 保存到緩存（只保存成功獲取的）
+                const cacheData = {
+                    date: date, // 保存日期
+                    timestamp: new Date().toISOString(),
+                    fortunes: Array.from(fortunes.entries())
+                };
+                localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+                console.log(`已保存 ${fortunes.size} 個星座的運勢到緩存: ${cacheKey}`);
+            } else {
+                throw new Error('未能獲取任何星座運勢數據');
+            }
         } catch (error) {
             console.error('批量獲取運勢失敗:', error);
-            this.generateDefaultFortunes();
+            // 不生成預設值，讓錯誤傳播
+            throw error;
         }
     }
     
@@ -139,9 +216,8 @@ class HoroscopeMarquee {
                         this.updateDisplay(zodiac, fortune);
                     }
                 } catch (error) {
-                    console.warn(`獲取${zodiac.name}運勢失敗:`, error);
-                    // 使用預設運勢
-                    fortunes.set(zodiac.name, this.getDefaultFortune(zodiac));
+                    console.error(`[${zodiac.name}] 獲取運勢失敗:`, error);
+                    // 不設置預設值，記錄錯誤即可
                 }
                 
                 // 延遲一下，避免請求過快
@@ -151,13 +227,17 @@ class HoroscopeMarquee {
             this.fortunes = fortunes;
             
             // 保存到緩存
-            localStorage.setItem(cacheKey, JSON.stringify({
+            const cacheData = {
+                date: date, // 保存日期
                 timestamp: new Date().toISOString(),
                 fortunes: Array.from(fortunes.entries())
-            }));
+            };
+            localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+            console.log(`已保存 ${fortunes.size} 個星座的運勢到緩存: ${cacheKey}`);
         } catch (error) {
             console.error('批量獲取運勢失敗:', error);
-            this.generateDefaultFortunes();
+            // 不生成預設值，讓錯誤傳播
+            throw error;
         }
     }
 
@@ -192,29 +272,35 @@ class HoroscopeMarquee {
 
             const result = await response.json();
             
-            // 解析 AI 返回的結果
+            // 解析 AI 返回的實際結果（不添加預設值）
             if (result.result) {
+                const resultData = result.result;
+                
                 // 嘗試直接使用結構化數據
-                if (result.result.overall || result.result.love) {
+                if (resultData.overall || resultData.love || resultData.career || resultData.wealth || resultData.health) {
                     return {
-                        overall: result.result.overall || '⭐⭐⭐',
-                        love: result.result.love || '感情運勢平穩',
-                        career: result.result.career || result.result.事業 || '事業發展順利',
-                        wealth: result.result.wealth || result.result.財運 || '財運穩定',
-                        health: result.result.health || result.result.健康 || '健康狀況良好',
-                        summary: result.result.summary || result.result.analysis || ''
+                        overall: resultData.overall || null,
+                        love: resultData.love || resultData.愛情 || null,
+                        career: resultData.career || resultData.事業 || resultData.work || null,
+                        wealth: resultData.wealth || resultData.財運 || resultData.finance || null,
+                        health: resultData.health || resultData.健康 || null,
+                        summary: resultData.summary || resultData.analysis || resultData.opening || null
                     };
                 }
                 
                 // 否則解析文本內容
-                const content = result.result.analysis || result.result.summary || result.result.opening || '';
-                return this.parseFortuneContent(content, zodiac);
+                const content = resultData.analysis || resultData.summary || resultData.opening || '';
+                if (content) {
+                    return this.parseFortuneContent(content, zodiac);
+                }
             }
             
-            return this.getDefaultFortune(zodiac);
+            // 如果沒有有效數據，拋出錯誤
+            throw new Error('AI 返回的數據格式無法解析');
         } catch (error) {
-            console.error(`獲取${zodiac.name}運勢錯誤:`, error);
-            return this.getDefaultFortune(zodiac);
+            console.error(`[${zodiac.name}] 獲取運勢錯誤:`, error);
+            // 不返回預設值，讓錯誤傳播
+            throw error;
         }
     }
     
@@ -254,14 +340,91 @@ class HoroscopeMarquee {
 
             const data = await response.json();
             
-            // 解析 API 返回的數據
+            // 調試：查看實際返回的數據結構
+            console.log(`[${zodiac.name}] API 返回數據:`, data);
+            
+            // 解析 API 返回的實際數據（不添加任何預設值）
+            let loveText = null;
+            let careerText = null;
+            let wealthText = null;
+            let healthText = null;
+            let overallScore = null;
+            let summaryText = null;
+            
+            // 檢查數據結構
+            if (typeof data === 'object' && data !== null) {
+                // 方法1: 檢查是否有分開的字段（最常見的格式）
+                if (data.love) loveText = String(data.love).trim();
+                if (data.career) careerText = String(data.career).trim();
+                if (data.finance) wealthText = String(data.finance).trim();
+                if (data.health) healthText = String(data.health).trim();
+                
+                // 方法2: 檢查其他可能的字段名變體
+                if (!loveText && (data.love_text || data.loveText || data.relationship || data.love_prediction)) {
+                    loveText = String(data.love_text || data.loveText || data.relationship || data.love_prediction).trim();
+                }
+                if (!careerText && (data.career_text || data.careerText || data.work || data.career_prediction)) {
+                    careerText = String(data.career_text || data.careerText || data.work || data.career_prediction).trim();
+                }
+                if (!wealthText && (data.finance_text || data.financeText || data.wealth || data.money || data.finance_prediction)) {
+                    wealthText = String(data.finance_text || data.financeText || data.wealth || data.money || data.finance_prediction).trim();
+                }
+                if (!healthText && (data.health_text || data.healthText || data.health_prediction)) {
+                    healthText = String(data.health_text || data.healthText || data.health_prediction).trim();
+                }
+                
+                // 方法3: 如果有 prediction 文本，嘗試解析（作為備選）
+                if (data.prediction && typeof data.prediction === 'string') {
+                    summaryText = String(data.prediction).trim();
+                    // 嘗試從 prediction 中提取各項運勢（如果沒有獨立字段）
+                    if (!loveText) {
+                        const loveMatch = summaryText.match(/(?:愛情|感情|love|relationship)[：:]\s*([^。\n，,]+)/i);
+                        if (loveMatch) loveText = loveMatch[1].trim();
+                    }
+                    if (!careerText) {
+                        const careerMatch = summaryText.match(/(?:事業|工作|career|work)[：:]\s*([^。\n，,]+)/i);
+                        if (careerMatch) careerText = careerMatch[1].trim();
+                    }
+                    if (!wealthText) {
+                        const wealthMatch = summaryText.match(/(?:財運|財富|finance|money)[：:]\s*([^。\n，,]+)/i);
+                        if (wealthMatch) wealthText = wealthMatch[1].trim();
+                    }
+                    if (!healthText) {
+                        const healthMatch = summaryText.match(/(?:健康|health)[：:]\s*([^。\n，,]+)/i);
+                        if (healthMatch) healthText = healthMatch[1].trim();
+                    }
+                }
+                
+                // 獲取評分
+                if (data.score !== undefined && data.score !== null) {
+                    overallScore = typeof data.score === 'number' ? data.score : parseInt(data.score);
+                    if (isNaN(overallScore)) overallScore = null;
+                }
+                
+                // 獲取摘要（如果沒有 prediction）
+                if (!summaryText && (data.description || data.summary || data.text || data.prediction)) {
+                    summaryText = String(data.description || data.summary || data.text || data.prediction).trim();
+                }
+            } else if (typeof data === 'string') {
+                // 如果返回的是字符串，作為摘要
+                summaryText = data.trim();
+            }
+            
+            // 驗證：至少要有一些實際數據
+            const hasData = loveText || careerText || wealthText || healthText || summaryText;
+            if (!hasData) {
+                console.error(`[${zodiac.name}] API 返回的數據格式無法解析:`, data);
+                throw new Error('API 返回的數據格式無法解析，沒有找到有效的運勢內容');
+            }
+            
+            // 只返回實際獲取到的數據，不添加任何預設值
             return {
-                overall: this.convertScoreToStars(data.score || 3),
-                love: data.love || data.love_text || '感情運勢平穩',
-                career: data.career || data.career_text || '事業發展順利',
-                wealth: data.finance || data.finance_text || '財運穩定',
-                health: data.health || data.health_text || '健康狀況良好',
-                summary: data.prediction || data.description || ''
+                overall: overallScore !== null ? this.convertScoreToStars(overallScore) : null,
+                love: loveText,
+                career: careerText,
+                wealth: wealthText,
+                health: healthText,
+                summary: summaryText
             };
         } catch (error) {
             console.error(`Free Astrology API 錯誤:`, error);
@@ -341,14 +504,23 @@ class HoroscopeMarquee {
             }
         }
         
-        return {
-            overall: overall || '⭐⭐⭐',
-            love: love || '感情運勢平穩',
-            career: career || '事業發展順利',
-            wealth: wealth || '財運穩定',
-            health: health || '健康狀況良好',
-            summary: content.substring(0, 100) + (content.length > 100 ? '...' : '')
+        // 只返回實際解析到的數據，不添加預設值
+        const result = {
+            overall: overall || null,
+            love: love || null,
+            career: career || null,
+            wealth: wealth || null,
+            health: health || null,
+            summary: content ? (content.substring(0, 100) + (content.length > 100 ? '...' : '')) : null
         };
+        
+        // 驗證至少有一些數據
+        const hasData = result.love || result.career || result.wealth || result.health || result.summary;
+        if (!hasData) {
+            throw new Error('無法從文本中解析出運勢內容');
+        }
+        
+        return result;
     }
 
     // 生成預設運勢
@@ -381,9 +553,26 @@ class HoroscopeMarquee {
             this.marqueeInterval = null;
         }
         
-        // 確保運勢數據已準備好
+        // 如果沒有運勢數據，顯示提示
         if (this.fortunes.size === 0) {
-            this.generateDefaultFortunes();
+            console.warn('沒有運勢數據，顯示載入中狀態');
+            const content = document.getElementById('marqueeContent');
+            if (content) {
+                content.innerHTML = `
+                    <div class="marquee-item">
+                        <div class="zodiac-icon">⏳</div>
+                        <div class="zodiac-info">
+                            <div class="zodiac-header">
+                                <span class="zodiac-name">載入中...</span>
+                            </div>
+                            <div class="zodiac-fortune">
+                                <span style="color: #ffb74d;">正在從 API 獲取運勢數據，請稍候...</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            return;
         }
         
         // 立即顯示第一個
@@ -396,13 +585,43 @@ class HoroscopeMarquee {
             }
         }, this.displayDuration);
         
-        console.log('跑馬燈已啟動，將每', this.displayDuration / 1000, '秒切換一次星座');
+        console.log('跑馬燈已啟動，將每', this.displayDuration / 1000, '秒切換一次星座，共', this.fortunes.size || 0, '個星座');
     }
 
     // 顯示當前星座
     showCurrentZodiac() {
         const zodiac = this.zodiacs[this.currentIndex];
-        const fortune = this.fortunes.get(zodiac.name) || this.getDefaultFortune(zodiac);
+        const fortune = this.fortunes.get(zodiac.name);
+        
+        if (!fortune) {
+            // 如果沒有運勢數據，顯示載入中
+            const content = document.getElementById('marqueeContent');
+            if (content) {
+                const today = new Date();
+                const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+                const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+                const weekday = weekdays[today.getDay()];
+                
+                content.innerHTML = `
+                    <div class="marquee-item">
+                        <div class="marquee-date">
+                            <span class="date-text">📅 ${dateStr} 星期${weekday}</span>
+                        </div>
+                        <div class="zodiac-icon">${zodiac.icon}</div>
+                        <div class="zodiac-info">
+                            <div class="zodiac-header">
+                                <span class="zodiac-name">${zodiac.name} ${zodiac.emoji}</span>
+                            </div>
+                            <div class="zodiac-fortune">
+                                <span style="color: #ffb74d;">⏳ 正在載入運勢數據...</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            return;
+        }
+        
         this.updateDisplay(zodiac, fortune);
     }
 
@@ -431,13 +650,15 @@ class HoroscopeMarquee {
                     <div class="zodiac-info">
                         <div class="zodiac-header">
                             <span class="zodiac-name">${zodiac.name} ${zodiac.emoji}</span>
-                            <span class="zodiac-rating">${fortune.overall}</span>
+                            ${fortune.overall ? `<span class="zodiac-rating">${fortune.overall}</span>` : ''}
                         </div>
                         <div class="zodiac-fortune">
-                            <span class="fortune-item">💕 ${fortune.love}</span>
-                            <span class="fortune-item">💼 ${fortune.career}</span>
-                            <span class="fortune-item">💰 ${fortune.wealth}</span>
-                            <span class="fortune-item">💚 ${fortune.health}</span>
+                            ${fortune.love ? `<span class="fortune-item">💕 ${this.truncateText(fortune.love, 20)}</span>` : ''}
+                            ${fortune.career ? `<span class="fortune-item">💼 ${this.truncateText(fortune.career, 20)}</span>` : ''}
+                            ${fortune.wealth ? `<span class="fortune-item">💰 ${this.truncateText(fortune.wealth, 20)}</span>` : ''}
+                            ${fortune.health ? `<span class="fortune-item">💚 ${this.truncateText(fortune.health, 20)}</span>` : ''}
+                            ${!fortune.love && !fortune.career && !fortune.wealth && !fortune.health && fortune.summary ? 
+                                `<span class="fortune-item">${this.truncateText(fortune.summary, 50)}</span>` : ''}
                         </div>
                     </div>
                 </div>
@@ -472,6 +693,13 @@ class HoroscopeMarquee {
             this.currentIndex = index;
             this.showCurrentZodiac();
         }
+    }
+    
+    // 截斷文本
+    truncateText(text, maxLength) {
+        if (!text) return '';
+        const str = String(text);
+        return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
     }
 }
 
