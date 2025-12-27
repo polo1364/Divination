@@ -905,54 +905,104 @@ class CelestialOS {
             <div class="detail-result">
                 <div class="detail-header">
                     <button class="back-btn" onclick="celestialOS.backToDestinyDashboard()">← 返回儀表板</button>
-                    <h2>${typeNames[type] || type}命盤詳情</h2>
+                    <div class="header-content">
+                        <h2>${typeNames[type] || type}命盤詳情</h2>
+                        ${resultData.score ? `<div class="score-badge">運勢評分：${resultData.score}</div>` : ''}
+                    </div>
                     ${type === 'bazi' ? `<button class="action-btn" onclick="celestialOS.exportDestinyPlate('bazi')">📥 導出命盤</button>` : ''}
                 </div>
                 
-                <div class="result-content">
+                <div class="result-content-wrapper">
                     ${resultData.opening ? `
-                        <div class="result-opening">
-                            <div class="opening-icon">✨</div>
-                            <p>${resultData.opening}</p>
-                        </div>
-                    ` : ''}
-                    
-                    ${resultData.analysis ? `
-                        <div class="result-analysis">
-                            <h3>🔮 詳細分析</h3>
-                            <p>${resultData.analysis}</p>
-                        </div>
-                    ` : resultData.summary ? `
-                        <div class="result-analysis">
-                            <h3>🔮 運勢總結</h3>
-                            <p>${resultData.summary}</p>
-                        </div>
-                    ` : ''}
-                    
-                    ${resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0 ? `
-                        <div class="result-advice">
-                            <h3>💡 建議</h3>
-                            <ul class="advice-list">
-                                ${resultData.advice.map(a => `<li>${a}</li>`).join('')}
-                            </ul>
-                        </div>
-                    ` : ''}
-                    
-                    ${resultData.luckyItems ? `
-                        <div class="lucky-section">
-                            <h3>🍀 幸運要素</h3>
-                            <div class="lucky-items">
-                                ${resultData.luckyItems.幸運色 ? `<div class="lucky-item"><strong>幸運色：</strong>${resultData.luckyItems.幸運色}</div>` : ''}
-                                ${resultData.luckyItems.幸運方位 ? `<div class="lucky-item"><strong>幸運方位：</strong>${resultData.luckyItems.幸運方位}</div>` : ''}
-                                ${resultData.luckyItems.幸運小物 ? `<div class="lucky-item"><strong>幸運小物：</strong>${resultData.luckyItems.幸運小物}</div>` : ''}
+                        <div class="result-section-card opening-card">
+                            <div class="section-header">
+                                <span class="section-icon">✨</span>
+                                <h4>開場語</h4>
+                            </div>
+                            <div class="section-content">
+                                <p class="opening-text">${this.formatText(resultData.opening)}</p>
                             </div>
                         </div>
                     ` : ''}
                     
-                    ${resultData.score ? `
-                        <div class="score-display">
-                            <div class="score-value">${resultData.score}</div>
-                            <div class="score-label">運勢評分</div>
+                    ${resultData.analysis ? `
+                        <div class="result-section-card analysis-card">
+                            <div class="section-header">
+                                <span class="section-icon">🔮</span>
+                                <h4>詳細分析</h4>
+                            </div>
+                            <div class="section-content">
+                                <p class="analysis-text">${this.formatText(resultData.analysis)}</p>
+                            </div>
+                        </div>
+                    ` : resultData.summary ? `
+                        <div class="result-section-card analysis-card">
+                            <div class="section-header">
+                                <span class="section-icon">📊</span>
+                                <h4>運勢總結</h4>
+                            </div>
+                            <div class="section-content">
+                                <p class="analysis-text">${this.formatText(resultData.summary)}</p>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0 ? `
+                        <div class="result-section-card advice-card">
+                            <div class="section-header">
+                                <span class="section-icon">💡</span>
+                                <h4>建議指引</h4>
+                            </div>
+                            <div class="section-content">
+                                <div class="advice-grid">
+                                    ${resultData.advice.map((a, index) => `
+                                        <div class="advice-item">
+                                            <span class="advice-number">${index + 1}</span>
+                                            <p>${this.formatText(a)}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${resultData.luckyItems ? `
+                        <div class="result-section-card lucky-card">
+                            <div class="section-header">
+                                <span class="section-icon">🍀</span>
+                                <h4>幸運要素</h4>
+                            </div>
+                            <div class="section-content">
+                                <div class="lucky-items-grid">
+                                    ${resultData.luckyItems.幸運色 ? `
+                                        <div class="lucky-item-card">
+                                            <span class="lucky-icon">🎨</span>
+                                            <div class="lucky-info">
+                                                <strong>幸運色</strong>
+                                                <span>${resultData.luckyItems.幸運色}</span>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                    ${resultData.luckyItems.幸運方位 ? `
+                                        <div class="lucky-item-card">
+                                            <span class="lucky-icon">🧭</span>
+                                            <div class="lucky-info">
+                                                <strong>幸運方位</strong>
+                                                <span>${resultData.luckyItems.幸運方位}</span>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                    ${resultData.luckyItems.幸運小物 ? `
+                                        <div class="lucky-item-card">
+                                            <span class="lucky-icon">✨</span>
+                                            <div class="lucky-info">
+                                                <strong>幸運小物</strong>
+                                                <span>${resultData.luckyItems.幸運小物}</span>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
                         </div>
                     ` : ''}
                 </div>
@@ -1241,26 +1291,38 @@ class CelestialOS {
         // 顯示占卜資料（如塔羅牌）
         if (type === 'tarot' && data && data.cards && Array.isArray(data.cards)) {
             resultHtml += `
-                <div class="chat-tarot-cards">
-                    ${data.cards.map(card => {
-                        const cardName = card.displayName || card.name || '未知';
-                        const cardEmoji = card.emoji || '🃏';
-                        return `
-                            <div class="chat-card-mini">
-                                <div class="card-emoji">${cardEmoji}</div>
-                                <div class="card-name">${cardName}</div>
-                            </div>
-                        `;
-                    }).join('')}
+                <div class="chat-data-section">
+                    <div class="section-header">
+                        <span class="section-icon">🃏</span>
+                        <h4>抽到的牌</h4>
+                    </div>
+                    <div class="chat-tarot-cards">
+                        ${data.cards.map(card => {
+                            const cardName = card.displayName || card.name || '未知';
+                            const cardEmoji = card.emoji || '🃏';
+                            return `
+                                <div class="chat-card-mini">
+                                    <div class="card-emoji">${cardEmoji}</div>
+                                    <div class="card-name">${cardName}</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
             `;
         } else if (type !== 'tarot' && data) {
             // 顯示其他占卜類型的資料（如易經卦象）
             if (data.gua || data.guaName) {
                 resultHtml += `
-                    <div class="chat-gua-info">
-                        <p><strong>${data.guaName || '卦象'}</strong>：${data.gua || ''}</p>
-                        ${data.meaning ? `<p>${data.meaning}</p>` : ''}
+                    <div class="chat-data-section">
+                        <div class="section-header">
+                            <span class="section-icon">☯️</span>
+                            <h4>卦象</h4>
+                        </div>
+                        <div class="chat-gua-info">
+                            <p class="gua-name"><strong>${data.guaName || '卦象'}</strong>：${data.gua || ''}</p>
+                            ${data.meaning ? `<p class="gua-meaning">${data.meaning}</p>` : ''}
+                        </div>
                     </div>
                 `;
             }
@@ -1269,20 +1331,57 @@ class CelestialOS {
         // 顯示 AI 解讀
         const interpretation = resultData.opening || resultData.analysis || resultData.summary || '解讀結果';
         resultHtml += `
-                    <div class="chat-interpretation">
-                        <h4>🔮 解讀</h4>
-                        <p>${interpretation}</p>
+                    <div class="chat-interpretation-section">
+                        <div class="section-header">
+                            <span class="section-icon">🔮</span>
+                            <h4>AI 解讀</h4>
+                        </div>
+                        <div class="interpretation-content">
+                            <p>${this.formatText(interpretation)}</p>
+                        </div>
                     </div>
         `;
 
         // 顯示建議
         if (resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0) {
             resultHtml += `
-                    <div class="chat-advice">
-                        <h4>💡 建議</h4>
-                        <ul>
-                            ${resultData.advice.map(a => `<li>${a || ''}</li>`).join('')}
-                        </ul>
+                    <div class="chat-advice-section">
+                        <div class="section-header">
+                            <span class="section-icon">💡</span>
+                            <h4>建議指引</h4>
+                        </div>
+                        <div class="advice-list-chat">
+                            ${resultData.advice.map((a, index) => `
+                                <div class="advice-item-chat">
+                                    <span class="advice-number-small">${index + 1}</span>
+                                    <p>${this.formatText(a || '')}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+            `;
+        }
+
+        // 顯示幸運要素
+        if (resultData.luckyItems || resultData.lucky_color) {
+            resultHtml += `
+                    <div class="chat-lucky-section">
+                        <div class="section-header">
+                            <span class="section-icon">🍀</span>
+                            <h4>幸運要素</h4>
+                        </div>
+                        <div class="lucky-tags-chat">
+                            ${resultData.luckyItems ? 
+                                Object.entries(resultData.luckyItems).map(([key, value]) => 
+                                    `<span class="lucky-tag-chat">${key}：${value}</span>`
+                                ).join('') :
+                                `
+                                    ${resultData.lucky_color ? `<span class="lucky-tag-chat">幸運色：${resultData.lucky_color}</span>` : ''}
+                                    ${resultData.lucky_direction ? `<span class="lucky-tag-chat">幸運方位：${resultData.lucky_direction}</span>` : ''}
+                                    ${resultData.lucky_item ? `<span class="lucky-tag-chat">幸運小物：${resultData.lucky_item}</span>` : ''}
+                                `
+                            }
+                        </div>
                     </div>
             `;
         }
@@ -1644,46 +1743,83 @@ class CelestialOS {
             <div class="dream-result">
                 <button class="back-btn" onclick="celestialOS.showSubconsciousTemple()">← 重新解夢</button>
                 
-                <div class="dream-original">
-                    <h4>🌙 你的夢境</h4>
-                    <p>${dreamText}</p>
-                </div>
-                
-                <div class="dream-analysis">
-                    <h4>🔮 夢境解析</h4>
-                    <div class="analysis-text">
-                        ${resultData.opening ? `<div class="dream-opening">${resultData.opening}</div>` : ''}
-                        <p>${resultData.analysis || resultData.summary || '解析結果'}</p>
-                    </div>
-                </div>
-                
-                ${resultData.symbols ? `
-                    <div class="dream-symbols">
-                        <h4>🎭 夢境象徵</h4>
-                        <div class="symbols-grid">
-                            ${Array.isArray(resultData.symbols) ? 
-                                resultData.symbols.map(s => `<div class="symbol-item">${s}</div>`).join('') :
-                                `<div class="symbol-item">${resultData.symbols}</div>`
-                            }
+                <div class="result-content-wrapper">
+                    <div class="result-section-card dream-original-card">
+                        <div class="section-header">
+                            <span class="section-icon">🌙</span>
+                            <h4>你的夢境</h4>
+                        </div>
+                        <div class="section-content">
+                            <p class="dream-text">${this.formatText(dreamText)}</p>
                         </div>
                     </div>
-                ` : ''}
-                
-                ${resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0 ? `
-                    <div class="dream-advice">
-                        <h4>💡 心理建議</h4>
-                        <ul>
-                            ${resultData.advice.map(a => `<li>${a}</li>`).join('')}
-                        </ul>
-                    </div>
-                ` : ''}
-                
-                ${resultData.emotion ? `
-                    <div class="dream-emotion">
-                        <h4>💭 情緒分析</h4>
-                        <p>${resultData.emotion}</p>
-                    </div>
-                ` : ''}
+                    
+                    ${resultData.opening || resultData.analysis || resultData.summary ? `
+                        <div class="result-section-card dream-analysis-card">
+                            <div class="section-header">
+                                <span class="section-icon">🔮</span>
+                                <h4>夢境解析</h4>
+                            </div>
+                            <div class="section-content">
+                                ${resultData.opening ? `<div class="dream-opening">${this.formatText(resultData.opening)}</div>` : ''}
+                                <p class="analysis-text">${this.formatText(resultData.analysis || resultData.summary || '解析結果')}</p>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${resultData.symbols ? `
+                        <div class="result-section-card dream-symbols-card">
+                            <div class="section-header">
+                                <span class="section-icon">🎭</span>
+                                <h4>夢境象徵</h4>
+                            </div>
+                            <div class="section-content">
+                                <div class="symbols-grid">
+                                    ${Array.isArray(resultData.symbols) ? 
+                                        resultData.symbols.map(s => `
+                                            <div class="symbol-item">
+                                                <span class="symbol-icon">✨</span>
+                                                <span>${s}</span>
+                                            </div>
+                                        `).join('') :
+                                        `<div class="symbol-item"><span class="symbol-icon">✨</span><span>${resultData.symbols}</span></div>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${resultData.emotion ? `
+                        <div class="result-section-card dream-emotion-card">
+                            <div class="section-header">
+                                <span class="section-icon">💭</span>
+                                <h4>情緒分析</h4>
+                            </div>
+                            <div class="section-content">
+                                <p class="emotion-text">${this.formatText(resultData.emotion)}</p>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0 ? `
+                        <div class="result-section-card dream-advice-card">
+                            <div class="section-header">
+                                <span class="section-icon">💡</span>
+                                <h4>心理建議</h4>
+                            </div>
+                            <div class="section-content">
+                                <div class="advice-grid">
+                                    ${resultData.advice.map((a, index) => `
+                                        <div class="advice-item">
+                                            <span class="advice-number">${index + 1}</span>
+                                            <p>${this.formatText(a)}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
             </div>
         `;
     }
@@ -1950,44 +2086,89 @@ class CelestialOS {
             <div class="calligraphy-result">
                 <button class="back-btn" onclick="celestialOS.showSubconsciousTemple()">← 重新測字</button>
                 
-                <div class="character-showcase">
-                    <div class="big-character">${character}</div>
-                    <p class="character-label">你選擇的字</p>
-                </div>
-                
-                <div class="calligraphy-analysis">
-                    <h4>✍️ 字形分析</h4>
-                    <div class="analysis-text">
-                        ${resultData.opening ? `<div class="calligraphy-opening">${resultData.opening}</div>` : ''}
-                        <p>${resultData.analysis || resultData.summary || '分析結果'}</p>
-                    </div>
-                </div>
-                
-                ${resultData.structure ? `
-                    <div class="character-structure">
-                        <h4>🔍 結構解讀</h4>
-                        <p>${resultData.structure}</p>
-                    </div>
-                ` : ''}
-                
-                ${resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0 ? `
-                    <div class="calligraphy-advice">
-                        <h4>💡 啟示與建議</h4>
-                        <ul>
-                            ${resultData.advice.map(a => `<li>${a}</li>`).join('')}
-                        </ul>
-                    </div>
-                ` : ''}
-                
-                ${resultData.luckyItems ? `
-                    <div class="calligraphy-lucky">
-                        <h4>🍀 幸運指引</h4>
-                        <div class="lucky-items">
-                            ${resultData.luckyItems.幸運色 ? `<span class="lucky-tag">幸運色：${resultData.luckyItems.幸運色}</span>` : ''}
-                            ${resultData.luckyItems.幸運數字 ? `<span class="lucky-tag">幸運數字：${resultData.luckyItems.幸運數字}</span>` : ''}
+                <div class="result-content-wrapper">
+                    <div class="result-section-card character-showcase-card">
+                        <div class="character-showcase">
+                            <div class="big-character">${character}</div>
+                            <p class="character-label">你選擇的字</p>
                         </div>
                     </div>
-                ` : ''}
+                    
+                    ${resultData.opening || resultData.analysis || resultData.summary ? `
+                        <div class="result-section-card calligraphy-analysis-card">
+                            <div class="section-header">
+                                <span class="section-icon">✍️</span>
+                                <h4>字形分析</h4>
+                            </div>
+                            <div class="section-content">
+                                ${resultData.opening ? `<div class="calligraphy-opening">${this.formatText(resultData.opening)}</div>` : ''}
+                                <p class="analysis-text">${this.formatText(resultData.analysis || resultData.summary || '分析結果')}</p>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${resultData.structure ? `
+                        <div class="result-section-card character-structure-card">
+                            <div class="section-header">
+                                <span class="section-icon">🔍</span>
+                                <h4>結構解讀</h4>
+                            </div>
+                            <div class="section-content">
+                                <p class="structure-text">${this.formatText(resultData.structure)}</p>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0 ? `
+                        <div class="result-section-card calligraphy-advice-card">
+                            <div class="section-header">
+                                <span class="section-icon">💡</span>
+                                <h4>啟示與建議</h4>
+                            </div>
+                            <div class="section-content">
+                                <div class="advice-grid">
+                                    ${resultData.advice.map((a, index) => `
+                                        <div class="advice-item">
+                                            <span class="advice-number">${index + 1}</span>
+                                            <p>${this.formatText(a)}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${resultData.luckyItems ? `
+                        <div class="result-section-card calligraphy-lucky-card">
+                            <div class="section-header">
+                                <span class="section-icon">🍀</span>
+                                <h4>幸運指引</h4>
+                            </div>
+                            <div class="section-content">
+                                <div class="lucky-items-grid">
+                                    ${resultData.luckyItems.幸運色 ? `
+                                        <div class="lucky-item-card">
+                                            <span class="lucky-icon">🎨</span>
+                                            <div class="lucky-info">
+                                                <strong>幸運色</strong>
+                                                <span>${resultData.luckyItems.幸運色}</span>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                    ${resultData.luckyItems.幸運數字 ? `
+                                        <div class="lucky-item-card">
+                                            <span class="lucky-icon">🔢</span>
+                                            <div class="lucky-info">
+                                                <strong>幸運數字</strong>
+                                                <span>${resultData.luckyItems.幸運數字}</span>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
             </div>
         `;
     }
