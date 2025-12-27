@@ -382,8 +382,32 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             closeModal();
+            // 也關閉使用者檔案模態框
+            if (typeof celestialOS !== 'undefined' && celestialOS.closeProfileModal) {
+                celestialOS.closeProfileModal();
+            }
         }
     });
+
+    // 使用者檔案模態框事件監聽器
+    const closeProfileModalBtn = document.getElementById('closeProfileModal');
+    const profileModalOverlay = document.getElementById('profileModalOverlay');
+    
+    if (closeProfileModalBtn) {
+        closeProfileModalBtn.addEventListener('click', () => {
+            if (typeof celestialOS !== 'undefined' && celestialOS.closeProfileModal) {
+                celestialOS.closeProfileModal();
+            }
+        });
+    }
+    
+    if (profileModalOverlay) {
+        profileModalOverlay.addEventListener('click', () => {
+            if (typeof celestialOS !== 'undefined' && celestialOS.closeProfileModal) {
+                celestialOS.closeProfileModal();
+            }
+        });
+    }
 
     // 保存 API 金鑰
     if (saveApiKeyBtn) {

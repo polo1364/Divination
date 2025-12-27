@@ -47,105 +47,220 @@ class CelestialOS {
 
     // 顯示使用者檔案模態框
     showProfileModal() {
-        const container = document.getElementById('celestialContent');
+        const modal = document.getElementById('profileModal');
+        const modalBody = document.getElementById('profileModalBody');
+        
+        if (!modal || !modalBody) {
+            this.showError('無法顯示使用者檔案模態框');
+            return;
+        }
+
         const profile = userProfile.profile;
         const isComplete = userProfile.isProfileComplete();
 
-        container.innerHTML = `
-            <div class="profile-modal-content">
-                <div class="profile-modal-header">
-                    <h2>👤 使用者檔案</h2>
-                    <button class="close-btn" onclick="celestialOS.closeProfileModal()">×</button>
-                </div>
-                
-                <div class="profile-info">
-                    ${isComplete ? `
-                        <div class="profile-status-badge complete">✓ 檔案完整</div>
-                        <div class="profile-details">
-                            <div class="detail-item">
-                                <span class="detail-label">姓名：</span>
-                                <span class="detail-value">${profile.name || '未設置'}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">性別：</span>
-                                <span class="detail-value">${profile.gender === 'male' ? '男' : profile.gender === 'female' ? '女' : '未設置'}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">出生日期：</span>
-                                <span class="detail-value">${profile.birthYear}年${profile.birthMonth}月${profile.birthDay}日</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">出生時間：</span>
-                                <span class="detail-value">${String(profile.birthHour).padStart(2, '0')}:${String(profile.birthMinute).padStart(2, '0')}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">出生地：</span>
-                                <span class="detail-value">${profile.birthPlace || '未設置'}</span>
-                            </div>
-                            
-                            <div class="calculated-status">
-                                <h3>命盤計算狀態</h3>
-                                <div class="status-grid">
-                                    <div class="status-item ${userProfile.calculatedData.bazi ? 'calculated' : 'pending'}">
-                                        <span class="status-icon">${userProfile.calculatedData.bazi ? '✓' : '○'}</span>
-                                        <span class="status-text">八字命盤</span>
-                                    </div>
-                                    <div class="status-item ${userProfile.calculatedData.ziwei ? 'calculated' : 'pending'}">
-                                        <span class="status-icon">${userProfile.calculatedData.ziwei ? '✓' : '○'}</span>
-                                        <span class="status-text">紫微斗數</span>
-                                    </div>
-                                    <div class="status-item ${userProfile.calculatedData.astrology ? 'calculated' : 'pending'}">
-                                        <span class="status-icon">${userProfile.calculatedData.astrology ? '✓' : '○'}</span>
-                                        <span class="status-text">西方占星</span>
-                                    </div>
+        modalBody.innerHTML = `
+            <div class="profile-info">
+                ${isComplete ? `
+                    <div class="profile-status-badge complete">✓ 檔案完整</div>
+                    <div class="profile-details">
+                        <div class="detail-item">
+                            <span class="detail-label">姓名：</span>
+                            <span class="detail-value">${profile.name || '未設置'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">性別：</span>
+                            <span class="detail-value">${profile.gender === 'male' ? '男' : profile.gender === 'female' ? '女' : '未設置'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">出生日期：</span>
+                            <span class="detail-value">${profile.birthYear}年${profile.birthMonth}月${profile.birthDay}日</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">出生時間：</span>
+                            <span class="detail-value">${String(profile.birthHour).padStart(2, '0')}:${String(profile.birthMinute).padStart(2, '0')}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">出生地：</span>
+                            <span class="detail-value">${profile.birthPlace || '未設置'}</span>
+                        </div>
+                        
+                        <div class="calculated-status">
+                            <h3>命盤計算狀態</h3>
+                            <div class="status-grid">
+                                <div class="status-item ${userProfile.calculatedData.bazi ? 'calculated' : 'pending'}">
+                                    <span class="status-icon">${userProfile.calculatedData.bazi ? '✓' : '○'}</span>
+                                    <span class="status-text">八字命盤</span>
+                                </div>
+                                <div class="status-item ${userProfile.calculatedData.ziwei ? 'calculated' : 'pending'}">
+                                    <span class="status-icon">${userProfile.calculatedData.ziwei ? '✓' : '○'}</span>
+                                    <span class="status-text">紫微斗數</span>
+                                </div>
+                                <div class="status-item ${userProfile.calculatedData.astrology ? 'calculated' : 'pending'}">
+                                    <span class="status-icon">${userProfile.calculatedData.astrology ? '✓' : '○'}</span>
+                                    <span class="status-text">西方占星</span>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="profile-actions">
-                            <button class="btn-secondary" onclick="celestialOS.editProfile()">✏️ 編輯檔案</button>
-                            <button class="btn-secondary" onclick="celestialOS.recalculateDestiny()">🔄 重新計算命盤</button>
-                            <button class="btn-secondary" onclick="celestialOS.exportProfile()">📥 導出檔案</button>
-                        </div>
-                    ` : `
-                        <div class="profile-status-badge incomplete">⚠ 檔案不完整</div>
-                        <p class="profile-warning">請先完成使用者檔案設置才能使用完整功能</p>
-                        <button class="btn-primary" onclick="celestialOS.editProfile()">建立檔案</button>
-                    `}
+                    </div>
+                    
+                    <div class="profile-actions">
+                        <button class="btn-secondary" onclick="celestialOS.editProfileInModal()">✏️ 編輯檔案</button>
+                        <button class="btn-secondary" onclick="celestialOS.recalculateDestiny()">🔄 重新計算命盤</button>
+                        <button class="btn-secondary" onclick="celestialOS.exportProfile()">📥 導出檔案</button>
+                    </div>
+                ` : `
+                    <div class="profile-status-badge incomplete">⚠ 檔案不完整</div>
+                    <p class="profile-warning">請先完成使用者檔案設置才能使用完整功能</p>
+                    <button class="btn-primary" onclick="celestialOS.editProfileInModal()">建立檔案</button>
+                `}
+            </div>
+        `;
+
+        // 顯示模態框
+        modal.classList.remove('hidden');
+    }
+
+    // 關閉檔案模態框
+    closeProfileModal() {
+        const modal = document.getElementById('profileModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = ''; // 恢復滾動
+        }
+    }
+
+    // 編輯使用者檔案（在模態框中）
+    editProfileInModal() {
+        const modalBody = document.getElementById('profileModalBody');
+        if (!modalBody) {
+            this.showError('無法顯示編輯界面');
+            return;
+        }
+
+        const profile = userProfile.profile;
+
+        modalBody.innerHTML = `
+            <div class="profile-edit-form">
+                <div class="form-group">
+                    <label for="editProfileName">姓名（可選）</label>
+                    <input type="text" id="editProfileName" class="profile-edit-input" 
+                           placeholder="輸入您的姓名" value="${profile.name || ''}">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editGender">性別</label>
+                        <select id="editGender" class="profile-edit-select">
+                            <option value="">請選擇</option>
+                            <option value="male" ${profile.gender === 'male' ? 'selected' : ''}>男</option>
+                            <option value="female" ${profile.gender === 'female' ? 'selected' : ''}>女</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editBirthYear">出生年份</label>
+                        <input type="number" id="editBirthYear" class="profile-edit-input" 
+                               min="1900" max="2100" value="${profile.birthYear || ''}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editBirthMonth">月份</label>
+                        <input type="number" id="editBirthMonth" class="profile-edit-input" 
+                               min="1" max="12" value="${profile.birthMonth || ''}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editBirthDay">日期</label>
+                        <input type="number" id="editBirthDay" class="profile-edit-input" 
+                               min="1" max="31" value="${profile.birthDay || ''}" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editBirthHour">時</label>
+                        <input type="number" id="editBirthHour" class="profile-edit-input" 
+                               min="0" max="23" value="${profile.birthHour || ''}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editBirthMinute">分</label>
+                        <input type="number" id="editBirthMinute" class="profile-edit-input" 
+                               min="0" max="59" value="${profile.birthMinute || ''}" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editBirthPlace">出生地</label>
+                    <input type="text" id="editBirthPlace" class="profile-edit-input" 
+                           placeholder="例如：台北、北京、New York" value="${profile.birthPlace || ''}" required>
+                </div>
+                
+                <div class="profile-edit-buttons">
+                    <button class="btn-secondary" onclick="celestialOS.showProfileModal()">取消</button>
+                    <button class="btn-primary" onclick="celestialOS.updateProfileFromModal()">保存</button>
                 </div>
             </div>
         `;
     }
 
-    // 關閉檔案模態框
-    closeProfileModal() {
-        this.backToTemples();
+    // 從模態框更新使用者檔案
+    async updateProfileFromModal() {
+        const formData = {
+            name: document.getElementById('editProfileName')?.value.trim() || '',
+            birthYear: parseInt(document.getElementById('editBirthYear').value),
+            birthMonth: parseInt(document.getElementById('editBirthMonth').value),
+            birthDay: parseInt(document.getElementById('editBirthDay').value),
+            birthHour: parseInt(document.getElementById('editBirthHour').value),
+            birthMinute: parseInt(document.getElementById('editBirthMinute').value),
+            birthPlace: document.getElementById('editBirthPlace').value.trim(),
+            gender: document.getElementById('editGender').value
+        };
+
+        // 驗證
+        if (!formData.birthYear || !formData.birthMonth || !formData.birthDay || 
+            formData.birthHour === undefined || formData.birthMinute === undefined || 
+            !formData.birthPlace || !formData.gender) {
+            this.showError('請填寫所有必填欄位');
+            return;
+        }
+
+        try {
+            userProfile.setBasicInfo(formData);
+            
+            // 顯示計算中狀態
+            const modalBody = document.getElementById('profileModalBody');
+            if (modalBody) {
+                modalBody.innerHTML = `
+                    <div class="profile-calculating">
+                        <div class="spinner"></div>
+                        <p>正在計算命盤...</p>
+                    </div>
+                `;
+            }
+            
+            // 計算所有命理資料
+            await dataCenter.calculateAll(userProfile);
+            
+            this.showSuccess('檔案已更新並重新計算命盤！');
+            
+            // 刷新顯示
+            setTimeout(() => {
+                this.showProfileModal();
+            }, 500);
+        } catch (error) {
+            console.error('更新檔案失敗:', error);
+            this.showError('更新檔案失敗：' + (error.message || '請稍後再試'));
+            // 重新顯示編輯界面
+            this.editProfileInModal();
+        }
     }
 
-    // 編輯使用者檔案
+    // 編輯使用者檔案（舊方法，保留兼容性）
     editProfile() {
-        // 顯示檔案設置界面
-        document.getElementById('profileSetup').classList.remove('hidden');
-        document.getElementById('templeNavigation').classList.add('hidden');
-        const celestialContent = document.getElementById('celestialContent');
-        if (celestialContent) {
-            celestialContent.innerHTML = '';
-        }
-        
-        // 如果已有檔案，填充表單
-        const profile = userProfile.profile;
-        if (profile.birthYear) {
-            document.getElementById('birthYear').value = profile.birthYear;
-            document.getElementById('birthMonth').value = profile.birthMonth;
-            document.getElementById('birthDay').value = profile.birthDay;
-            document.getElementById('birthHour').value = profile.birthHour;
-            document.getElementById('birthMinute').value = profile.birthMinute;
-            document.getElementById('birthPlace').value = profile.birthPlace || '';
-            document.getElementById('gender').value = profile.gender || '';
-            if (document.getElementById('profileName')) {
-                document.getElementById('profileName').value = profile.name || '';
-            }
-        }
+        this.showProfileModal();
+        setTimeout(() => {
+            this.editProfileInModal();
+        }, 100);
     }
 
     // 重新計算命盤
@@ -160,7 +275,10 @@ class CelestialOS {
                 this.showCalculatingState();
                 await dataCenter.calculateAll(userProfile);
                 this.showSuccess('命盤重新計算完成！');
-                this.showProfileModal(); // 刷新顯示
+                // 刷新顯示
+                setTimeout(() => {
+                    this.showProfileModal();
+                }, 500);
             } catch (error) {
                 console.error('重新計算失敗:', error);
                 this.showError('重新計算失敗：' + error.message);
