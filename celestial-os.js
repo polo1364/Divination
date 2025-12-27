@@ -232,35 +232,27 @@ class CelestialOS {
             return;
         }
         
-        templeCards.forEach((card, index) => {
+        templeCards.forEach((card) => {
             const temple = card.dataset.temple;
-            console.log(`設置神殿 ${index + 1}: ${temple}`); // 調試用
             
-            // 檢查是否已經添加過事件監聽器
             if (card.hasAttribute('data-listener-attached')) {
-                return; // 已經添加過，跳過
+                return;
             }
             
-            // 標記已添加事件監聽器
             card.setAttribute('data-listener-attached', 'true');
             
-            // 添加點擊事件監聽器
             card.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('點擊神殿:', temple); // 調試用
                 this.enterTemple(temple);
             });
             
-            // 添加鼠標懸停效果
             card.style.cursor = 'pointer';
         });
     }
 
     // 進入神殿
     enterTemple(temple) {
-        console.log('進入神殿方法被調用，神殿類型:', temple); // 調試用
-        
         if (!temple) {
             console.error('神殿類型未指定');
             return;
@@ -283,73 +275,50 @@ class CelestialOS {
             profileSetup.classList.add('hidden');
         }
         
-        // 確保 formContainer 可見
-        const formContainer = document.getElementById('celestialContent');
-        if (formContainer) {
-            formContainer.classList.remove('hidden');
-            console.log('顯示 formContainer'); // 調試用
-        } else {
-            console.error('找不到 formContainer 元素');
+        // 確保 celestialContent 可見
+        const celestialContent = document.getElementById('celestialContent');
+        if (celestialContent) {
+            celestialContent.classList.remove('hidden');
         }
         
         // 根據神殿類型顯示對應內容
         switch(temple) {
             case 'destiny':
-                console.log('調用 showDestinyTemple'); // 調試用
                 this.showDestinyTemple();
                 break;
             case 'divination':
-                console.log('調用 showDivinationTemple'); // 調試用
                 this.showDivinationTemple();
                 break;
             case 'subconscious':
-                console.log('調用 showSubconsciousTemple'); // 調試用
                 this.showSubconsciousTemple();
                 break;
             default:
-                console.error('未知的神殿類型:', temple);
                 this.showError('未知的神殿類型');
         }
     }
 
     // 顯示天命殿（Dashboard 風格）
     showDestinyTemple() {
-        console.log('showDestinyTemple 被調用'); // 調試用
-        
         // 首先檢查使用者檔案是否完整
         const isComplete = userProfile.isProfileComplete();
-        console.log('使用者檔案是否完整:', isComplete); // 調試用
         
         if (!isComplete) {
-            // 檔案不完整，提示用戶先設置
-            console.log('檔案不完整，顯示設置界面'); // 調試用
             this.showError('請先完成使用者檔案設置');
-            // 顯示檔案設置界面
             document.getElementById('profileSetup').classList.remove('hidden');
             document.getElementById('templeNavigation').classList.remove('hidden');
-            // 返回神殿導航
             this.backToTemples();
             return;
         }
 
-        console.log('檔案完整，檢查命盤計算狀態'); // 調試用
-        
         // 檢查是否已計算命盤
         const hasCalculated = userProfile.calculatedData.bazi || 
                              userProfile.calculatedData.ziwei || 
                              userProfile.calculatedData.astrology;
-        
-        console.log('命盤是否已計算:', hasCalculated); // 調試用
 
         if (!hasCalculated) {
-            // 顯示計算中狀態
-            console.log('顯示計算中狀態'); // 調試用
             this.showCalculatingState();
-            // 開始計算
             this.calculateAllDestinyData();
         } else {
-            // 顯示已計算的命盤
-            console.log('顯示已計算的命盤'); // 調試用
             this.displayDestinyDashboard();
         }
     }
@@ -386,27 +355,14 @@ class CelestialOS {
 
     // 顯示天命殿儀表板
     displayDestinyDashboard() {
-        console.log('displayDestinyDashboard 被調用'); // 調試用
         const container = document.getElementById('celestialContent');
         
         if (!container) {
-            console.error('找不到 formContainer 元素');
-            this.showError('無法顯示儀表板：找不到容器元素');
+            this.showError('無法顯示儀表板');
             return;
         }
         
-        // 確保容器可見
         container.classList.remove('hidden');
-        container.style.display = 'block';
-        container.style.visibility = 'visible';
-        container.style.opacity = '1';
-        console.log('formContainer 已設置為可見'); // 調試用
-        console.log('formContainer 當前樣式:', {
-            display: container.style.display,
-            visibility: container.style.visibility,
-            opacity: container.style.opacity,
-            classList: Array.from(container.classList)
-        }); // 調試用
         
         container.innerHTML = `
             <div class="destiny-dashboard">
@@ -462,6 +418,11 @@ class CelestialOS {
     // 顯示靈犀殿（對話風格）
     showDivinationTemple() {
         const container = document.getElementById('celestialContent');
+        if (!container) {
+            this.showError('無法顯示靈犀殿');
+            return;
+        }
+        
         container.innerHTML = `
             <div class="divination-temple">
                 <div class="temple-header">
@@ -472,22 +433,39 @@ class CelestialOS {
                 <div class="chat-interface">
                     <div class="chat-messages" id="chatMessages">
                         <div class="message bot-message">
-                            <p>歡迎來到靈犀殿！請告訴我你想詢問的問題，我會為你選擇最適合的占卜方式。</p>
+                            <div class="bot-avatar">🔮</div>
+                            <div class="message-content">
+                                <p>歡迎來到靈犀殿！</p>
+                                <p>請告訴我你想詢問的問題，我會為你進行占卜指引。</p>
+                                <p class="message-hint">💡 試試問：「我最近的感情運勢如何？」</p>
+                            </div>
                         </div>
                     </div>
                     
                     <div class="chat-input-area">
-                        <input type="text" id="questionInput" placeholder="輸入你的問題..." class="chat-input">
-                        <button onclick="celestialOS.sendQuestion()" class="chat-send-btn">發送</button>
+                        <input type="text" id="questionInput" placeholder="輸入你的問題..." class="chat-input" 
+                               onkeypress="if(event.key === 'Enter') celestialOS.sendQuestion()">
+                        <button onclick="celestialOS.sendQuestion()" class="chat-send-btn">🔮 占卜</button>
                     </div>
                     
                     <div class="divination-options hidden" id="divinationOptions">
-                        <p>你想使用哪種方式來探索這個問題？</p>
+                        <p class="options-title">選擇占卜方式：</p>
                         <div class="option-buttons">
-                            <button class="option-btn" data-type="tarot" onclick="celestialOS.selectDivinationType('tarot')">🃏 塔羅牌</button>
-                            <button class="option-btn" data-type="yijing" onclick="celestialOS.selectDivinationType('yijing')">☯️ 周易</button>
-                            <button class="option-btn" data-type="migu" onclick="celestialOS.selectDivinationType('migu')">🌾 米卦</button>
-                            <button class="option-btn" data-type="qiuqian" onclick="celestialOS.selectDivinationType('qiuqian')">🎋 求籤</button>
+                            <button class="option-btn" onclick="celestialOS.selectDivinationType('tarot')">
+                                <span class="option-icon">🃏</span>
+                                <span class="option-name">塔羅牌</span>
+                                <span class="option-desc">具體問題指引</span>
+                            </button>
+                            <button class="option-btn" onclick="celestialOS.selectDivinationType('yijing')">
+                                <span class="option-icon">☯️</span>
+                                <span class="option-name">周易</span>
+                                <span class="option-desc">重大決策分析</span>
+                            </button>
+                            <button class="option-btn" onclick="celestialOS.selectDivinationType('qiuqian')">
+                                <span class="option-icon">🎋</span>
+                                <span class="option-name">求籤</span>
+                                <span class="option-desc">運勢總體預測</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -498,6 +476,11 @@ class CelestialOS {
     // 顯示潛意識殿（筆記風格）
     showSubconsciousTemple() {
         const container = document.getElementById('celestialContent');
+        if (!container) {
+            this.showError('無法顯示潛意識殿');
+            return;
+        }
+        
         container.innerHTML = `
             <div class="subconscious-temple">
                 <div class="temple-header">
@@ -507,48 +490,43 @@ class CelestialOS {
                 
                 <div class="subconscious-tabs">
                     <button class="tab-btn active" data-tab="dream">🛌 解夢</button>
-                    <button class="tab-btn" data-tab="meditation">🧘 視覺冥想</button>
                     <button class="tab-btn" data-tab="calligraphy">✍️ 測字</button>
                 </div>
                 
                 <div class="subconscious-content">
                     <div id="dreamTab" class="tab-content active">
-                        <div class="tab-instruction">
-                            <p>記錄你的夢境，AI 將為你進行深度心理分析</p>
-                        </div>
-                        <textarea id="dreamText" class="dream-textarea" placeholder="請詳細描述你的夢境，包括夢中的場景、人物、情緒等..."></textarea>
-                        <button class="btn-primary" onclick="celestialOS.analyzeDream()">🔮 AI 解夢分析</button>
-                    </div>
-                    
-                    <div id="meditationTab" class="tab-content hidden">
-                        <div class="meditation-content">
-                            <h3>🧘 視覺冥想</h3>
-                            <p>功能開發中，未來將支持塔羅牌視覺化生成...</p>
-                            <div class="meditation-placeholder">
-                                <div class="placeholder-icon">🎨</div>
-                                <p>即將推出</p>
-                            </div>
+                        <div class="dream-section">
+                            <div class="section-icon">🌙</div>
+                            <h3>AI 解夢分析</h3>
+                            <p class="section-desc">記錄你的夢境，AI 將為你進行深度心理分析和象徵解讀</p>
+                            <textarea id="dreamText" class="dream-textarea" placeholder="請詳細描述你的夢境...
+
+例如：
+- 夢中的場景是什麼？
+- 有哪些人物出現？
+- 你在夢中的情緒如何？
+- 發生了什麼事件？"></textarea>
+                            <button class="btn-primary" onclick="celestialOS.analyzeDream()">🔮 開始解夢</button>
                         </div>
                     </div>
                     
                     <div id="calligraphyTab" class="tab-content hidden">
-                        <div class="tab-instruction">
-                            <p>輸入一個字，AI 將為你進行測字分析</p>
-                        </div>
-                        <div class="calligraphy-input-area">
-                            <input type="text" id="calligraphyText" placeholder="輸入一個字" maxlength="1" 
-                                   style="font-size: 3em; text-align: center; width: 200px; padding: 20px; margin: 20px auto; display: block; background: rgba(255,255,255,0.1); border: 2px solid rgba(138,43,226,0.5); border-radius: 10px; color: #ffffff;">
-                            <button class="btn-primary" onclick="celestialOS.analyzeCalligraphy()">✍️ 測字分析</button>
+                        <div class="calligraphy-section">
+                            <div class="section-icon">✍️</div>
+                            <h3>AI 測字分析</h3>
+                            <p class="section-desc">輸入一個字，AI 將分析其字形結構和象徵意義</p>
+                            <div class="calligraphy-input-wrapper">
+                                <input type="text" id="calligraphyText" class="calligraphy-input" placeholder="輸入一個字" maxlength="1">
+                            </div>
+                            <button class="btn-primary" onclick="celestialOS.analyzeCalligraphy()">✍️ 開始測字</button>
                         </div>
                     </div>
                 </div>
             </div>
         `;
         
-        // 設置標籤切換（在 DOM 更新後）
-        setTimeout(() => {
-            this.setupSubconsciousTabs();
-        }, 100);
+        // 設置標籤切換
+        setTimeout(() => this.setupSubconsciousTabs(), 100);
     }
 
     // 設置潛意識殿標籤切換
@@ -629,43 +607,84 @@ class CelestialOS {
 
     // 顯示計算中狀態
     showCalculatingState() {
-        console.log('showCalculatingState 被調用'); // 調試用
         const container = document.getElementById('celestialContent');
         
         if (!container) {
-            console.error('找不到 formContainer 元素');
-            this.showError('無法顯示計算狀態：找不到容器元素');
+            this.showError('無法顯示計算狀態');
             return;
         }
         
-        // 確保容器可見
         container.classList.remove('hidden');
         container.style.display = 'block';
-        console.log('formContainer 已設置為可見（計算中）'); // 調試用
         
         container.innerHTML = `
-            <div class="calculating-state" style="text-align: center; padding: 60px 20px;">
-                <div class="spinner" style="width: 60px; height: 60px; margin: 0 auto 20px; border: 4px solid rgba(255, 215, 0, 0.3); border-top-color: #ffd700; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                <h2 style="color: #ffd700; margin-bottom: 10px;">正在計算你的命盤...</h2>
-                <p style="color: #d0d0d0;">這可能需要幾秒鐘時間，請稍候</p>
+            <div class="calculating-state">
+                <div class="loading-animation">
+                    <div class="mystical-orb">
+                        <div class="orb-core"></div>
+                        <div class="orb-ring ring-1"></div>
+                        <div class="orb-ring ring-2"></div>
+                        <div class="orb-ring ring-3"></div>
+                    </div>
+                </div>
+                <h2 class="loading-title">正在計算你的命盤...</h2>
+                <p class="loading-subtitle">AI 正在分析你的八字、紫微斗數和占星資料</p>
+                <div class="loading-progress">
+                    <div class="progress-steps">
+                        <div class="step active" id="step1">📅 八字計算</div>
+                        <div class="step" id="step2">⭐ 紫微排盤</div>
+                        <div class="step" id="step3">🌙 占星分析</div>
+                    </div>
+                </div>
+                <p class="loading-tip">💡 提示：首次計算需要 5-15 秒，請耐心等待</p>
             </div>
         `;
-        console.log('計算中狀態已設置'); // 調試用
+        
+        // 模擬進度更新
+        setTimeout(() => {
+            const step2 = document.getElementById('step2');
+            if (step2) step2.classList.add('active');
+        }, 2000);
+        
+        setTimeout(() => {
+            const step3 = document.getElementById('step3');
+            if (step3) step3.classList.add('active');
+        }, 4000);
     }
 
     // 顯示成功訊息
     showSuccess(message) {
-        // 使用現有的 showError 函數，但改為 success 類型
-        if (typeof showError === 'function') {
-            showError(message, 'success');
-        }
+        this.showToast(message, 'success');
     }
 
     // 顯示錯誤訊息
     showError(message) {
-        if (typeof showError === 'function') {
-            showError(message, 'error');
-        }
+        this.showToast(message, 'error');
+    }
+    
+    // 統一的訊息提示
+    showToast(message, type = 'info') {
+        // 移除舊的 toast
+        const oldToast = document.querySelector('.toast-message');
+        if (oldToast) oldToast.remove();
+        
+        const toast = document.createElement('div');
+        toast.className = `toast-message toast-${type}`;
+        toast.innerHTML = `
+            <span class="toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
+            <span class="toast-text">${message}</span>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // 動畫顯示
+        setTimeout(() => toast.classList.add('show'), 10);
+        
+        // 自動消失
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 
     // 查看詳情
