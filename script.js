@@ -275,8 +275,19 @@ function initShuffleInteraction() {
 
 // API 金鑰管理
 function getApiKey() {
+    // 優先從 localStorage 讀取
+    const savedKey = localStorage.getItem('gemini_api_key');
+    if (savedKey && savedKey.trim()) {
+        return savedKey.trim();
+    }
+    
+    // 如果 localStorage 沒有，嘗試從輸入框讀取（向後兼容）
     const apiKeyInput = document.getElementById('apiKey');
-    return apiKeyInput ? apiKeyInput.value.trim() : '';
+    if (apiKeyInput && apiKeyInput.value.trim()) {
+        return apiKeyInput.value.trim();
+    }
+    
+    return '';
 }
 
 function saveApiKey(apiKey) {
@@ -289,11 +300,14 @@ function saveApiKey(apiKey) {
 
 function loadApiKey() {
     const savedKey = localStorage.getItem('gemini_api_key');
-    if (savedKey) {
-        const apiKeyInput = document.getElementById('apiKey');
-        if (apiKeyInput) {
+    const apiKeyInput = document.getElementById('apiKey');
+    if (apiKeyInput) {
+        if (savedKey && savedKey.trim()) {
             apiKeyInput.value = savedKey;
             updateApiKeyStatus(true);
+        } else {
+            apiKeyInput.value = '';
+            updateApiKeyStatus(false);
         }
     }
 }
@@ -305,7 +319,7 @@ function updateApiKeyStatus(isSet) {
             statusEl.textContent = '✓ 已設置';
             statusEl.className = 'api-key-status valid';
         } else {
-            statusEl.textContent = '';
+            statusEl.textContent = '未設置';
             statusEl.className = 'api-key-status';
         }
     }
@@ -379,8 +393,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 saveApiKey(key);
                 updateApiKeyStatus(true);
                 closeModal();
+                // 顯示成功提示
+                if (typeof celestialOS !== 'undefined' && celestialOS.showSuccess) {
+                    celestialOS.showSuccess('API 金鑰已保存');
+                } else {
+                    alert('API 金鑰已保存');
+                }
             } else {
                 alert('請輸入 API 金鑰');
+            }
+        });
+    }
+    
+    // 當輸入框內容改變時，實時檢查
+    if (apiKeyInput) {
+        apiKeyInput.addEventListener('input', () => {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                // 實時保存（可選，或者只在點擊保存時保存）
+                // saveApiKey(key);
             }
         });
     }
