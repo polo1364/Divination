@@ -148,8 +148,14 @@ async function handleDrawCards() {
             const interpretation = await getAIInterpretation(question, drawnCards);
             displayResult(interpretation);
         } catch (error) {
-            console.error('Error:', error);
-            alert('解讀失敗，請稍後再試。');
+            console.error('解讀錯誤:', error);
+            let errorMsg = '解讀失敗，請稍後再試。';
+            if (error.message.includes('API 金鑰')) {
+                errorMsg = '服務器配置錯誤：請聯繫管理員檢查 API 金鑰設置。';
+            } else if (error.message.includes('配額')) {
+                errorMsg = 'API 配額已用完，請稍後再試。';
+            }
+            alert(errorMsg + '\n\n錯誤詳情：' + error.message);
         } finally {
             loading.classList.add('hidden');
             drawBtn.disabled = false;
@@ -212,7 +218,10 @@ async function getAIInterpretation(question, cards) {
     });
 
     if (!response.ok) {
-        throw new Error('API 請求失敗');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || 'API 請求失敗';
+        const errorDetails = errorData.details || `HTTP ${response.status}`;
+        throw new Error(`${errorMessage}: ${errorDetails}`);
     }
 
     return await response.json();
