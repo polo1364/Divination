@@ -711,6 +711,83 @@ class HoroscopeMarquee {
         const str = String(text);
         return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
     }
+    
+    // 強制重新抓取運勢（清除緩存並重新獲取）
+    async refreshFortunes() {
+        const today = new Date().toISOString().split('T')[0];
+        const cachedKey = `horoscope_${today}`;
+        
+        console.log('🔄 開始強制重新抓取運勢...');
+        
+        // 清除今日緩存
+        try {
+            localStorage.removeItem(cachedKey);
+            console.log('🗑️ 已清除今日緩存:', cachedKey);
+        } catch (e) {
+            console.warn('清除緩存失敗:', e);
+        }
+        
+        // 清空當前運勢數據
+        this.fortunes.clear();
+        
+        // 顯示載入中狀態
+        const content = document.getElementById('marqueeContent');
+        if (content) {
+            const todayDate = new Date();
+            const dateStr = `${todayDate.getFullYear()}年${todayDate.getMonth() + 1}月${todayDate.getDate()}日`;
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            const weekday = weekdays[todayDate.getDay()];
+            
+            content.innerHTML = `
+                <div class="marquee-item">
+                    <div class="marquee-date">
+                        <span class="date-text">📅 ${dateStr} 星期${weekday}</span>
+                    </div>
+                    <div class="zodiac-icon">🔄</div>
+                    <div class="zodiac-info">
+                        <div class="zodiac-header">
+                            <span class="zodiac-name">重新載入中...</span>
+                        </div>
+                        <div class="zodiac-fortune">
+                            <span style="color: #ffb74d;">正在從 API 重新獲取運勢數據...</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 重新載入運勢
+        try {
+            await this.loadTodayFortunes();
+            console.log('✅ 運勢重新載入完成');
+            
+            // 如果輪播已啟動，更新顯示
+            if (this.marqueeInterval) {
+                this.showCurrentZodiac();
+            } else {
+                // 如果輪播未啟動，重新啟動
+                this.startMarquee();
+            }
+        } catch (error) {
+            console.error('❌ 重新載入運勢失敗:', error);
+            // 顯示錯誤狀態
+            if (content) {
+                content.innerHTML = `
+                    <div class="marquee-item">
+                        <div class="zodiac-icon">⚠️</div>
+                        <div class="zodiac-info">
+                            <div class="zodiac-header">
+                                <span class="zodiac-name">載入失敗</span>
+                            </div>
+                            <div class="zodiac-fortune">
+                                <span style="color: #ff6b6b;">${error.message || '無法獲取運勢數據'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }
 }
 
 // 初始化跑馬燈
