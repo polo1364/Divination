@@ -1757,6 +1757,22 @@ class CelestialOS {
         
         const resultData = result.result || result;
 
+        // 處理引導步驟，如果 analysis 是字符串，嘗試按段落分割
+        let guideSteps = [];
+        if (resultData.guide && Array.isArray(resultData.guide)) {
+            guideSteps = resultData.guide;
+        } else if (resultData.analysis) {
+            // 嘗試按數字、句號或換行分割
+            const analysisText = resultData.analysis;
+            const splitPattern = /(\d+[\.、]|[\n\r]+|。|；)/;
+            const parts = analysisText.split(splitPattern).filter(p => p.trim());
+            if (parts.length > 1) {
+                guideSteps = parts.filter(p => !p.match(/^[\d\.、\n\r。；]+$/)).map(p => p.trim()).filter(p => p.length > 0);
+            } else {
+                guideSteps = [analysisText];
+            }
+        }
+
         meditationTab.innerHTML = `
             <div class="meditation-result">
                 <button class="back-btn" onclick="celestialOS.showSubconsciousTemple()">← 返回冥想</button>
@@ -1765,65 +1781,94 @@ class CelestialOS {
                     <div class="meditation-theme-display">
                         <span class="theme-badge">${theme}</span>
                         <h3>🧘 你的專屬冥想引導</h3>
+                        ${resultData.duration ? `<div class="duration-badge">⏱️ ${resultData.duration}</div>` : ''}
                     </div>
                 </div>
 
-                ${resultData.scene ? `
-                    <div class="meditation-scene">
-                        <h4>🌌 視覺場景</h4>
-                        <div class="scene-description">
-                            ${resultData.scene}
+                <div class="meditation-content-wrapper">
+                    ${resultData.scene ? `
+                        <div class="meditation-scene">
+                            <div class="section-header">
+                                <span class="section-icon">🌌</span>
+                                <h4>視覺場景</h4>
+                            </div>
+                            <div class="scene-description">
+                                ${this.formatText(resultData.scene)}
+                            </div>
                         </div>
-                    </div>
-                ` : ''}
+                    ` : ''}
 
-                ${resultData.guide ? `
-                    <div class="meditation-guide">
-                        <h4>🧘 冥想引導</h4>
-                        <div class="guide-steps">
-                            ${Array.isArray(resultData.guide) ? 
-                                resultData.guide.map((step, index) => `
-                                    <div class="guide-step">
-                                        <span class="step-number">${index + 1}</span>
-                                        <p>${step}</p>
+                    ${resultData.breathing ? `
+                        <div class="meditation-breathing">
+                            <div class="section-header">
+                                <span class="section-icon">💨</span>
+                                <h4>呼吸節奏</h4>
+                            </div>
+                            <div class="breathing-pattern">
+                                ${this.formatText(resultData.breathing)}
+                            </div>
+                            <div class="breathing-visual">
+                                <div class="breath-cycle">
+                                    <div class="breath-step breath-in">
+                                        <span class="breath-icon">⬆️</span>
+                                        <span class="breath-label">吸氣</span>
                                     </div>
-                                `).join('') :
-                                `<div class="guide-step"><p>${resultData.guide}</p></div>`
-                            }
+                                    <div class="breath-step breath-hold">
+                                        <span class="breath-icon">⏸️</span>
+                                        <span class="breath-label">屏息</span>
+                                    </div>
+                                    <div class="breath-step breath-out">
+                                        <span class="breath-icon">⬇️</span>
+                                        <span class="breath-label">呼氣</span>
+                                    </div>
+                                    <div class="breath-step breath-pause">
+                                        <span class="breath-icon">⏸️</span>
+                                        <span class="breath-label">停頓</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                ` : resultData.analysis ? `
-                    <div class="meditation-guide">
-                        <h4>🧘 冥想引導</h4>
-                        <div class="guide-content">
-                            ${resultData.analysis}
+                    ` : ''}
+
+                    ${guideSteps.length > 0 ? `
+                        <div class="meditation-guide">
+                            <div class="section-header">
+                                <span class="section-icon">🧘</span>
+                                <h4>冥想引導步驟</h4>
+                            </div>
+                            <div class="guide-steps">
+                                ${guideSteps.map((step, index) => `
+                                    <div class="guide-step">
+                                        <div class="step-indicator">
+                                            <span class="step-number">${index + 1}</span>
+                                            <div class="step-connector ${index === guideSteps.length - 1 ? 'last' : ''}"></div>
+                                        </div>
+                                        <div class="step-content">
+                                            <p>${this.formatText(step)}</p>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
-                    </div>
-                ` : ''}
+                    ` : ''}
 
-                ${resultData.breathing ? `
-                    <div class="meditation-breathing">
-                        <h4>💨 呼吸節奏</h4>
-                        <div class="breathing-pattern">
-                            ${resultData.breathing}
+                    ${resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0 ? `
+                        <div class="meditation-advice">
+                            <div class="section-header">
+                                <span class="section-icon">💡</span>
+                                <h4>冥想後建議</h4>
+                            </div>
+                            <div class="advice-grid">
+                                ${resultData.advice.map((a, index) => `
+                                    <div class="advice-card">
+                                        <span class="advice-number">${index + 1}</span>
+                                        <p>${this.formatText(a)}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
-                    </div>
-                ` : ''}
-
-                ${resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0 ? `
-                    <div class="meditation-advice">
-                        <h4>💡 冥想後建議</h4>
-                        <ul>
-                            ${resultData.advice.map(a => `<li>${a}</li>`).join('')}
-                        </ul>
-                    </div>
-                ` : ''}
-
-                ${resultData.duration ? `
-                    <div class="meditation-duration">
-                        <p><strong>建議時長：</strong>${resultData.duration}</p>
-                    </div>
-                ` : ''}
+                    ` : ''}
+                </div>
 
                 <div class="meditation-actions">
                     <button class="btn-primary" onclick="celestialOS.startMeditation('${theme}')">🔄 重新生成</button>
@@ -1836,6 +1881,15 @@ class CelestialOS {
     shareMeditation(theme) {
         // 可以實現分享功能
         this.showSuccess('冥想引導已準備好分享');
+    }
+
+    // 格式化文本，處理換行和段落
+    formatText(text) {
+        if (!text) return '';
+        // 將換行符轉換為 <br>
+        return text.replace(/\n/g, '<br>')
+                   .replace(/\r\n/g, '<br>')
+                   .replace(/\r/g, '<br>');
     }
 
     // 測字分析
