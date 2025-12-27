@@ -109,7 +109,7 @@ class CelestialOS {
                     <div class="dashboard-card" data-type="ziwei">
                         <div class="card-icon">⭐</div>
                         <h3>紫微斗數</h3>
-                        <p class="card-status" id="ziweiStatus">${userProfile.calculatedData.ziwei ? '✓ 已計算' : ' : '未計算'}</p>
+                        <p class="card-status" id="ziweiStatus">${userProfile.calculatedData.ziwei ? '✓ 已計算' : '未計算'}</p>
                         <button class="card-action-btn" onclick="celestialOS.viewDetail('ziwei')">查看詳情</button>
                     </div>
                     

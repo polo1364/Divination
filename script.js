@@ -1053,10 +1053,11 @@ async function handleDivination() {
                 document.getElementById('astrologyBirthDate').focus();
                 return;
             }
-            const birthPlace = document.getElementById('birthPlace').value.trim();
+            const birthPlaceEl = document.getElementById('astrologyBirthPlace') || document.getElementById('birthPlace');
+            const birthPlace = birthPlaceEl ? birthPlaceEl.value.trim() : '';
             if (!birthPlace) {
                 showError('請輸入出生地點！', 'error');
-                document.getElementById('birthPlace').focus();
+                if (birthPlaceEl) birthPlaceEl.focus();
                 return;
             }
             
