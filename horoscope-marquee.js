@@ -65,12 +65,16 @@ class HoroscopeMarquee {
             console.warn('讀取運勢緩存失敗:', e);
         }
 
-        // 批量獲取運勢（使用 AI API）
-        const apiKey = typeof getApiKey === 'function' ? getApiKey() : null;
+        // 優先使用 Free Astrology API，如果沒有則使用 Gemini API
+        const astrologyApiKey = typeof getAstrologyApiKey === 'function' ? getAstrologyApiKey() : null;
+        const geminiApiKey = typeof getApiKey === 'function' ? getApiKey() : null;
         
-        if (apiKey) {
-            // 如果有 API 金鑰，批量獲取運勢
-            await this.fetchFortunesFromAI(apiKey, today, cachedKey);
+        if (astrologyApiKey) {
+            // 使用 Free Astrology API
+            await this.fetchFortunesFromAstrologyAPI(astrologyApiKey, today, cachedKey);
+        } else if (geminiApiKey) {
+            // 使用 Gemini API 作為備用
+            await this.fetchFortunesFromAI(geminiApiKey, today, cachedKey);
         } else {
             // 否則使用預設運勢
             this.generateDefaultFortunes();
@@ -82,7 +86,43 @@ class HoroscopeMarquee {
         }
     }
 
-    // 從 AI 獲取運勢
+    // 從 Free Astrology API 批量獲取運勢
+    async fetchFortunesFromAstrologyAPI(apiKey, date, cacheKey) {
+        try {
+            const fortunes = new Map();
+            
+            // 並行獲取所有星座運勢
+            const promises = this.zodiacs.map(async (zodiac) => {
+                try {
+                    const fortune = await this.fetchFromAstrologyAPI(zodiac, apiKey);
+                    fortunes.set(zodiac.name, fortune);
+                    
+                    // 更新顯示（如果當前正在顯示這個星座）
+                    if (this.marqueeInterval && this.zodiacs[this.currentIndex].name === zodiac.name) {
+                        this.updateDisplay(zodiac, fortune);
+                    }
+                } catch (error) {
+                    console.warn(`獲取${zodiac.name}運勢失敗:`, error);
+                    fortunes.set(zodiac.name, this.getDefaultFortune(zodiac));
+                }
+            });
+            
+            await Promise.all(promises);
+            
+            this.fortunes = fortunes;
+            
+            // 保存到緩存
+            localStorage.setItem(cacheKey, JSON.stringify({
+                timestamp: new Date().toISOString(),
+                fortunes: Array.from(fortunes.entries())
+            }));
+        } catch (error) {
+            console.error('批量獲取運勢失敗:', error);
+            this.generateDefaultFortunes();
+        }
+    }
+    
+    // 從 AI 獲取運勢（Gemini API 備用方案）
     async fetchFortunesFromAI(apiKey, date, cacheKey) {
         try {
             // 為所有星座生成運勢
@@ -121,8 +161,9 @@ class HoroscopeMarquee {
         }
     }
 
-    // 獲取單個星座運勢
+    // 獲取單個星座運勢（使用 Gemini API）
     async fetchSingleZodiacFortune(zodiac, apiKey, date) {
+        // 使用 Gemini API
         const question = `請為${zodiac.name}（${zodiac.english}）生成今日（${date}）的運勢，包括：整體運勢（1-5星）、愛情、事業、財運、健康等方面的簡短建議。請用簡潔的語言，每項不超過20字。`;
         
         const data = {
@@ -175,6 +216,66 @@ class HoroscopeMarquee {
             console.error(`獲取${zodiac.name}運勢錯誤:`, error);
             return this.getDefaultFortune(zodiac);
         }
+    }
+    
+    // 從 Free Astrology API 獲取運勢
+    async fetchFromAstrologyAPI(zodiac, apiKey) {
+        // 星座名稱映射到 API 需要的格式
+        const zodiacMap = {
+            '白羊座': 'aries',
+            '金牛座': 'taurus',
+            '雙子座': 'gemini',
+            '巨蟹座': 'cancer',
+            '獅子座': 'leo',
+            '處女座': 'virgo',
+            '天秤座': 'libra',
+            '天蠍座': 'scorpio',
+            '射手座': 'sagittarius',
+            '摩羯座': 'capricorn',
+            '水瓶座': 'aquarius',
+            '雙魚座': 'pisces'
+        };
+        
+        const zodiacSign = zodiacMap[zodiac.name] || zodiac.name.toLowerCase();
+        
+        try {
+            // 使用 Free Astrology API 獲取今日運勢
+            const response = await fetch(`https://json.astrologyapi.com/v1/horoscope/daily/${zodiacSign}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Basic ${btoa(apiKey + ':')}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`API 請求失敗: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            // 解析 API 返回的數據
+            return {
+                overall: this.convertScoreToStars(data.score || 3),
+                love: data.love || data.love_text || '感情運勢平穩',
+                career: data.career || data.career_text || '事業發展順利',
+                wealth: data.finance || data.finance_text || '財運穩定',
+                health: data.health || data.health_text || '健康狀況良好',
+                summary: data.prediction || data.description || ''
+            };
+        } catch (error) {
+            console.error(`Free Astrology API 錯誤:`, error);
+            throw error;
+        }
+    }
+    
+    // 將分數轉換為星級
+    convertScoreToStars(score) {
+        if (typeof score === 'number') {
+            const stars = Math.round(score);
+            return '⭐'.repeat(Math.max(1, Math.min(5, stars)));
+        }
+        return '⭐⭐⭐';
     }
 
     // 解析運勢內容
