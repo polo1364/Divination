@@ -85,7 +85,7 @@ app.post('/api/calculate', (req, res) => {
 // 通用占卜解讀 API（支持多種占卜方式）
 app.post('/api/divination', async (req, res) => {
     try {
-        const { type, question, data, apiKey } = req.body;
+        const { type, question, data, apiKey, history } = req.body;
 
         // 優先使用請求中的 API 金鑰，否則使用環境變數
         const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
@@ -118,14 +118,38 @@ app.post('/api/divination', async (req, res) => {
         console.log(`📝 收到${type}解讀請求`);
 
         // 構建提示詞（使用強烈的人設 + RAG + 冷讀術 + 記憶）
-        const prompt = buildDivinationPrompt(type, question, data, history);
+        let prompt;
+        try {
+            prompt = buildDivinationPrompt(type, question, data || {}, history || null);
+            console.log('✅ 提示詞構建成功，長度:', prompt.length);
+        } catch (promptError) {
+            console.error('❌ 提示詞構建失敗:', promptError);
+            throw new Error(`提示詞構建失敗: ${promptError.message}`);
+        }
 
         console.log('🤖 調用 Gemini API...');
         
-        // 調用 Gemini API
-        const result = await currentModel.generateContent(prompt);
-        const response = await result.response;
-        let interpretation = response.text();
+        // 調用 Gemini API（添加錯誤處理）
+        let result, response, interpretation;
+        try {
+            result = await currentModel.generateContent(prompt);
+            response = await result.response;
+            interpretation = response.text();
+            
+            if (!interpretation || interpretation.trim().length === 0) {
+                throw new Error('AI 返回了空內容');
+            }
+            
+            console.log('✅ AI 回應成功，長度:', interpretation.length);
+        } catch (apiError) {
+            console.error('❌ Gemini API 調用失敗:', apiError);
+            console.error('API 錯誤詳情:', {
+                message: apiError.message,
+                name: apiError.name,
+                stack: apiError.stack
+            });
+            throw new Error(`AI 解讀失敗: ${apiError.message || '未知錯誤'}`);
+        }
 
         // 嘗試解析 JSON（如果 AI 返回了結構化輸出）
         let structuredResult = null;
@@ -160,9 +184,19 @@ app.post('/api/divination', async (req, res) => {
 
     } catch (error) {
         console.error('❌ 解讀失敗:', error);
+        console.error('錯誤堆疊:', error.stack);
+        console.error('請求數據:', {
+            type: req.body?.type,
+            question: req.body?.question ? req.body.question.substring(0, 50) + '...' : '無',
+            hasData: !!req.body?.data,
+            hasApiKey: !!req.body?.apiKey,
+            hasHistory: !!req.body?.history
+        });
+        
         res.status(500).json({ 
             error: '解讀失敗，請稍後再試',
-            details: error.message 
+            details: error.message || '未知錯誤',
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
@@ -190,11 +224,15 @@ function buildDivinationPrompt(type, question, data, history = null) {
    - "這個指引會在你最需要的時候顯現..."
 
 【記憶功能】
-${history ? `使用者之前的占卜紀錄：
+${history && Array.isArray(history) && history.length > 0 ? `使用者之前的占卜紀錄：
 ${history.map((h, i) => {
-    const date = new Date(h.timestamp);
-    const daysAgo = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
-    return `${i + 1}. ${daysAgo}天前：${h.type}占卜，問題「${h.question}」，結果摘要：${h.result?.result?.summary || '無'}`;
+    try {
+        const date = h.timestamp ? new Date(h.timestamp) : new Date();
+        const daysAgo = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+        return `${i + 1}. ${daysAgo}天前：${h.type || '未知'}占卜，問題「${h.question || '無'}」，結果摘要：${h.result?.result?.summary || h.result?.summary || '無'}`;
+    } catch (e) {
+        return `${i + 1}. 歷史紀錄格式錯誤`;
+    }
 }).join('\n')}
 
 請結合上次的脈絡，分析為什麼使用者的狀態會有這樣的轉變，並在解讀中自然地提及這種連續性。` : '這是使用者的第一次占卜，請給予完整的初始解讀。'}
