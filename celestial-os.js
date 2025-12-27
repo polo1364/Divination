@@ -257,14 +257,17 @@ class CelestialOS {
             return;
         }
         
+        // 防止重複進入同一個神殿
+        if (this.currentTemple === temple && document.getElementById('celestialContent')?.innerHTML.trim() !== '') {
+            return;
+        }
+        
         this.currentTemple = temple;
         
         // 隱藏神殿導航
         const templeNav = document.getElementById('templeNavigation');
         if (templeNav) {
             templeNav.classList.add('hidden');
-        } else {
-            // 導航元素可能還未加載
         }
         
         // 隱藏檔案設置界面
@@ -415,6 +418,11 @@ class CelestialOS {
         const container = document.getElementById('celestialContent');
         if (!container) {
             this.showError('無法顯示靈犀殿');
+            return;
+        }
+        
+        // 防止重複渲染（如果內容已經存在且相同）
+        if (this.currentTemple === 'divination' && container.querySelector('#chatMessages')) {
             return;
         }
         
@@ -883,11 +891,7 @@ class CelestialOS {
         }
         
         if (!messages) {
-            this.showError('找不到聊天區域，請先進入靈犀殿');
-            // 嘗試重新顯示靈犀殿
-            if (this.currentTemple === 'divination') {
-                this.showDivinationTemple();
-            }
+            this.showError('找不到聊天區域，請重新進入靈犀殿');
             return;
         }
         
@@ -937,12 +941,24 @@ class CelestialOS {
             return;
         }
         
+        // 檢查問題是否存在
+        if (!this.currentQuestion) {
+            this.showError('請先輸入問題');
+            return;
+        }
+        
         const typeNames = {
             'tarot': '塔羅牌',
             'yijing': '周易',
             'migu': '米卦',
             'qiuqian': '求籤'
         };
+        
+        // 檢查類型是否有效
+        if (!typeNames[type]) {
+            this.showError('無效的占卜類型');
+            return;
+        }
 
         // 顯示選擇的占卜方式
         messages.innerHTML += `
@@ -960,6 +976,9 @@ class CelestialOS {
         // 隱藏選項
         const options = document.getElementById('divinationOptions');
         if (options) options.classList.add('hidden');
+        
+        // 滾動到底部
+        messages.scrollTop = messages.scrollHeight;
 
         // 執行占卜
         this.executeDivination(type, this.currentQuestion);
@@ -973,13 +992,41 @@ class CelestialOS {
             return;
         }
         
+        if (!question) {
+            this.showError('問題不能為空');
+            return;
+        }
+        
+        // 檢查必要的函數是否存在
+        if (typeof getApiKey !== 'function') {
+            this.showError('系統錯誤：找不到 API 金鑰函數');
+            return;
+        }
+        
+        if (type === 'tarot' && typeof drawRandomCards !== 'function') {
+            this.showError('系統錯誤：找不到塔羅牌抽牌函數');
+            return;
+        }
+        
+        if (type !== 'tarot' && typeof generateGua !== 'function') {
+            this.showError('系統錯誤：找不到占卜生成函數');
+            return;
+        }
+        
         // 顯示進行中訊息（帶進度指示）
         const progressMsgId = 'divination-progress-' + Date.now();
+        const typeNames = {
+            'tarot': '塔羅牌',
+            'yijing': '周易',
+            'migu': '米卦',
+            'qiuqian': '求籤'
+        };
+        
         messages.innerHTML += `
             <div class="message bot-message divination-progress" id="${progressMsgId}">
                 <div class="bot-avatar">🔮</div>
                 <div class="message-content">
-                    <p>正在為你進行 ${type === 'tarot' ? '塔羅牌' : type === 'yijing' ? '周易' : type === 'migu' ? '米卦' : '求籤'} 占卜...</p>
+                    <p>正在為你進行 ${typeNames[type] || type} 占卜...</p>
                     <div class="loading-dots">
                         <span></span><span></span><span></span>
                     </div>
@@ -991,7 +1038,21 @@ class CelestialOS {
         try {
             const apiKey = getApiKey();
             if (!apiKey) {
+                // 移除進度訊息
+                const progressMsg = document.getElementById(progressMsgId);
+                if (progressMsg) progressMsg.remove();
+                
                 this.showError('請先設置 API 金鑰');
+                messages.innerHTML += `
+                    <div class="message bot-message error-message">
+                        <div class="bot-avatar">⚠️</div>
+                        <div class="message-content">
+                            <p><strong>需要 API 金鑰</strong></p>
+                            <p>請先點擊右上角的 ⚙️ 按鈕設置 API 金鑰</p>
+                        </div>
+                    </div>
+                `;
+                messages.scrollTop = messages.scrollHeight;
                 return;
             }
 
@@ -999,15 +1060,30 @@ class CelestialOS {
             let data = {};
             if (type === 'tarot') {
                 const numCards = 3; // 靈犀殿使用三張牌
-                drawnCards = drawRandomCards(numCards);
+                const drawnCards = drawRandomCards(numCards);
+                if (!drawnCards || drawnCards.length === 0) {
+                    throw new Error('抽牌失敗，請重試');
+                }
                 data = { cards: drawnCards, spread: 'three' };
             } else {
                 const guaData = generateGua(type);
+                if (!guaData) {
+                    throw new Error('生成卦象失敗，請重試');
+                }
                 data = guaData;
+            }
+
+            // 檢查是否有 getDivinationResult 函數
+            if (typeof getDivinationResult !== 'function') {
+                throw new Error('系統錯誤：找不到 API 調用函數');
             }
 
             // 調用 AI 解讀
             const result = await getDivinationResult(type, question, data, apiKey);
+            
+            if (!result) {
+                throw new Error('AI 解讀失敗，請重試');
+            }
             
             // 顯示結果
             this.displayDivinationInChat(type, question, data, result);
@@ -1040,14 +1116,27 @@ class CelestialOS {
     // 在聊天中顯示占卜結果
     displayDivinationInChat(type, question, data, result) {
         const messages = document.getElementById('chatMessages');
-        if (!messages) return;
+        if (!messages) {
+            console.error('找不到聊天區域');
+            return;
+        }
+        
+        if (!result) {
+            this.showError('結果數據為空');
+            return;
+        }
         
         const resultData = result.result || result;
+        
+        if (!resultData) {
+            this.showError('無法解析結果數據');
+            return;
+        }
 
         // 移除進度訊息
         const progressMsg = messages.querySelector('.divination-progress');
         if (progressMsg) {
-            progressMsg.parentElement.remove();
+            progressMsg.remove();
         }
 
         // 顯示結果
@@ -1057,33 +1146,49 @@ class CelestialOS {
         `;
 
         // 顯示占卜資料（如塔羅牌）
-        if (type === 'tarot' && data.cards) {
+        if (type === 'tarot' && data && data.cards && Array.isArray(data.cards)) {
             resultHtml += `
                 <div class="chat-tarot-cards">
-                    ${data.cards.map(card => `
-                        <div class="chat-card-mini">
-                            <div class="card-emoji">${card.emoji}</div>
-                            <div class="card-name">${card.displayName || card.name}</div>
-                        </div>
-                    `).join('')}
+                    ${data.cards.map(card => {
+                        const cardName = card.displayName || card.name || '未知';
+                        const cardEmoji = card.emoji || '🃏';
+                        return `
+                            <div class="chat-card-mini">
+                                <div class="card-emoji">${cardEmoji}</div>
+                                <div class="card-name">${cardName}</div>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
             `;
+        } else if (type !== 'tarot' && data) {
+            // 顯示其他占卜類型的資料（如易經卦象）
+            if (data.gua || data.guaName) {
+                resultHtml += `
+                    <div class="chat-gua-info">
+                        <p><strong>${data.guaName || '卦象'}</strong>：${data.gua || ''}</p>
+                        ${data.meaning ? `<p>${data.meaning}</p>` : ''}
+                    </div>
+                `;
+            }
         }
 
         // 顯示 AI 解讀
+        const interpretation = resultData.opening || resultData.analysis || resultData.summary || '解讀結果';
         resultHtml += `
                     <div class="chat-interpretation">
                         <h4>🔮 解讀</h4>
-                        <p>${resultData.opening || resultData.analysis || '解讀結果'}</p>
+                        <p>${interpretation}</p>
                     </div>
         `;
 
-        if (resultData.advice && resultData.advice.length > 0) {
+        // 顯示建議
+        if (resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0) {
             resultHtml += `
                     <div class="chat-advice">
                         <h4>💡 建議</h4>
                         <ul>
-                            ${resultData.advice.map(a => `<li>${a}</li>`).join('')}
+                            ${resultData.advice.map(a => `<li>${a || ''}</li>`).join('')}
                         </ul>
                     </div>
             `;
@@ -1097,11 +1202,29 @@ class CelestialOS {
         messages.innerHTML += resultHtml;
         messages.scrollTop = messages.scrollHeight;
 
-        // 添加繼續提問按鈕
+        // 保存到歷史記錄
+        try {
+            if (typeof saveToHistory === 'function') {
+                saveToHistory({
+                    type: type,
+                    question: question,
+                    data: data,
+                    result: resultData,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        } catch (error) {
+            console.error('保存歷史記錄失敗:', error);
+        }
+
+        // 添加繼續提問提示
         setTimeout(() => {
             messages.innerHTML += `
                 <div class="message bot-message">
-                    <p>還有其他問題嗎？請繼續提問。</p>
+                    <div class="bot-avatar">🔮</div>
+                    <div class="message-content">
+                        <p>還有其他問題嗎？請繼續提問。</p>
+                    </div>
                 </div>
             `;
             messages.scrollTop = messages.scrollHeight;
