@@ -519,20 +519,58 @@ async function handleDivination() {
                 return;
             }
             const birthTime = document.getElementById('birthTime').value;
-            const birthDateTime = birthTime ? `${birthDate}T${birthTime}` : `${birthDate}T12:00`;
-            
-            // 計算八字或紫微斗數（使用節氣計算）
-            const calculation = currentDivinationType === 'bazi' 
-                ? calculateBazi(birthDateTime)
-                : calculateZiwei(birthDateTime);
-            
-            data = {
-                name: document.getElementById('name').value.trim(),
-                gender: document.getElementById('gender').value,
-                birthDate: birthDate,
-                birthTime: birthTime,
-                calculation: calculation
-            };
+            // 調用後端完整計算 API
+            try {
+                const calcResponse = await fetch('/api/calculate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: currentDivinationType,
+                        birthDate: birthDate,
+                        birthTime: birthTime || '12:00'
+                    })
+                });
+
+                if (calcResponse.ok) {
+                    const calcData = await calcResponse.json();
+                    data = {
+                        name: document.getElementById('name').value.trim(),
+                        gender: document.getElementById('gender').value,
+                        birthDate: birthDate,
+                        birthTime: birthTime,
+                        calculation: calcData.result
+                    };
+                } else {
+                    // 如果後端計算失敗，使用前端簡化計算
+                    const birthDateTime = birthTime ? `${birthDate}T${birthTime}` : `${birthDate}T12:00`;
+                    const calculation = currentDivinationType === 'bazi' 
+                        ? calculateBazi(birthDateTime)
+                        : calculateZiwei(birthDateTime);
+                    data = {
+                        name: document.getElementById('name').value.trim(),
+                        gender: document.getElementById('gender').value,
+                        birthDate: birthDate,
+                        birthTime: birthTime,
+                        calculation: calculation
+                    };
+                }
+            } catch (error) {
+                console.error('計算錯誤，使用簡化版本:', error);
+                // 使用前端簡化計算作為備用
+                const birthDateTime = birthTime ? `${birthDate}T${birthTime}` : `${birthDate}T12:00`;
+                const calculation = currentDivinationType === 'bazi' 
+                    ? calculateBazi(birthDateTime)
+                    : calculateZiwei(birthDateTime);
+                data = {
+                    name: document.getElementById('name').value.trim(),
+                    gender: document.getElementById('gender').value,
+                    birthDate: birthDate,
+                    birthTime: birthTime,
+                    calculation: calculation
+                };
+            }
             break;
 
         case 'astrology':
@@ -552,14 +590,47 @@ async function handleDivination() {
                 return;
             }
             
-            // 計算占星盤（簡化版，實際應使用 Swiss Ephemeris）
-            const astrologyData = calculateAstrology(astrologyBirthDate, birthPlace);
-            
-            data = {
-                birthDate: astrologyBirthDate,
-                birthPlace: birthPlace,
-                calculation: astrologyData
-            };
+            // 調用後端完整計算 API
+            try {
+                const calcResponse = await fetch('/api/calculate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'astrology',
+                        birthDate: astrologyBirthDate,
+                        birthTime: '12:00',
+                        birthPlace: birthPlace
+                    })
+                });
+
+                if (calcResponse.ok) {
+                    const calcData = await calcResponse.json();
+                    data = {
+                        birthDate: astrologyBirthDate,
+                        birthPlace: birthPlace,
+                        calculation: calcData.result
+                    };
+                } else {
+                    // 如果後端計算失敗，使用前端簡化計算
+                    const astrologyData = calculateAstrology(astrologyBirthDate, birthPlace);
+                    data = {
+                        birthDate: astrologyBirthDate,
+                        birthPlace: birthPlace,
+                        calculation: astrologyData
+                    };
+                }
+            } catch (error) {
+                console.error('計算錯誤，使用簡化版本:', error);
+                // 使用前端簡化計算作為備用
+                const astrologyData = calculateAstrology(astrologyBirthDate, birthPlace);
+                data = {
+                    birthDate: astrologyBirthDate,
+                    birthPlace: birthPlace,
+                    calculation: astrologyData
+                };
+            }
             break;
 
         case 'yijing':
@@ -641,17 +712,70 @@ function displayDivinationResult(type, question, data, result) {
             if (type === 'bazi' && data.calculation.fullBazi) {
                 html += `<div class="bazi-result"><strong>四柱八字：</strong>${data.calculation.fullBazi}</div>`;
                 html += `<div>年柱：${data.calculation.yearPillar} | 月柱：${data.calculation.monthPillar} | 日柱：${data.calculation.dayPillar} | 時柱：${data.calculation.hourPillar}</div>`;
+                if (data.calculation.lunarDate) {
+                    html += `<div>農曆：${data.calculation.lunarDate}</div>`;
+                }
+                if (data.calculation.jieQi) {
+                    html += `<div>節氣：${data.calculation.jieQi}</div>`;
+                }
             } else if (type === 'ziwei' && data.calculation.mingGong) {
                 html += `<div class="ziwei-result"><strong>${data.calculation.mingGong}</strong></div>`;
-                html += `<div>主星：${data.calculation.mainStar}</div>`;
+                if (data.calculation.wuXingJu) {
+                    html += `<div>五行局：${data.calculation.wuXingJu}</div>`;
+                }
+                if (data.calculation.ziweiPosition) {
+                    html += `<div>${data.calculation.ziweiPosition}</div>`;
+                }
+                if (data.calculation.mainStars) {
+                    html += `<div>主星配置：</div>`;
+                    if (typeof data.calculation.mainStars === 'object') {
+                        Object.values(data.calculation.mainStars).forEach(star => {
+                            html += `<div>${star}</div>`;
+                        });
+                    }
+                }
+                if (data.calculation.lunarDate) {
+                    html += `<div>農曆：${data.calculation.lunarDate}</div>`;
+                }
             }
         }
         html += `</div>`;
     } else if (type === 'astrology' && data.birthDate) {
         html += `<div class="result-data">`;
         html += `<div>出生資訊：${data.birthDate} ${data.birthPlace || ''}</div>`;
-        if (data.calculation && data.calculation.sunSign) {
-            html += `<div class="astrology-result"><strong>太陽星座：</strong>${data.calculation.sunSign}</div>`;
+        if (data.calculation) {
+            if (data.calculation.sunSign) {
+                html += `<div class="astrology-result"><strong>太陽星座：</strong>${data.calculation.sunSign}`;
+                if (data.calculation.planets && data.calculation.planets.sun) {
+                    html += ` ${data.calculation.planets.sun.degree}°`;
+                }
+                html += `</div>`;
+            }
+            if (data.calculation.moonSign) {
+                html += `<div><strong>月亮星座：</strong>${data.calculation.moonSign}`;
+                if (data.calculation.planets && data.calculation.planets.moon) {
+                    html += ` ${data.calculation.planets.moon.degree}°`;
+                }
+                html += `</div>`;
+            }
+            if (data.calculation.risingSign) {
+                html += `<div><strong>上升星座：</strong>${data.calculation.risingSign}</div>`;
+            }
+            if (data.calculation.planets) {
+                html += `<div class="planets-section"><strong>行星位置：</strong></div>`;
+                const planetNames = {
+                    mercury: '水星',
+                    venus: '金星',
+                    mars: '火星',
+                    jupiter: '木星',
+                    saturn: '土星'
+                };
+                Object.entries(data.calculation.planets).forEach(([key, planet]) => {
+                    if (key !== 'sun' && key !== 'moon' && planetNames[key]) {
+                        html += `<div>${planetNames[key]}：${planet.sign} ${planet.degree}°</div>`;
+                    }
+                });
+            }
         }
         html += `</div>`;
     } else if (data.gua) {

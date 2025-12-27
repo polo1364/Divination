@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { calculateBaziFull, calculateZiweiFull, calculateAstrologyFull } = require('./calculations');
 require('dotenv').config();
 
 const app = express();
@@ -32,6 +33,45 @@ try {
 } catch (error) {
     console.error('❌ Gemini API 初始化失敗:', error.message);
 }
+
+// 計算 API（用於八字、紫微斗數、占星的精確計算）
+app.post('/api/calculate', (req, res) => {
+    try {
+        const { type, birthDate, birthTime, birthPlace } = req.body;
+
+        if (!type || !birthDate) {
+            return res.status(400).json({ error: '缺少必要參數' });
+        }
+
+        let result = null;
+
+        switch(type) {
+            case 'bazi':
+                result = calculateBaziFull(birthDate, birthTime);
+                break;
+            case 'ziwei':
+                result = calculateZiweiFull(birthDate, birthTime);
+                break;
+            case 'astrology':
+                if (!birthPlace) {
+                    return res.status(400).json({ error: '占星計算需要出生地點' });
+                }
+                result = calculateAstrologyFull(birthDate, birthTime, birthPlace);
+                break;
+            default:
+                return res.status(400).json({ error: '不支持的計算類型' });
+        }
+
+        if (!result) {
+            return res.status(500).json({ error: '計算失敗' });
+        }
+
+        res.json({ type, result });
+    } catch (error) {
+        console.error('計算錯誤:', error);
+        res.status(500).json({ error: '計算失敗', details: error.message });
+    }
+});
 
 // 通用占卜解讀 API（支持多種占卜方式）
 app.post('/api/divination', async (req, res) => {
