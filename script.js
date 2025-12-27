@@ -90,10 +90,76 @@ const threeCardPositions = [
 let currentSpread = 'single';
 let drawnCards = [];
 
+// API 金鑰管理
+function getApiKey() {
+    const apiKeyInput = document.getElementById('apiKey');
+    return apiKeyInput ? apiKeyInput.value.trim() : '';
+}
+
+function saveApiKey(apiKey) {
+    if (apiKey) {
+        localStorage.setItem('gemini_api_key', apiKey);
+    } else {
+        localStorage.removeItem('gemini_api_key');
+    }
+}
+
+function loadApiKey() {
+    const savedKey = localStorage.getItem('gemini_api_key');
+    if (savedKey) {
+        const apiKeyInput = document.getElementById('apiKey');
+        if (apiKeyInput) {
+            apiKeyInput.value = savedKey;
+            updateApiKeyStatus(true);
+        }
+    }
+}
+
+function updateApiKeyStatus(isSet) {
+    const statusEl = document.getElementById('apiKeyStatus');
+    if (statusEl) {
+        if (isSet) {
+            statusEl.textContent = '✓ 已設置';
+            statusEl.className = 'api-key-status valid';
+        } else {
+            statusEl.textContent = '';
+            statusEl.className = 'api-key-status';
+        }
+    }
+}
+
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
     const spreadButtons = document.querySelectorAll('.spread-btn');
     const drawBtn = document.getElementById('drawBtn');
+    const apiKeyInput = document.getElementById('apiKey');
+    const toggleApiKeyBtn = document.getElementById('toggleApiKey');
+
+    // 載入保存的 API 金鑰
+    loadApiKey();
+
+    // API 金鑰輸入監聽
+    if (apiKeyInput) {
+        apiKeyInput.addEventListener('input', (e) => {
+            const key = e.target.value.trim();
+            saveApiKey(key);
+            updateApiKeyStatus(key.length > 0);
+        });
+
+        // 檢查初始狀態
+        if (apiKeyInput.value.trim()) {
+            updateApiKeyStatus(true);
+        }
+    }
+
+    // 切換 API 金鑰顯示/隱藏
+    if (toggleApiKeyBtn) {
+        toggleApiKeyBtn.addEventListener('click', () => {
+            const type = apiKeyInput.type === 'password' ? 'text' : 'password';
+            apiKeyInput.type = type;
+            toggleApiKeyBtn.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+    }
 
     // 占卜方式選擇
     spreadButtons.forEach(btn => {
@@ -121,12 +187,19 @@ function resetCards() {
 // 處理抽牌
 async function handleDrawCards() {
     const question = document.getElementById('question').value.trim();
+    const apiKey = getApiKey();
     const drawBtn = document.getElementById('drawBtn');
     const loading = document.getElementById('loading');
     const resultSection = document.getElementById('resultSection');
 
     if (!question) {
         alert('請先輸入您的問題！');
+        return;
+    }
+
+    if (!apiKey) {
+        alert('請先輸入 Gemini API 金鑰！\n\n您可以在 https://makersuite.google.com/app/apikey 申請。');
+        document.getElementById('apiKey')?.focus();
         return;
     }
 
@@ -205,6 +278,7 @@ function displayCards(cards) {
 
 // 獲取 AI 解讀
 async function getAIInterpretation(question, cards) {
+    const apiKey = getApiKey();
     const response = await fetch('/api/interpret', {
         method: 'POST',
         headers: {
@@ -213,7 +287,8 @@ async function getAIInterpretation(question, cards) {
         body: JSON.stringify({
             question: question,
             cards: cards,
-            spread: currentSpread
+            spread: currentSpread,
+            apiKey: apiKey
         })
     });
 

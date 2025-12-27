@@ -34,16 +34,30 @@ try {
 // 塔羅牌解讀 API
 app.post('/api/interpret', async (req, res) => {
     try {
-        // 檢查 API 是否已初始化
-        if (!model) {
-            console.error('❌ Gemini API 未初始化');
-            return res.status(500).json({ 
-                error: '服務器配置錯誤',
-                details: 'Gemini API 未正確初始化，請檢查 GEMINI_API_KEY 環境變數是否已設置'
+        const { question, cards, spread, apiKey } = req.body;
+
+        // 優先使用請求中的 API 金鑰，否則使用環境變數
+        const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
+
+        if (!geminiApiKey) {
+            return res.status(400).json({ 
+                error: '缺少 API 金鑰',
+                details: '請在前端輸入 Gemini API 金鑰，或在服務器環境變數中設置 GEMINI_API_KEY'
             });
         }
 
-        const { question, cards, spread } = req.body;
+        // 動態初始化 Gemini API（使用請求中的 API 金鑰）
+        let currentModel;
+        try {
+            const genAI = new GoogleGenerativeAI(geminiApiKey);
+            currentModel = genAI.getGenerativeModel({ model: 'gemini-pro' });
+        } catch (error) {
+            console.error('❌ Gemini API 初始化失敗:', error);
+            return res.status(400).json({ 
+                error: 'API 金鑰無效',
+                details: '請檢查您的 Gemini API 金鑰是否正確'
+            });
+        }
 
         if (!question || !cards || cards.length === 0) {
             return res.status(400).json({ error: '缺少必要參數' });
@@ -78,8 +92,8 @@ app.post('/api/interpret', async (req, res) => {
 
         console.log('🤖 調用 Gemini API...');
         
-        // 調用 Gemini API
-        const result = await model.generateContent(prompt);
+        // 調用 Gemini API（使用動態創建的模型）
+        const result = await currentModel.generateContent(prompt);
         const response = await result.response;
         const interpretation = response.text();
 

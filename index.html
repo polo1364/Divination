@@ -14,6 +14,18 @@
         </header>
 
         <main>
+            <div class="api-key-section">
+                <label for="apiKey">Gemini API 金鑰：</label>
+                <div class="api-key-input-wrapper">
+                    <input type="password" id="apiKey" placeholder="請輸入您的 Gemini API 金鑰" />
+                    <button type="button" id="toggleApiKey" class="toggle-btn" title="顯示/隱藏">👁️</button>
+                </div>
+                <p class="api-key-hint">
+                    <a href="https://makersuite.google.com/app/apikey" target="_blank">點此申請 API 金鑰</a>
+                    <span class="api-key-status" id="apiKeyStatus"></span>
+                </p>
+            </div>
+
             <div class="question-section">
                 <label for="question">請輸入您的問題：</label>
                 <textarea id="question" placeholder="例如：我最近的工作運勢如何？" rows="3"></textarea>
