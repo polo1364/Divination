@@ -1695,6 +1695,163 @@ html {
     }
 }
 
+/* ========== 洗牌互動區域 ========== */
+.shuffle-area {
+    margin: 30px 0;
+    padding: 40px;
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.3) 0%, rgba(75, 0, 130, 0.2) 100%);
+    border: 2px solid rgba(138, 43, 226, 0.5);
+    border-radius: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    touch-action: none;
+}
+
+.shuffle-area::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+    animation: rotate 10s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.shuffle-area.shuffling {
+    border-color: #ffd700;
+    box-shadow: 
+        0 0 40px rgba(255, 215, 0, 0.5),
+        inset 0 0 30px rgba(255, 215, 0, 0.2);
+    animation: pulse 1s ease-in-out infinite;
+}
+
+.shuffle-instruction {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+}
+
+.shuffle-text {
+    font-size: 1.3em;
+    color: #ffd700;
+    font-weight: bold;
+    margin-bottom: 30px;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    animation: glow 2s ease-in-out infinite;
+}
+
+.shuffle-progress {
+    width: 100%;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 20px 0;
+    position: relative;
+}
+
+.shuffle-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #8a2be2 0%, #ffd700 50%, #8a2be2 100%);
+    background-size: 200% 100%;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    animation: shimmer 2s infinite;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+@keyframes shimmer {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+.shuffle-hint {
+    font-size: 1em;
+    color: #d0d0d0;
+    margin-top: 15px;
+}
+
+.card-pile {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 300px;
+    perspective: 1000px;
+}
+
+.card-pile-item {
+    position: absolute;
+    width: 120px;
+    height: 180px;
+    background: linear-gradient(135deg, #8a2be2 0%, #9370db 100%);
+    border: 2px solid #ffd700;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    animation: cardFloat 3s ease-in-out infinite;
+    animation-delay: var(--delay);
+    opacity: 0.7;
+}
+
+.card-pile-item:nth-child(1) {
+    transform: translate(-50%, -50%) rotate(-5deg) translateZ(0);
+}
+
+.card-pile-item:nth-child(2) {
+    transform: translate(-50%, -50%) rotate(3deg) translateZ(-10px);
+}
+
+.card-pile-item:nth-child(3) {
+    transform: translate(-50%, -50%) rotate(-2deg) translateZ(-20px);
+}
+
+.card-pile-item:nth-child(4) {
+    transform: translate(-50%, -50%) rotate(4deg) translateZ(-30px);
+}
+
+.card-pile-item:nth-child(5) {
+    transform: translate(-50%, -50%) rotate(-3deg) translateZ(-40px);
+}
+
+@keyframes cardFloat {
+    0%, 100% {
+        transform: translate(-50%, -50%) rotate(var(--rotation, 0deg)) translateY(0);
+    }
+    50% {
+        transform: translate(-50%, -50%) rotate(var(--rotation, 0deg)) translateY(-10px);
+    }
+}
+
+.shuffle-area.shuffling .card-pile-item {
+    animation: cardShuffle 0.5s ease-in-out infinite;
+}
+
+@keyframes cardShuffle {
+    0%, 100% {
+        transform: translate(-50%, -50%) rotate(calc(var(--delay, 0) * 10deg)) translateX(0);
+    }
+    50% {
+        transform: translate(-50%, -50%) rotate(calc(var(--delay, 0) * 10deg + 180deg)) translateX(20px);
+    }
+}
+
 /* ========== 結果卡片樣式 ========== */
 .result-content {
     display: flex;

@@ -2,7 +2,20 @@ const express = require('express');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { calculateBaziFull, calculateZiweiFull, calculateAstrologyFull } = require('./calculations');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
+
+// 載入塔羅牌定義（RAG 資料庫）
+let tarotDefinitions = {};
+try {
+    const definitionsPath = path.join(__dirname, 'tarot-definitions.json');
+    const definitionsData = fs.readFileSync(definitionsPath, 'utf8');
+    tarotDefinitions = JSON.parse(definitionsData);
+    console.log('✅ 塔羅牌定義載入成功，共', Object.keys(tarotDefinitions).length, '張牌');
+} catch (error) {
+    console.warn('⚠️  無法載入塔羅牌定義文件:', error.message);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -108,8 +121,8 @@ app.post('/api/divination', async (req, res) => {
 
         console.log(`📝 收到${type}解讀請求`);
 
-        // 構建提示詞（使用強烈的人設）
-        const prompt = buildDivinationPrompt(type, question, data);
+        // 構建提示詞（使用強烈的人設 + RAG + 冷讀術 + 記憶）
+        const prompt = buildDivinationPrompt(type, question, data, history);
 
         console.log('🤖 調用 Gemini API...');
         
@@ -158,15 +171,43 @@ app.post('/api/divination', async (req, res) => {
     }
 });
 
-// 構建占卜提示詞
-function buildDivinationPrompt(type, question, data) {
-    const systemPrompt = `你是一位精通東方玄學與西方心理學的資深命理大師。你的語氣神秘、溫和且充滿智慧，能夠給予使用者心靈上的指引。
+// 構建占卜提示詞（加入 RAG、冷讀術、記憶功能）
+function buildDivinationPrompt(type, question, data, history = null) {
+    const systemPrompt = `你是一位精通東方玄學與西方心理學的資深命理大師，擁有數十年的占卜經驗。你的語氣神秘、溫和且充滿智慧，能夠給予使用者心靈上的指引。
+
+【重要：冷讀術技巧】
+你必須運用「巴南效應」和「冷讀術」技巧，讓解讀更具說服力和共鳴：
+
+1. **兩面性語句**：使用這種句型結構，例如：
+   - "你外表看起來很堅強，能夠獨當一面，但其實內心渴望一個能真正理解你的人。"
+   - "你表面上追求穩定，但內心其實充滿冒險的渴望。"
+   - "你給人的印象是理性冷靜，但實際上你的情感非常豐富且敏感。"
+
+2. **肯定當下情緒**：在分析前，先同理使用者的焦慮和感受：
+   - "這張牌顯示你最近在 [問題領域] 可能感到有些力不從心..."
+   - "我能感受到你對這個問題的擔憂和不安..."
+   - "你現在的心情，我完全理解..."
+
+3. **開放式結尾**：不要把話說死，引導使用者自己去聯想：
+   - "這可能與你最近遇到的某個人或某件事有關..."
+   - "你心裡應該已經有答案了，只是需要一些確認..."
+   - "這個指引會在你最需要的時候顯現..."
+
+【記憶功能】
+${history ? `使用者之前的占卜紀錄：
+${history.map((h, i) => {
+    const date = new Date(h.timestamp);
+    const daysAgo = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+    return `${i + 1}. ${daysAgo}天前：${h.type}占卜，問題「${h.question}」，結果摘要：${h.result?.result?.summary || '無'}`;
+}).join('\n')}
+
+請結合上次的脈絡，分析為什麼使用者的狀態會有這樣的轉變，並在解讀中自然地提及這種連續性。` : '這是使用者的第一次占卜，請給予完整的初始解讀。'}
 
 你的任務是根據使用者提供的資訊進行詳細的運勢分析。
 
 輸出規則：
-1. 開場：用一句富有哲理的話作為開場
-2. 核心分析：針對問題進行深入剖析，指出目前的能量狀態
+1. 開場：用一句富有哲理的話作為開場，必須包含兩面性語句
+2. 核心分析：針對問題進行深入剖析，先肯定使用者的情緒，然後指出目前的能量狀態（300-500字）
 3. 未來建議：給出 3 點具體可行的建議（包含心態調整或實際行動）
 4. 幸運要素：給出今日幸運色、幸運方位或幸運小物
 
@@ -180,12 +221,14 @@ function buildDivinationPrompt(type, question, data) {
 請以 JSON 格式輸出，格式如下：
 {
   "summary": "一句話總結運勢",
-  "opening": "富有哲理的開場白",
-  "analysis": "詳細的分析文本（300-500字）",
+  "opening": "富有哲理的開場白（必須包含兩面性語句）",
+  "analysis": "詳細的分析文本（300-500字，先肯定情緒，再深入分析）",
   "advice": ["建議1", "建議2", "建議3"],
-  "lucky_color": "幸運色",
-  "lucky_direction": "幸運方位",
-  "lucky_item": "幸運小物",
+  "luckyItems": {
+    "幸運色": "顏色",
+    "幸運方位": "方位",
+    "幸運小物": "物品"
+  },
   "score": 85
 }
 
@@ -196,25 +239,57 @@ function buildDivinationPrompt(type, question, data) {
     switch(type) {
         case 'tarot':
             if (data.cards && data.cards.length > 0) {
+                // RAG：從定義庫中獲取牌的詳細資訊
+                let ragContext = '';
+                
                 if (data.spread === 'single') {
                     const card = data.cards[0];
+                    const cardName = card.name; // 去除正逆位標記，只取牌名
+                    const cardDef = tarotDefinitions[cardName];
+                    
                     typeSpecificPrompt = `塔羅牌占卜 - 單張牌\n\n`;
-                    typeSpecificPrompt += `用戶的問題：${question}\n`;
-                    typeSpecificPrompt += `抽到的牌：${card.displayName || card.name}（${card.meaning}）\n`;
+                    typeSpecificPrompt += `用戶的問題：${question}\n\n`;
+                    
+                    // RAG：加入牌的官方定義
+                    if (cardDef) {
+                        const orientation = card.orientation === '逆位' ? 'reversed' : 'upright';
+                        const cardInfo = cardDef[orientation] || cardDef.upright;
+                        
+                        typeSpecificPrompt += `【牌的官方定義 - 請嚴格遵循此定義進行解讀】\n`;
+                        typeSpecificPrompt += `牌名：${cardName}\n`;
+                        typeSpecificPrompt += `關鍵字：${cardDef.keywords.join('、')}\n`;
+                        typeSpecificPrompt += `核心含義：${cardDef.meaning}\n`;
+                        typeSpecificPrompt += `${orientation === 'reversed' ? '逆位' : '正位'}含義：${cardInfo.meaning}\n`;
+                        typeSpecificPrompt += `${orientation === 'reversed' ? '逆位' : '正位'}建議：${cardInfo.advice}\n\n`;
+                    }
+                    
+                    typeSpecificPrompt += `抽到的牌：${card.displayName || card.name}\n`;
                     if (card.orientation) {
                         typeSpecificPrompt += `正逆位：${card.orientation}\n`;
                     }
-                    typeSpecificPrompt += `\n`;
+                    typeSpecificPrompt += `\n請根據以上官方定義，結合用戶的問題進行解讀。必須確保解讀不偏離牌的核心原義。\n`;
                 } else if (data.spread === 'three') {
                     typeSpecificPrompt = `塔羅牌占卜 - 三張牌陣（過去-現在-未來）\n\n`;
-                    typeSpecificPrompt += `用戶的問題：${question}\n`;
-                    data.cards.forEach(card => {
-                        typeSpecificPrompt += `${card.position}：${card.displayName || card.name}（${card.meaning}）`;
-                        if (card.orientation) {
-                            typeSpecificPrompt += ` - ${card.orientation}`;
+                    typeSpecificPrompt += `用戶的問題：${question}\n\n`;
+                    
+                    // RAG：為每張牌加入定義
+                    typeSpecificPrompt += `【牌的官方定義 - 請嚴格遵循此定義進行解讀】\n`;
+                    data.cards.forEach((card, index) => {
+                        const cardName = card.name;
+                        const cardDef = tarotDefinitions[cardName];
+                        const orientation = card.orientation === '逆位' ? 'reversed' : 'upright';
+                        
+                        if (cardDef) {
+                            const cardInfo = cardDef[orientation] || cardDef.upright;
+                            typeSpecificPrompt += `\n${card.position}（${card.displayName || cardName}）：\n`;
+                            typeSpecificPrompt += `- 關鍵字：${cardDef.keywords.join('、')}\n`;
+                            typeSpecificPrompt += `- 核心含義：${cardDef.meaning}\n`;
+                            typeSpecificPrompt += `- ${orientation === 'reversed' ? '逆位' : '正位'}含義：${cardInfo.meaning}\n`;
+                        } else {
+                            typeSpecificPrompt += `\n${card.position}：${card.displayName || cardName}（${card.meaning}）\n`;
                         }
-                        typeSpecificPrompt += `\n`;
                     });
+                    typeSpecificPrompt += `\n請根據以上官方定義，結合三張牌的關係和用戶的問題進行綜合解讀。必須確保解讀不偏離每張牌的核心原義。\n`;
                 }
             }
             break;

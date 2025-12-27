@@ -156,6 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
     handleQuestionChange('astrologyQuestion', 'astrologyQuestionCustom');
     handleQuestionChange('yijingQuestion', 'yijingQuestionCustom');
     
+    // 初始化洗牌互動
+    initShuffleInteraction();
+    
     const spreadButtons = document.querySelectorAll('.spread-btn');
     const drawBtn = document.getElementById('drawBtn');
     const settingsBtn = document.getElementById('settingsBtn');
@@ -379,31 +382,73 @@ async function handleDrawCards() {
     }, 2000);
 }
 
-// Fisher-Yates Shuffle 演算法（正確的洗牌方法）
+/**
+ * Fisher-Yates Shuffle 演算法
+ * 這是目前公認最公平的洗牌方法，確保每張牌被選中的機率完全均等
+ * 
+ * 算法原理：
+ * 1. 從陣列最後一個元素開始
+ * 2. 隨機選擇一個從 0 到當前索引的元素
+ * 3. 交換這兩個元素
+ * 4. 重複直到第一個元素
+ * 
+ * 時間複雜度：O(n)
+ * 空間複雜度：O(1) - 原地洗牌
+ * 
+ * @param {Array} array - 要洗牌的陣列
+ * @returns {Array} - 洗牌後的陣列（新陣列，不修改原陣列）
+ */
 function fisherYatesShuffle(array) {
+    // 創建陣列副本，避免修改原始陣列
     const shuffled = [...array];
+    
+    // 從最後一個元素開始，向前遍歷
     for (let i = shuffled.length - 1; i > 0; i--) {
+        // 隨機選擇一個從 0 到 i（包含 i）的索引
+        // Math.random() * (i + 1) 產生 [0, i+1) 的隨機數
+        // Math.floor() 向下取整，得到 [0, i] 的整數
         const j = Math.floor(Math.random() * (i + 1));
+        
+        // 交換 shuffled[i] 和 shuffled[j]
+        // 使用解構賦值進行交換，無需臨時變數
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
+    
     return shuffled;
 }
 
-// 隨機抽牌（使用 Fisher-Yates Shuffle + 正逆位判定）
+/**
+ * 隨機抽牌（使用 Fisher-Yates Shuffle + 正逆位判定）
+ * 
+ * 流程：
+ * 1. 使用 Fisher-Yates 洗牌法對完整牌組進行洗牌
+ * 2. 從洗好的牌組中抽取指定數量的牌（抽後不放回）
+ * 3. 為每張抽到的牌隨機決定正位或逆位（各50%機率）
+ * 4. 如果是三張牌牌陣，為每張牌分配位置意義
+ * 
+ * @param {number} count - 要抽取的牌數（1 或 3）
+ * @returns {Array} - 抽取的牌陣列，包含正逆位和位置資訊
+ */
 function drawRandomCards(count) {
-    // 使用 Fisher-Yates Shuffle 洗牌
+    // 步驟1：使用 Fisher-Yates Shuffle 對完整78張牌進行洗牌
+    // 這確保每張牌被選中的機率完全均等，沒有偏差
     const shuffled = fisherYatesShuffle(tarotCards);
     
-    // 抽後不放回，並判定正逆位
+    // 步驟2：從洗好的牌組中抽取前 count 張牌（抽後不放回）
+    // slice(0, count) 確保不會重複抽取同一張牌
     const selected = shuffled.slice(0, count).map(card => {
+        // 步驟3：為每張牌隨機決定正位或逆位
+        // Math.random() > 0.5 產生各50%的機率
         const isUpright = Math.random() > 0.5;
+        
         return {
-            ...card,
+            ...card, // 保留原始卡片資訊（name, emoji, meaning）
             orientation: isUpright ? '正位' : '逆位',
-            displayName: `${card.name}(${isUpright ? '正位' : '逆位'})`
+            displayName: `${card.name}${isUpright ? '(正位)' : '(逆位)'}`
         };
     });
     
+    // 步驟4：如果是三張牌牌陣，為每張牌分配位置意義
     if (currentSpread === 'three') {
         return selected.map((card, index) => ({
             ...card,
@@ -412,6 +457,7 @@ function drawRandomCards(count) {
         }));
     }
     
+    // 單張牌直接返回
     return selected;
 }
 
@@ -591,10 +637,33 @@ async function handleDivination() {
                 document.getElementById('question').focus();
                 return;
             }
+            
+            // 顯示洗牌區域（儀式感）
+            const shuffleArea = document.getElementById('shuffleArea');
+            if (shuffleArea) {
+                shuffleArea.classList.remove('hidden');
+                shuffleState.progress = 0;
+                const progressBar = document.querySelector('.shuffle-progress-bar');
+                const shuffleProgress = document.getElementById('shuffleProgress');
+                if (progressBar) progressBar.style.width = '0%';
+                if (shuffleProgress) shuffleProgress.textContent = '0%';
+                
+                // 隱藏占卜按鈕，等待洗牌完成
+                divineBtn.style.display = 'none';
+                return; // 等待洗牌完成後再繼續
+            }
+            
+            // 如果沒有洗牌區域，直接進行（向後兼容）
             const numCards = currentSpread === 'single' ? 1 : 3;
             drawnCards = drawRandomCards(numCards);
             displayCards(drawnCards);
             data = { cards: drawnCards, spread: currentSpread };
+            
+            // 心理延遲動畫
+            await performPsychologicalDelay();
+            
+            // 繼續占卜流程
+            await performDivination(question, data, apiKey, divineBtn, loading, resultSection);
             break;
 
         case 'bazi':
@@ -605,6 +674,9 @@ async function handleDivination() {
                 document.getElementById('baziQuestion').focus();
                 return;
             }
+            
+            // 心理延遲動畫
+            await performPsychologicalDelay();
             const birthDate = document.getElementById('birthDate').value;
             if (!birthDate) {
                 showError('請輸入出生日期！', 'error');
@@ -664,6 +736,9 @@ async function handleDivination() {
                     calculation: calculation
                 };
             }
+            
+            // 執行占卜
+            await performDivination(question, data, apiKey, divineBtn, loading, resultSection);
             break;
 
         case 'astrology':
@@ -673,6 +748,9 @@ async function handleDivination() {
                 document.getElementById('astrologyQuestion').focus();
                 return;
             }
+            
+            // 心理延遲動畫
+            await performPsychologicalDelay();
             const astrologyBirthDate = document.getElementById('astrologyBirthDate').value;
             if (!astrologyBirthDate) {
                 showError('請輸入出生日期！', 'error');
@@ -727,6 +805,9 @@ async function handleDivination() {
                     calculation: astrologyData
                 };
             }
+            
+            // 執行占卜
+            await performDivination(question, data, apiKey, divineBtn, loading, resultSection);
             break;
 
         case 'yijing':
@@ -738,31 +819,37 @@ async function handleDivination() {
                 document.getElementById('yijingQuestion').focus();
                 return;
             }
+            
+            // 心理延遲動畫
+            await performPsychologicalDelay();
+            
             // 隨機生成卦象或籤詩
             const guaData = generateGua(currentDivinationType);
             data = guaData;
+            
+            // 執行占卜
+            await performDivination(question, data, apiKey, divineBtn, loading, resultSection);
             break;
     }
+}
 
-    // 禁用按鈕並顯示載入
-    divineBtn.disabled = true;
-    loading.classList.remove('hidden');
-    resultSection.classList.add('hidden');
-
+// 獲取最近的歷史紀錄（用於記憶功能）
+function getRecentHistory(limit = 5) {
     try {
-        const result = await getDivinationResult(currentDivinationType, question, data, apiKey);
-        displayDivinationResult(currentDivinationType, question, data, result);
+        const history = JSON.parse(localStorage.getItem('divination_history') || '[]');
+        // 返回最近的 N 條紀錄，排除當前這次
+        return history.slice(-limit).filter(h => h.timestamp);
     } catch (error) {
-        console.error('解讀錯誤:', error);
-        showError('解讀失敗：' + error.message, 'error');
-    } finally {
-        loading.classList.add('hidden');
-        divineBtn.disabled = false;
+        console.error('讀取歷史紀錄錯誤:', error);
+        return [];
     }
 }
 
 // 獲取占卜結果
 async function getDivinationResult(type, question, data, apiKey) {
+    // 獲取歷史紀錄（用於記憶功能）
+    const history = getRecentHistory(5);
+    
     const response = await fetch('/api/divination', {
         method: 'POST',
         headers: {
@@ -772,7 +859,8 @@ async function getDivinationResult(type, question, data, apiKey) {
             type: type,
             question: question,
             data: data,
-            apiKey: apiKey
+            apiKey: apiKey,
+            history: history // 傳遞歷史紀錄
         })
     });
 
@@ -1094,6 +1182,160 @@ function displayDivinationResult(type, question, data, result) {
         result: result,
         timestamp: new Date().toISOString()
     });
+    
+    // 滾動到結果區域
+    setTimeout(() => {
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+    
+    // 顯示分享按鈕
+    addShareButton(result);
+}
+
+// 添加分享按鈕
+function addShareButton(result) {
+    const resultHeader = document.querySelector('.result-header');
+    if (!resultHeader) return;
+    
+    // 檢查是否已有分享按鈕
+    if (document.getElementById('shareBtn')) return;
+    
+    const shareBtn = document.createElement('button');
+    shareBtn.id = 'shareBtn';
+    shareBtn.className = 'icon-btn-small';
+    shareBtn.title = '分享結果';
+    shareBtn.textContent = '📤';
+    shareBtn.addEventListener('click', () => generateShareImage(result));
+    
+    resultHeader.appendChild(shareBtn);
+}
+
+// 生成分享圖片（IG Story 格式 9:16）
+function generateShareImage(result) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // IG Story 尺寸：1080x1920 (9:16)
+    canvas.width = 1080;
+    canvas.height = 1920;
+    
+    // 背景漸變
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, '#1a1a2e');
+    gradient.addColorStop(0.5, '#16213e');
+    gradient.addColorStop(1, '#0f3460');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // 添加星空效果
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    for (let i = 0; i < 50; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const size = Math.random() * 3;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    // 標題
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 80px Microsoft JhengHei';
+    ctx.textAlign = 'center';
+    ctx.fillText('🔮 AI 命理占卜', canvas.width / 2, 150);
+    
+    // 關鍵牌或結果
+    const resultData = result.result || {};
+    if (resultData.summary) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 60px Microsoft JhengHei';
+        const summaryLines = wrapText(ctx, resultData.summary, canvas.width - 200, 60);
+        summaryLines.forEach((line, index) => {
+            ctx.fillText(line, canvas.width / 2, 400 + index * 80);
+        });
+    }
+    
+    // 金句
+    if (resultData.opening) {
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'italic 50px Microsoft JhengHei';
+        const openingLines = wrapText(ctx, resultData.opening, canvas.width - 200, 50);
+        openingLines.forEach((line, index) => {
+            ctx.fillText(line, canvas.width / 2, 700 + index * 70);
+        });
+    }
+    
+    // 幸運元素
+    if (resultData.luckyItems) {
+        ctx.fillStyle = '#d0d0d0';
+        ctx.font = '40px Microsoft JhengHei';
+        let yPos = 1400;
+        Object.entries(resultData.luckyItems).forEach(([key, value]) => {
+            ctx.fillText(`${key}：${value}`, canvas.width / 2, yPos);
+            yPos += 60;
+        });
+    } else if (resultData.lucky_color || resultData.lucky_direction || resultData.lucky_item) {
+        ctx.fillStyle = '#d0d0d0';
+        ctx.font = '40px Microsoft JhengHei';
+        let yPos = 1400;
+        if (resultData.lucky_color) {
+            ctx.fillText(`幸運色：${resultData.lucky_color}`, canvas.width / 2, yPos);
+            yPos += 60;
+        }
+        if (resultData.lucky_direction) {
+            ctx.fillText(`幸運方位：${resultData.lucky_direction}`, canvas.width / 2, yPos);
+            yPos += 60;
+        }
+        if (resultData.lucky_item) {
+            ctx.fillText(`幸運小物：${resultData.lucky_item}`, canvas.width / 2, yPos);
+        }
+    }
+    
+    // 評分
+    if (resultData.score !== undefined) {
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold 100px Microsoft JhengHei';
+        ctx.fillText(`${resultData.score}分`, canvas.width / 2, 1700);
+    }
+    
+    // 底部標記
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.font = '30px Microsoft JhengHei';
+    ctx.fillText('AI 命理占卜', canvas.width / 2, canvas.height - 100);
+    
+    // 轉換為圖片並下載
+    canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `占卜結果_${new Date().toISOString().slice(0, 10)}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        showError('圖片已下載！可以分享到 Instagram Story 了', 'success');
+    }, 'image/png');
+}
+
+// 文字換行輔助函數
+function wrapText(ctx, text, maxWidth, fontSize) {
+    const words = text.split('');
+    const lines = [];
+    let currentLine = '';
+    
+    for (let i = 0; i < words.length; i++) {
+        const testLine = currentLine + words[i];
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && currentLine !== '') {
+            lines.push(currentLine);
+            currentLine = words[i];
+        } else {
+            currentLine = testLine;
+        }
+    }
+    if (currentLine) {
+        lines.push(currentLine);
+    }
+    return lines;
 }
 
 // 易經：模擬金錢卦法（正確的機率分佈）
