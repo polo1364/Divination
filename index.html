@@ -3,23 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 命理占卜 - 多種占卜方式</title>
+    <title>天機 Celestial OS - AI 命理占卜平台</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
             <div class="header-content">
-                <h1>🔮 AI 命理占卜</h1>
-                <p class="subtitle">融合東方玄學與西方智慧的 AI 占卜平台</p>
+                <h1>🌌 天機 Celestial OS</h1>
+                <p class="subtitle">One Profile, All Destinies - 統一命理平台</p>
             </div>
             <div class="header-actions">
+                <button id="profileBtn" class="icon-btn" title="使用者檔案">👤</button>
                 <button id="historyBtn" class="icon-btn" title="歷史記錄">📜</button>
                 <button id="settingsBtn" class="icon-btn" title="設置 API 金鑰">⚙️</button>
             </div>
         </header>
 
         <main>
+            <!-- 三個神殿導航 -->
+            <div id="templeNavigation" class="temple-navigation">
+                <div class="temple-card" data-temple="destiny">
+                    <div class="temple-icon">🏰</div>
+                    <h2 class="temple-title">天命殿</h2>
+                    <p class="temple-subtitle">The Temple of Destiny</p>
+                    <p class="temple-description">基於出生時間的先天命格分析</p>
+                    <div class="temple-features">
+                        <span class="feature-tag">📅 八字</span>
+                        <span class="feature-tag">⭐ 紫微斗數</span>
+                        <span class="feature-tag">🌙 西方占星</span>
+                    </div>
+                </div>
+                
+                <div class="temple-card" data-temple="divination">
+                    <div class="temple-icon">🔮</div>
+                    <h2 class="temple-title">靈犀殿</h2>
+                    <p class="temple-subtitle">The Hall of Divination</p>
+                    <p class="temple-description">針對當下問題的隨機指引</p>
+                    <div class="temple-features">
+                        <span class="feature-tag">🃏 塔羅牌</span>
+                        <span class="feature-tag">☯️ 周易</span>
+                        <span class="feature-tag">🌾 米卦</span>
+                        <span class="feature-tag">🎋 求籤</span>
+                    </div>
+                </div>
+                
+                <div class="temple-card" data-temple="subconscious">
+                    <div class="temple-icon">🌌</div>
+                    <h2 class="temple-title">潛意識殿</h2>
+                    <p class="temple-subtitle">The Void of Subconscious</p>
+                    <p class="temple-description">探索內心世界的心理投射</p>
+                    <div class="temple-features">
+                        <span class="feature-tag">🛌 AI 解夢</span>
+                        <span class="feature-tag">🧘 視覺冥想</span>
+                        <span class="feature-tag">✍️ 測字</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 使用者檔案設置（首次使用時顯示） -->
+            <div id="profileSetup" class="profile-setup hidden">
+                <div class="profile-setup-content">
+                    <h2>👤 建立你的命理檔案</h2>
+                    <p class="setup-description">只需輸入一次，系統將自動計算所有命理資料</p>
+                    <form id="profileForm" class="profile-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="birthYear">出生年份</label>
+                                <input type="number" id="birthYear" min="1900" max="2100" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="birthMonth">月份</label>
+                                <input type="number" id="birthMonth" min="1" max="12" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="birthDay">日期</label>
+                                <input type="number" id="birthDay" min="1" max="31" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="birthHour">時辰（小時）</label>
+                                <input type="number" id="birthHour" min="0" max="23" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="birthMinute">分鐘</label>
+                                <input type="number" id="birthMinute" min="0" max="59" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="gender">性別</label>
+                                <select id="gender" required>
+                                    <option value="">請選擇</option>
+                                    <option value="male">男</option>
+                                    <option value="female">女</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="birthPlace">出生地點（城市名稱，用於占星計算）</label>
+                            <input type="text" id="birthPlace" placeholder="例如：台北、北京、New York" required>
+                        </div>
+                        <button type="submit" class="btn-primary">建立檔案並計算命盤</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 傳統模式（向後兼容） -->
+            <div id="traditionalMode" class="traditional-mode hidden">
             <!-- 占卜方式選擇 -->
             <div class="divination-type-section">
                 <label>選擇占卜方式：</label>
@@ -501,6 +591,9 @@
         <div class="modal-overlay" id="historyModalOverlay"></div>
     </div>
 
+    <script src="user-profile.js"></script>
+    <script src="data-center.js"></script>
     <script src="script.js"></script>
+    <script src="celestial-os.js"></script>
 </body>
 </html>
