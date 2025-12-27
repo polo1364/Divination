@@ -504,6 +504,7 @@ class CelestialOS {
                 
                 <div class="subconscious-tabs">
                     <button class="tab-btn active" data-tab="dream">🛌 解夢</button>
+                    <button class="tab-btn" data-tab="meditation">🧘 視覺冥想</button>
                     <button class="tab-btn" data-tab="calligraphy">✍️ 測字</button>
                 </div>
                 
@@ -521,6 +522,56 @@ class CelestialOS {
 - 你在夢中的情緒如何？
 - 發生了什麼事件？"></textarea>
                             <button class="btn-primary" onclick="celestialOS.analyzeDream()">🔮 開始解夢</button>
+                        </div>
+                    </div>
+                    
+                    <div id="meditationTab" class="tab-content hidden">
+                        <div class="meditation-section">
+                            <div class="section-icon">🧘</div>
+                            <h3>AI 視覺冥想引導</h3>
+                            <p class="section-desc">選擇冥想主題，AI 將為你生成專屬的視覺化冥想場景和引導</p>
+                            
+                            <div class="meditation-themes">
+                                <h4>選擇冥想主題：</h4>
+                                <div class="theme-grid">
+                                    <button class="theme-btn" onclick="celestialOS.startMeditation('平靜')">
+                                        <span class="theme-icon">🌊</span>
+                                        <span class="theme-name">平靜</span>
+                                        <span class="theme-desc">釋放壓力，回歸內心</span>
+                                    </button>
+                                    <button class="theme-btn" onclick="celestialOS.startMeditation('專注')">
+                                        <span class="theme-icon">🎯</span>
+                                        <span class="theme-name">專注</span>
+                                        <span class="theme-desc">提升注意力與清晰度</span>
+                                    </button>
+                                    <button class="theme-btn" onclick="celestialOS.startMeditation('療癒')">
+                                        <span class="theme-icon">💚</span>
+                                        <span class="theme-name">療癒</span>
+                                        <span class="theme-desc">修復身心，恢復能量</span>
+                                    </button>
+                                    <button class="theme-btn" onclick="celestialOS.startMeditation('創造')">
+                                        <span class="theme-icon">✨</span>
+                                        <span class="theme-name">創造</span>
+                                        <span class="theme-desc">激發靈感與創造力</span>
+                                    </button>
+                                    <button class="theme-btn" onclick="celestialOS.startMeditation('勇氣')">
+                                        <span class="theme-icon">🔥</span>
+                                        <span class="theme-name">勇氣</span>
+                                        <span class="theme-desc">克服恐懼，勇敢前行</span>
+                                    </button>
+                                    <button class="theme-btn" onclick="celestialOS.startMeditation('愛與連結')">
+                                        <span class="theme-icon">💕</span>
+                                        <span class="theme-name">愛與連結</span>
+                                        <span class="theme-desc">感受愛與和諧</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="meditation-custom">
+                                <h4>或自定義主題：</h4>
+                                <input type="text" id="customMeditationTheme" class="meditation-input" placeholder="輸入你想探索的主題...">
+                                <button class="btn-secondary" onclick="celestialOS.startCustomMeditation()">🧘 開始自定義冥想</button>
+                            </div>
                         </div>
                     </div>
                     

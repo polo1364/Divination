@@ -4206,6 +4206,345 @@ html {
     text-align: center;
 }
 
+/* 視覺冥想樣式 */
+.meditation-section {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 30px;
+}
+
+.meditation-themes {
+    margin: 30px 0;
+}
+
+.meditation-themes h4 {
+    color: #ffd700;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+}
+
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.theme-btn {
+    background: rgba(26, 26, 46, 0.8);
+    border: 2px solid rgba(138, 43, 226, 0.4);
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.theme-btn:hover {
+    background: rgba(138, 43, 226, 0.2);
+    border-color: #ffd700;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(138, 43, 226, 0.3);
+}
+
+.theme-icon {
+    font-size: 3em;
+    margin-bottom: 5px;
+}
+
+.theme-name {
+    color: #ffd700;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.theme-desc {
+    color: #d0d0d0;
+    font-size: 0.9em;
+}
+
+.meditation-custom {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 1px dashed rgba(138, 43, 226, 0.3);
+}
+
+.meditation-custom h4 {
+    color: #ffd700;
+    margin-bottom: 15px;
+}
+
+.meditation-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(138, 43, 226, 0.5);
+    border-radius: 10px;
+    padding: 12px;
+    color: #ffffff;
+    font-size: 1em;
+    margin-bottom: 15px;
+}
+
+.meditation-loading {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.meditation-orb {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 30px;
+}
+
+.meditation-orb .orb-core {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle, #ffd700, #ffaa00);
+    border-radius: 50%;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    animation: pulse-core 2s ease-in-out infinite;
+}
+
+.meditation-orb .orb-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 2px solid rgba(138, 43, 226, 0.6);
+    border-radius: 50%;
+    animation: expand-ring 3s ease-in-out infinite;
+}
+
+.meditation-orb .orb-ring.ring-1 {
+    width: 60px;
+    height: 60px;
+    animation-delay: 0s;
+}
+
+.meditation-orb .orb-ring.ring-2 {
+    width: 80px;
+    height: 80px;
+    animation-delay: 1s;
+}
+
+.meditation-orb .orb-ring.ring-3 {
+    width: 100px;
+    height: 100px;
+    animation-delay: 2s;
+}
+
+@keyframes pulse-core {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+}
+
+@keyframes expand-ring {
+    0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
+
+.meditation-result {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.meditation-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.meditation-theme-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.theme-badge {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(138, 43, 226, 0.3) 100%);
+    border: 2px solid rgba(255, 215, 0, 0.5);
+    border-radius: 25px;
+    padding: 8px 20px;
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.meditation-scene {
+    background: rgba(26, 26, 46, 0.8);
+    border: 2px solid rgba(138, 43, 226, 0.4);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.meditation-scene h4 {
+    color: #ffd700;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.scene-description {
+    color: #e0e0e0;
+    line-height: 1.8;
+    font-size: 1.05em;
+    font-style: italic;
+}
+
+.meditation-guide {
+    background: rgba(26, 26, 46, 0.8);
+    border: 2px solid rgba(138, 43, 226, 0.4);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.meditation-guide h4 {
+    color: #ffd700;
+    margin-bottom: 20px;
+    font-size: 1.3em;
+}
+
+.guide-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.guide-step {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.step-number {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #1a1a2e;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+    font-size: 1.1em;
+}
+
+.guide-step p {
+    color: #e0e0e0;
+    line-height: 1.8;
+    flex: 1;
+    margin: 0;
+    padding-top: 5px;
+}
+
+.guide-content {
+    color: #e0e0e0;
+    line-height: 1.8;
+}
+
+.meditation-breathing {
+    background: rgba(26, 26, 46, 0.8);
+    border: 2px solid rgba(138, 43, 226, 0.4);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.meditation-breathing h4 {
+    color: #ffd700;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.breathing-pattern {
+    color: #e0e0e0;
+    font-size: 1.2em;
+    font-weight: 500;
+    line-height: 1.8;
+}
+
+.meditation-advice {
+    background: rgba(26, 26, 46, 0.8);
+    border: 2px solid rgba(138, 43, 226, 0.4);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.meditation-advice h4 {
+    color: #ffd700;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.meditation-advice ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.meditation-advice li {
+    color: #e0e0e0;
+    line-height: 1.8;
+    margin-bottom: 10px;
+    padding-left: 25px;
+    position: relative;
+}
+
+.meditation-advice li::before {
+    content: '✨';
+    position: absolute;
+    left: 0;
+}
+
+.meditation-duration {
+    text-align: center;
+    padding: 15px;
+    background: rgba(138, 43, 226, 0.15);
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+
+.meditation-duration p {
+    color: #e0e0e0;
+    margin: 0;
+}
+
+.meditation-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.btn-secondary {
+    background: rgba(138, 43, 226, 0.3);
+    border: 1px solid rgba(138, 43, 226, 0.5);
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1em;
+}
+
+.btn-secondary:hover {
+    background: rgba(138, 43, 226, 0.5);
+    transform: translateY(-2px);
+}
+
 .meditation-placeholder {
     text-align: center;
     padding: 60px 20px;

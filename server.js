@@ -368,6 +368,27 @@ function buildDivinationPrompt(type, question, data) {
             typeSpecificPrompt += `}`;
             break;
 
+        case 'meditation':
+            typeSpecificPrompt = `視覺冥想引導生成\n\n`;
+            typeSpecificPrompt += `冥想主題：${data.theme || question}\n\n`;
+            typeSpecificPrompt += `【任務】\n`;
+            typeSpecificPrompt += `請為使用者生成一個完整的視覺冥想引導。你需要：\n`;
+            typeSpecificPrompt += `1. 創建一個生動、詳細的視覺場景描述（如：寧靜的森林、海邊日出、星空下等），讓使用者能夠在腦海中清晰想像。\n`;
+            typeSpecificPrompt += `2. 提供逐步的冥想引導步驟（建議5-8步），包括如何進入場景、如何感受環境、如何與場景互動等。\n`;
+            typeSpecificPrompt += `3. 給出呼吸節奏建議（如：4-4-4-4 呼吸法，或根據主題自定義）。\n`;
+            typeSpecificPrompt += `4. 提供冥想結束後的建議，幫助使用者將冥想中的感受帶回現實生活。\n`;
+            typeSpecificPrompt += `5. 建議冥想時長（如：10分鐘、15分鐘等）。\n\n`;
+            typeSpecificPrompt += `請以冥想導師的角度，用溫和、引導性的語言，創造一個能夠幫助使用者達到「${data.theme || '平靜'}」狀態的冥想體驗。\n\n`;
+            typeSpecificPrompt += `JSON 輸出格式：\n`;
+            typeSpecificPrompt += `{\n`;
+            typeSpecificPrompt += `  "scene": "詳細的視覺場景描述（200-300字）",\n`;
+            typeSpecificPrompt += `  "guide": ["步驟1", "步驟2", "步驟3", "步驟4", "步驟5"],\n`;
+            typeSpecificPrompt += `  "breathing": "呼吸節奏建議（如：吸氣4秒，屏息4秒，呼氣4秒，停頓4秒）",\n`;
+            typeSpecificPrompt += `  "advice": ["結束後建議1", "結束後建議2", "結束後建議3"],\n`;
+            typeSpecificPrompt += `  "duration": "建議時長（如：10-15分鐘）"\n`;
+            typeSpecificPrompt += `}`;
+            break;
+
         case 'tarot':
             if (data.cards && data.cards.length > 0) {
                 // RAG：從定義庫中獲取牌的詳細資訊
