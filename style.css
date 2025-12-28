@@ -239,7 +239,7 @@ header {
     display: inline-flex;
     align-items: flex-start;
     gap: 5px;
-    padding: 5px 12px;
+    padding: 8px 15px;
     background: rgba(138, 43, 226, 0.2);
     border-radius: 20px;
     border: 1px solid rgba(138, 43, 226, 0.3);
@@ -253,8 +253,10 @@ header {
     max-width: none;
     width: auto;
     word-wrap: break-word;
-    line-height: 1.5;
+    line-height: 1.6;
     box-sizing: border-box;
+    text-indent: 0;
+    letter-spacing: normal;
 }
 
 .fortune-item:hover {

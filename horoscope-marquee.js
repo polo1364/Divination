@@ -270,25 +270,25 @@ class HoroscopeMarquee {
             
             // 解析愛情運勢
             if (trimmedLine.includes('愛情') || trimmedLine.includes('感情')) {
-                const match = trimmedLine.match(/[愛情感情：:]\s*(.+)/);
+                const match = trimmedLine.match(/(?:愛情|感情)[：:]\s*(.+)/);
                 if (match && match[1]) {
-                    love = match[1].trim().substring(0, 20);
+                    love = match[1].trim();
                 }
             }
             
             // 解析事業運勢
             if (trimmedLine.includes('事業') || trimmedLine.includes('工作')) {
-                const match = trimmedLine.match(/[事業工作：:]\s*(.+)/);
+                const match = trimmedLine.match(/(?:事業|工作)[：:]\s*(.+)/);
                 if (match && match[1]) {
-                    career = match[1].trim().substring(0, 20);
+                    career = match[1].trim();
                 }
             }
             
             // 解析財運
             if (trimmedLine.includes('財運') || trimmedLine.includes('財富')) {
-                const match = trimmedLine.match(/[財運財富：:]\s*(.+)/);
+                const match = trimmedLine.match(/(?:財運|財富)[：:]\s*(.+)/);
                 if (match && match[1]) {
-                    wealth = match[1].trim().substring(0, 20);
+                    wealth = match[1].trim();
                 }
             }
             
@@ -296,7 +296,7 @@ class HoroscopeMarquee {
             if (trimmedLine.includes('健康')) {
                 const match = trimmedLine.match(/健康[：:]\s*(.+)/);
                 if (match && match[1]) {
-                    health = match[1].trim().substring(0, 20);
+                    health = match[1].trim();
                 }
             }
         }
