@@ -249,15 +249,56 @@ class HoroscopeMarquee {
                 const cleanText = (text) => {
                     if (!text) return null;
                     let cleaned = String(text).trim();
-                    // 移除開頭的引號和轉義字符
-                    cleaned = cleaned.replace(/^["'「]|["'」]$/g, '');
-                    // 移除 JSON 轉義的引號
+                    
+                    // 如果包含 JSON 轉義格式（如 "情\": \"敞開心扉..."），提取實際內容
+                    // 匹配模式：任何字符 + 引號 + 冒號 + 空格 + 引號 + 實際內容 + 引號
+                    const jsonMatch = cleaned.match(/[^"]*["']?[^"']*["']?\s*[:：]\s*["']?([^"']+?)["']?/);
+                    if (jsonMatch && jsonMatch[1]) {
+                        cleaned = jsonMatch[1];
+                    }
+                    
+                    // 移除 JSON 轉義的引號（先處理轉義字符）
                     cleaned = cleaned.replace(/\\"/g, '"');
-                    // 移除可能的 JSON 格式殘留（如 "key\": \"value"）
-                    cleaned = cleaned.replace(/^[^:]+:\s*["']?/g, '');
+                    cleaned = cleaned.replace(/\\'/g, "'");
+                    cleaned = cleaned.replace(/\\n/g, ' ');
+                    cleaned = cleaned.replace(/\\t/g, ' ');
+                    
+                    // 移除開頭和結尾的引號
+                    cleaned = cleaned.replace(/^["'「]|["'」]$/g, '');
+                    
+                    // 移除可能的 JSON 格式殘留（如 "key\": \"value" 或 情\": \"value）
+                    cleaned = cleaned.replace(/^[^a-zA-Z\u4e00-\u9fa5]+[:：]\s*["']?/g, '');
                     cleaned = cleaned.replace(/["']?\s*[,，]?$/g, '');
+                    
+                    // 移除開頭的非文字字符（保留中英文和數字）
+                    cleaned = cleaned.replace(/^[^a-zA-Z\u4e00-\u9fa50-9]+/g, '');
+                    
                     return cleaned.trim() || null;
                 };
+                
+                // 處理 summary 字段（可能包含 JSON 字符串）
+                if (fortune.summary && typeof fortune.summary === 'string') {
+                    // 嘗試從 summary 中提取 JSON
+                    const jsonMatch = fortune.summary.match(/```json\s*([\s\S]*?)\s*```/);
+                    if (jsonMatch) {
+                        try {
+                            const summaryData = JSON.parse(jsonMatch[1]);
+                            // 如果 summary 中包含完整的運勢數據，使用它
+                            if (summaryData.love || summaryData.career || summaryData.wealth || summaryData.health) {
+                                fortune.love = cleanText(summaryData.love || summaryData.愛情 || summaryData['感情']) || fortune.love;
+                                fortune.career = cleanText(summaryData.career || summaryData.事業 || summaryData.work || summaryData['工作']) || fortune.career;
+                                fortune.wealth = cleanText(summaryData.wealth || summaryData.財運 || summaryData.finance || summaryData['財富']) || fortune.wealth;
+                                fortune.health = cleanText(summaryData.health || summaryData.健康) || fortune.health;
+                                fortune.overall = summaryData.overall || fortune.overall;
+                                fortune.summary = summaryData.summary || summaryData.opening || null;
+                            } else {
+                                fortune.summary = summaryData.summary || summaryData.opening || fortune.summary;
+                            }
+                        } catch (e) {
+                            console.warn(`[${zodiac.name}] 解析 summary JSON 失敗:`, e);
+                        }
+                    }
+                }
                 
                 // 檢查是否有有效的運勢數據
                 if (fortune.overall || fortune.love || fortune.career || fortune.wealth || fortune.health) {
@@ -515,8 +556,8 @@ class HoroscopeMarquee {
                             ${fortune.career ? `<span class="fortune-item">💼 ${String(fortune.career || '').trim()}</span>` : ''}
                             ${fortune.wealth ? `<span class="fortune-item">💰 ${String(fortune.wealth || '').trim()}</span>` : ''}
                             ${fortune.health ? `<span class="fortune-item">💚 ${String(fortune.health || '').trim()}</span>` : ''}
-                            ${!fortune.love && !fortune.career && !fortune.wealth && !fortune.health && fortune.summary ? 
-                                `<span class="fortune-item">${this.truncateText(fortune.summary, 100)}</span>` : ''}
+                            ${fortune.summary && (!fortune.love && !fortune.career && !fortune.wealth && !fortune.health) ? 
+                                `<span class="fortune-item">${this.truncateText(String(fortune.summary).trim(), 100)}</span>` : ''}
                         </div>
                     </div>
                 </div>
