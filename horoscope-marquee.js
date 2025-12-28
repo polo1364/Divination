@@ -206,18 +206,34 @@ class HoroscopeMarquee {
             if (result.result) {
                 let resultData = result.result;
                 
+                // 調試：記錄原始數據
+                console.log(`[${zodiac.name}] 原始數據類型:`, typeof resultData);
+                console.log(`[${zodiac.name}] 原始數據:`, resultData);
+                
                 // 如果 resultData 是字符串，嘗試解析為 JSON
                 if (typeof resultData === 'string') {
+                    // 嘗試提取 JSON 部分（可能包含在 ```json ... ``` 中）
+                    let jsonStr = resultData;
+                    const jsonMatch = resultData.match(/```json\s*([\s\S]*?)\s*```/);
+                    if (jsonMatch) {
+                        jsonStr = jsonMatch[1];
+                    } else {
+                        // 嘗試提取 {...} 部分
+                        const braceMatch = resultData.match(/\{[\s\S]*\}/);
+                        if (braceMatch) {
+                            jsonStr = braceMatch[0];
+                        }
+                    }
+                    
                     try {
-                        resultData = JSON.parse(resultData);
+                        resultData = JSON.parse(jsonStr);
+                        console.log(`[${zodiac.name}] 解析後的 JSON:`, JSON.stringify(resultData, null, 2));
                     } catch (e) {
+                        console.warn(`[${zodiac.name}] JSON 解析失敗，當作文本處理:`, e);
                         // 如果不是 JSON，當作普通文本處理
                         resultData = { analysis: resultData };
                     }
                 }
-                
-                // 調試：記錄原始數據
-                console.log(`[${zodiac.name}] 原始數據:`, JSON.stringify(resultData, null, 2));
                 
                 // 嘗試直接使用結構化數據
                 let fortune = {
@@ -229,25 +245,29 @@ class HoroscopeMarquee {
                     summary: resultData.summary || resultData.analysis || resultData.opening || null
                 };
                 
+                // 清理數據：移除可能的 JSON 轉義字符和引號
+                const cleanText = (text) => {
+                    if (!text) return null;
+                    let cleaned = String(text).trim();
+                    // 移除開頭的引號和轉義字符
+                    cleaned = cleaned.replace(/^["'「]|["'」]$/g, '');
+                    // 移除 JSON 轉義的引號
+                    cleaned = cleaned.replace(/\\"/g, '"');
+                    // 移除可能的 JSON 格式殘留（如 "key\": \"value"）
+                    cleaned = cleaned.replace(/^[^:]+:\s*["']?/g, '');
+                    cleaned = cleaned.replace(/["']?\s*[,，]?$/g, '');
+                    return cleaned.trim() || null;
+                };
+                
                 // 檢查是否有有效的運勢數據
                 if (fortune.overall || fortune.love || fortune.career || fortune.wealth || fortune.health) {
-                    // 確保所有文字都是完整的（移除可能的截斷）
-                    if (fortune.love) {
-                        fortune.love = String(fortune.love).trim();
-                        console.log(`[${zodiac.name}] 愛情運勢:`, fortune.love);
-                    }
-                    if (fortune.career) {
-                        fortune.career = String(fortune.career).trim();
-                        console.log(`[${zodiac.name}] 事業運勢:`, fortune.career);
-                    }
-                    if (fortune.wealth) {
-                        fortune.wealth = String(fortune.wealth).trim();
-                        console.log(`[${zodiac.name}] 財運:`, fortune.wealth);
-                    }
-                    if (fortune.health) {
-                        fortune.health = String(fortune.health).trim();
-                        console.log(`[${zodiac.name}] 健康:`, fortune.health);
-                    }
+                    // 清理所有文字
+                    fortune.love = cleanText(fortune.love);
+                    fortune.career = cleanText(fortune.career);
+                    fortune.wealth = cleanText(fortune.wealth);
+                    fortune.health = cleanText(fortune.health);
+                    
+                    console.log(`[${zodiac.name}] 清理後的運勢:`, JSON.stringify(fortune, null, 2));
                     return fortune;
                 }
                 
