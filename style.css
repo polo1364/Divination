@@ -200,6 +200,8 @@ header {
     gap: 10px;
     min-width: 0;
     overflow: visible;
+    width: 100%;
+    max-width: 100%;
 }
 
 .zodiac-header {
@@ -230,11 +232,12 @@ header {
     color: #e8e8e8;
     overflow: visible;
     width: 100%;
+    align-items: flex-start;
 }
 
 .fortune-item {
-    display: flex;
-    align-items: center;
+    display: inline-flex;
+    align-items: flex-start;
     gap: 5px;
     padding: 5px 12px;
     background: rgba(138, 43, 226, 0.2);
@@ -243,13 +246,15 @@ header {
     transition: all 0.3s ease;
     white-space: normal;
     overflow: visible;
-    min-width: fit-content;
-    word-break: keep-all;
+    min-width: 0;
+    word-break: normal;
     flex-shrink: 0;
-    max-width: 100%;
+    flex-grow: 0;
+    max-width: none;
     width: auto;
     word-wrap: break-word;
     line-height: 1.5;
+    box-sizing: border-box;
 }
 
 .fortune-item:hover {
@@ -290,13 +295,17 @@ header {
         justify-content: center;
         white-space: normal;
         overflow: visible;
-        min-width: fit-content;
-        word-break: keep-all;
+        min-width: 0;
+        word-break: normal;
         flex-shrink: 0;
-        max-width: 100%;
+        flex-grow: 0;
+        max-width: none;
         width: auto;
         word-wrap: break-word;
         line-height: 1.5;
+        box-sizing: border-box;
+        display: inline-flex;
+        align-items: flex-start;
     }
 }
 
@@ -7037,13 +7046,17 @@ html {
         font-size: 0.9em;
         white-space: normal;
         overflow: visible;
-        min-width: fit-content;
-        word-break: keep-all;
+        min-width: 0;
+        word-break: normal;
         flex-shrink: 0;
-        max-width: 100%;
+        flex-grow: 0;
+        max-width: none;
         width: auto;
         word-wrap: break-word;
         line-height: 1.5;
+        box-sizing: border-box;
+        display: inline-flex;
+        align-items: flex-start;
     }
     
     .temple-navigation {
