@@ -450,12 +450,12 @@ class HoroscopeMarquee {
                             ${fortune.overall ? `<span class="zodiac-rating">${fortune.overall}</span>` : ''}
                         </div>
                         <div class="zodiac-fortune">
-                            ${fortune.love ? `<span class="fortune-item">💕 ${this.truncateText(fortune.love, 20)}</span>` : ''}
-                            ${fortune.career ? `<span class="fortune-item">💼 ${this.truncateText(fortune.career, 20)}</span>` : ''}
-                            ${fortune.wealth ? `<span class="fortune-item">💰 ${this.truncateText(fortune.wealth, 20)}</span>` : ''}
-                            ${fortune.health ? `<span class="fortune-item">💚 ${this.truncateText(fortune.health, 20)}</span>` : ''}
+                            ${fortune.love ? `<span class="fortune-item">💕 ${fortune.love}</span>` : ''}
+                            ${fortune.career ? `<span class="fortune-item">💼 ${fortune.career}</span>` : ''}
+                            ${fortune.wealth ? `<span class="fortune-item">💰 ${fortune.wealth}</span>` : ''}
+                            ${fortune.health ? `<span class="fortune-item">💚 ${fortune.health}</span>` : ''}
                             ${!fortune.love && !fortune.career && !fortune.wealth && !fortune.health && fortune.summary ? 
-                                `<span class="fortune-item">${this.truncateText(fortune.summary, 50)}</span>` : ''}
+                                `<span class="fortune-item">${this.truncateText(fortune.summary, 100)}</span>` : ''}
                         </div>
                     </div>
                 </div>
@@ -492,11 +492,16 @@ class HoroscopeMarquee {
         }
     }
     
-    // 截斷文本
+    // 截斷文本（改進版，確保不會在字符中間截斷）
     truncateText(text, maxLength) {
         if (!text) return '';
-        const str = String(text);
-        return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
+        const str = String(text).trim();
+        // 如果文字長度不超過限制，直接返回
+        if (str.length <= maxLength) {
+            return str;
+        }
+        // 截斷並添加省略號
+        return str.substring(0, maxLength) + '...';
     }
     
 }

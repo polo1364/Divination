@@ -241,13 +241,15 @@ header {
     border-radius: 20px;
     border: 1px solid rgba(138, 43, 226, 0.3);
     transition: all 0.3s ease;
-    white-space: nowrap;
+    white-space: normal;
     overflow: visible;
     min-width: fit-content;
     word-break: keep-all;
     flex-shrink: 0;
-    max-width: none;
+    max-width: 100%;
     width: auto;
+    word-wrap: break-word;
+    line-height: 1.5;
 }
 
 .fortune-item:hover {
@@ -286,13 +288,15 @@ header {
     
     .fortune-item {
         justify-content: center;
-        white-space: nowrap;
+        white-space: normal;
         overflow: visible;
         min-width: fit-content;
         word-break: keep-all;
         flex-shrink: 0;
-        max-width: none;
+        max-width: 100%;
         width: auto;
+        word-wrap: break-word;
+        line-height: 1.5;
     }
 }
 
@@ -7031,13 +7035,15 @@ html {
         justify-content: center;
         padding: 6px 10px;
         font-size: 0.9em;
-        white-space: nowrap;
+        white-space: normal;
         overflow: visible;
         min-width: fit-content;
         word-break: keep-all;
         flex-shrink: 0;
-        max-width: none;
+        max-width: 100%;
         width: auto;
+        word-wrap: break-word;
+        line-height: 1.5;
     }
     
     .temple-navigation {
