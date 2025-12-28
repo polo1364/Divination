@@ -199,18 +199,44 @@ class HoroscopeMarquee {
             
             // 解析 AI 返回的實際結果（不添加預設值）
             if (result.result) {
-                const resultData = result.result;
+                let resultData = result.result;
+                
+                // 如果 resultData 是字符串，嘗試解析為 JSON
+                if (typeof resultData === 'string') {
+                    try {
+                        resultData = JSON.parse(resultData);
+                    } catch (e) {
+                        // 如果不是 JSON，當作普通文本處理
+                        resultData = { analysis: resultData };
+                    }
+                }
                 
                 // 嘗試直接使用結構化數據
-                if (resultData.overall || resultData.love || resultData.career || resultData.wealth || resultData.health) {
-                    return {
-                        overall: resultData.overall || null,
-                        love: resultData.love || resultData.愛情 || null,
-                        career: resultData.career || resultData.事業 || resultData.work || null,
-                        wealth: resultData.wealth || resultData.財運 || resultData.finance || null,
-                        health: resultData.health || resultData.健康 || null,
-                        summary: resultData.summary || resultData.analysis || resultData.opening || null
-                    };
+                const fortune = {
+                    overall: resultData.overall || null,
+                    love: resultData.love || resultData.愛情 || resultData['感情'] || null,
+                    career: resultData.career || resultData.事業 || resultData.work || resultData['工作'] || null,
+                    wealth: resultData.wealth || resultData.財運 || resultData.finance || resultData['財富'] || null,
+                    health: resultData.health || resultData.健康 || null,
+                    summary: resultData.summary || resultData.analysis || resultData.opening || null
+                };
+                
+                // 檢查是否有有效的運勢數據
+                if (fortune.overall || fortune.love || fortune.career || fortune.wealth || fortune.health) {
+                    // 確保所有文字都是完整的（移除可能的截斷）
+                    if (fortune.love && fortune.love.length > 0) {
+                        fortune.love = String(fortune.love).trim();
+                    }
+                    if (fortune.career && fortune.career.length > 0) {
+                        fortune.career = String(fortune.career).trim();
+                    }
+                    if (fortune.wealth && fortune.wealth.length > 0) {
+                        fortune.wealth = String(fortune.wealth).trim();
+                    }
+                    if (fortune.health && fortune.health.length > 0) {
+                        fortune.health = String(fortune.health).trim();
+                    }
+                    return fortune;
                 }
                 
                 // 否則解析文本內容
@@ -243,11 +269,11 @@ class HoroscopeMarquee {
         // 嘗試提取關鍵信息
         const lines = content.split('\n').filter(line => line.trim());
         
-        let overall = '⭐⭐⭐';
-        let love = '感情運勢平穩';
-        let career = '事業發展順利';
-        let wealth = '財運穩定';
-        let health = '健康狀況良好';
+        let overall = null;
+        let love = null;
+        let career = null;
+        let wealth = null;
+        let health = null;
         
         // 解析每一行
         for (const line of lines) {
