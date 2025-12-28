@@ -154,13 +154,44 @@ app.post('/api/divination', async (req, res) => {
         // 嘗試解析 JSON（如果 AI 返回了結構化輸出）
         let structuredResult = null;
         try {
-            // 嘗試從文本中提取 JSON
-            const jsonMatch = interpretation.match(/\{[\s\S]*\}/);
+            // 嘗試從文本中提取 JSON（支援 markdown 包裹的 JSON）
+            let jsonStr = interpretation;
+            const markdownMatch = interpretation.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+            if (markdownMatch) {
+                jsonStr = markdownMatch[1];
+            }
+            const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
                 structuredResult = JSON.parse(jsonMatch[0]);
+                console.log('✅ 成功解析 JSON 結構:', Object.keys(structuredResult));
             }
         } catch (e) {
-            // 如果不是 JSON，使用原始文本
+            console.warn('⚠️ JSON 解析失敗，使用原始文本:', e.message);
+        }
+
+        // 如果是星座運勢且成功解析，直接返回 JSON
+        if ((type === 'horoscope' || type === 'horoscope_simple') && structuredResult) {
+            // 確保有必要的字段
+            const horoscopeResult = {
+                overall: structuredResult.overall || null,
+                love: structuredResult.love || structuredResult.愛情 || null,
+                career: structuredResult.career || structuredResult.事業 || null,
+                wealth: structuredResult.wealth || structuredResult.財運 || null,
+                health: structuredResult.health || structuredResult.健康 || null,
+                summary: structuredResult.summary || null,
+                luckyColor: structuredResult.luckyColor || structuredResult.幸運色 || null,
+                luckyNumber: structuredResult.luckyNumber || structuredResult.幸運數字 || null
+            };
+            console.log('✅ 星座運勢解析結果:', horoscopeResult);
+            
+            res.json({
+                type: type,
+                question: question,
+                data: data,
+                result: horoscopeResult,
+                raw: interpretation
+            });
+            return;
         }
 
         // 如果成功解析為結構化輸出，使用它；否則使用原始文本
@@ -302,18 +333,24 @@ function buildDivinationPrompt(type, question, data) {
             break;
 
         case 'horoscope':
-            typeSpecificPrompt = `星座每日運勢生成\n\n`;
+        case 'horoscope_simple':
+            typeSpecificPrompt = `星座每日運勢生成（跑馬燈格式）\n\n`;
             typeSpecificPrompt += `星座：${data.zodiac || '未知'}\n`;
             typeSpecificPrompt += `日期：${data.date || new Date().toISOString().split('T')[0]}\n\n`;
-            typeSpecificPrompt += `【任務】\n`;
-            typeSpecificPrompt += `請為${data.zodiac}生成今日的運勢，內容要簡潔明瞭，適合在跑馬燈中顯示。\n`;
-            typeSpecificPrompt += `請按照以下格式輸出：\n`;
-            typeSpecificPrompt += `整體運勢：[用1-5個⭐表示，例如⭐⭐⭐⭐]\n`;
-            typeSpecificPrompt += `愛情：[簡短建議，不超過20字]\n`;
-            typeSpecificPrompt += `事業：[簡短建議，不超過20字]\n`;
-            typeSpecificPrompt += `財運：[簡短建議，不超過20字]\n`;
-            typeSpecificPrompt += `健康：[簡短建議，不超過20字]\n\n`;
-            typeSpecificPrompt += `請用簡潔、正面、鼓勵的語言，避免過於負面的描述。`;
+            typeSpecificPrompt += `【重要：請嚴格按照以下 JSON 格式返回，不要添加任何其他內容】\n\n`;
+            typeSpecificPrompt += `{\n`;
+            typeSpecificPrompt += `  "overall": "⭐⭐⭐⭐",\n`;
+            typeSpecificPrompt += `  "love": "感情運勢描述（15-25字，具體且有建設性）",\n`;
+            typeSpecificPrompt += `  "career": "事業運勢描述（15-25字，具體且有建設性）",\n`;
+            typeSpecificPrompt += `  "wealth": "財運描述（15-25字，具體且有建設性）",\n`;
+            typeSpecificPrompt += `  "health": "健康運勢描述（15-25字，具體且有建設性）"\n`;
+            typeSpecificPrompt += `}\n\n`;
+            typeSpecificPrompt += `【注意事項】\n`;
+            typeSpecificPrompt += `1. overall 用 1-5 個 ⭐ 表示今日運勢好壞\n`;
+            typeSpecificPrompt += `2. 每項運勢要針對${data.zodiac}的特質給出具體建議\n`;
+            typeSpecificPrompt += `3. 語言正面、鼓勵，避免負面描述\n`;
+            typeSpecificPrompt += `4. 直接返回 JSON，不要用 markdown 代碼塊包裹\n`;
+            typeSpecificPrompt += `5. 不要添加任何解釋文字，只返回 JSON`;
             break;
             
         case 'daily_report':

@@ -215,13 +215,31 @@ class HoroscopeMarquee {
 
     // 獲取單個星座運勢（使用 Gemini API）
     async fetchSingleZodiacFortune(zodiac, apiKey, date) {
-        // 使用 Gemini API
-        const question = `請為${zodiac.name}（${zodiac.english}）生成今日（${date}）的運勢，包括：整體運勢（1-5星）、愛情、事業、財運、健康等方面的簡短建議。請用簡潔的語言，每項不超過20字。`;
+        // 使用 Gemini API - 明確要求返回 JSON 格式
+        const question = `請為${zodiac.name}（${zodiac.english}）生成今日（${date}）的星座運勢。
+
+請嚴格按照以下 JSON 格式返回，不要添加其他內容：
+{
+    "overall": "⭐⭐⭐⭐",
+    "love": "感情運勢描述（15-25字）",
+    "career": "事業運勢描述（15-25字）",
+    "wealth": "財運描述（15-25字）",
+    "health": "健康運勢描述（15-25字）",
+    "summary": "今日運勢總結（20-40字）",
+    "luckyColor": "幸運顏色",
+    "luckyNumber": "幸運數字"
+}
+
+注意：
+1. overall 用 1-5 個 ⭐ 表示（根據今日運勢好壞）
+2. 每項運勢描述要具體且有建設性
+3. 直接返回 JSON，不要用 markdown 包裹`;
         
         const data = {
-            type: 'horoscope',
+            type: 'horoscope_simple',
             zodiac: zodiac.name,
-            date: date
+            date: date,
+            format: 'json'
         };
 
         try {
@@ -393,65 +411,94 @@ class HoroscopeMarquee {
                     return cleaned.trim() || null;
                 };
                 
-                // 處理 summary 字段（可能包含 JSON 字符串或 Markdown 包裹的 JSON）
-                if (fortune.summary && typeof fortune.summary === 'string') {
-                    const originalSummary = fortune.summary;
-                    let extractedSummary = null;
+                // 合併所有可能包含運勢信息的字段
+                const allText = [
+                    resultData.summary || '',
+                    resultData.analysis || '',
+                    resultData.opening || ''
+                ].join('\n');
+                
+                // 從合併的文本中提取運勢信息
+                const extractFromText = (text) => {
+                    // 提取 JSON 格式的字段
+                    const summaryMatch = text.match(/"summary"\s*:\s*"([^"]+)"/);
+                    const openingMatch = text.match(/"opening"\s*:\s*"([^"]+)"/);
+                    const loveMatch = text.match(/"(?:love|愛情)"\s*:\s*"([^"]+)"/);
+                    const careerMatch = text.match(/"(?:career|事業)"\s*:\s*"([^"]+)"/);
+                    const wealthMatch = text.match(/"(?:wealth|財運)"\s*:\s*"([^"]+)"/);
+                    const healthMatch = text.match(/"(?:health|健康)"\s*:\s*"([^"]+)"/);
+                    const scoreMatch = text.match(/"score"\s*:\s*(\d+)/);
+                    const luckyColorMatch = text.match(/"幸運色"\s*:\s*"([^"]+)"/);
+                    const luckyDirectionMatch = text.match(/"幸運方位"\s*:\s*"([^"]+)"/);
+                    const luckyItemMatch = text.match(/"幸運小物"\s*:\s*"([^"]+)"/);
                     
-                    // 檢查是否包含 JSON 格式的內容
-                    if (originalSummary.includes('```json') || originalSummary.includes('"summary"') || originalSummary.includes('"opening"')) {
-                        // 嘗試多種方式提取
-                        
-                        // 方法1：提取 "summary" 字段的值
-                        const summaryMatch = originalSummary.match(/"summary"\s*:\s*"([^"]+)"/);
-                        if (summaryMatch && summaryMatch[1]) {
-                            extractedSummary = summaryMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"');
-                            console.log(`[${zodiac.name}] 從 JSON 提取 summary:`, extractedSummary);
-                        }
-                        
-                        // 方法2：提取 "opening" 字段的值（通常更詳細）
-                        const openingMatch = originalSummary.match(/"opening"\s*:\s*"([^"]+)"/);
-                        if (openingMatch && openingMatch[1]) {
-                            const opening = openingMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"');
-                            // 如果 opening 比 summary 長，使用 opening
-                            if (!extractedSummary || opening.length > extractedSummary.length) {
-                                extractedSummary = opening;
-                                console.log(`[${zodiac.name}] 從 JSON 提取 opening:`, extractedSummary);
-                            }
-                        }
-                        
-                        // 方法3：提取 love/career/wealth/health
-                        const loveMatch = originalSummary.match(/"(?:love|愛情|感情)"\s*:\s*"([^"]+)"/);
-                        const careerMatch = originalSummary.match(/"(?:career|事業|工作)"\s*:\s*"([^"]+)"/);
-                        const wealthMatch = originalSummary.match(/"(?:wealth|財運|財富)"\s*:\s*"([^"]+)"/);
-                        const healthMatch = originalSummary.match(/"(?:health|健康)"\s*:\s*"([^"]+)"/);
-                        
-                        if (loveMatch) fortune.love = loveMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"');
-                        if (careerMatch) fortune.career = careerMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"');
-                        if (wealthMatch) fortune.wealth = wealthMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"');
-                        if (healthMatch) fortune.health = healthMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"');
-                        
-                        // 更新 summary
-                        if (extractedSummary) {
-                            fortune.summary = extractedSummary;
-                        }
-                    }
+                    // 也嘗試從純文本格式提取（如 **愛情：** 內容）
+                    const textLoveMatch = text.match(/\*?\*?愛情[：:]\*?\*?\s*([^\n*]+)/);
+                    const textCareerMatch = text.match(/\*?\*?事業[：:]\*?\*?\s*([^\n*]+)/);
+                    const textWealthMatch = text.match(/\*?\*?財運[：:]\*?\*?\s*([^\n*]+)/);
+                    const textHealthMatch = text.match(/\*?\*?健康[：:]\*?\*?\s*([^\n*]+)/);
                     
-                    // 如果 summary 仍然以 ```json 開頭，清理它
-                    if (fortune.summary && fortune.summary.startsWith('```')) {
-                        // 移除 markdown 標記，只保留純文字
-                        fortune.summary = fortune.summary
-                            .replace(/```json\s*/g, '')
-                            .replace(/```\s*/g, '')
-                            .replace(/^\s*\{\s*/, '')
-                            .replace(/\s*\}\s*$/, '')
-                            .replace(/"[^"]+"\s*:\s*"?/g, '')
-                            .trim();
-                        
-                        // 如果清理後為空或太短，使用 extractedSummary
-                        if (fortune.summary.length < 10 && extractedSummary) {
-                            fortune.summary = extractedSummary;
-                        }
+                    return {
+                        summary: summaryMatch ? summaryMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"') : null,
+                        opening: openingMatch ? openingMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"') : null,
+                        love: loveMatch ? loveMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"') : 
+                              (textLoveMatch ? textLoveMatch[1].trim() : null),
+                        career: careerMatch ? careerMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"') : 
+                                (textCareerMatch ? textCareerMatch[1].trim() : null),
+                        wealth: wealthMatch ? wealthMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"') : 
+                                (textWealthMatch ? textWealthMatch[1].trim() : null),
+                        health: healthMatch ? healthMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"') : 
+                                (textHealthMatch ? textHealthMatch[1].trim() : null),
+                        score: scoreMatch ? parseInt(scoreMatch[1]) : null,
+                        luckyColor: luckyColorMatch ? luckyColorMatch[1] : null,
+                        luckyDirection: luckyDirectionMatch ? luckyDirectionMatch[1] : null,
+                        luckyItem: luckyItemMatch ? luckyItemMatch[1] : null
+                    };
+                };
+                
+                const extracted = extractFromText(allText);
+                console.log(`[${zodiac.name}] 提取的運勢數據:`, extracted);
+                
+                // 更新 fortune 對象
+                if (extracted.summary) fortune.summary = extracted.summary;
+                if (extracted.opening) fortune.opening = extracted.opening;
+                if (extracted.love) fortune.love = extracted.love;
+                if (extracted.career) fortune.career = extracted.career;
+                if (extracted.wealth) fortune.wealth = extracted.wealth;
+                if (extracted.health) fortune.health = extracted.health;
+                if (extracted.score && !fortune.score) {
+                    fortune.score = extracted.score;
+                    // 根據分數更新星級
+                    if (extracted.score >= 90) fortune.overall = '⭐⭐⭐⭐⭐';
+                    else if (extracted.score >= 75) fortune.overall = '⭐⭐⭐⭐';
+                    else if (extracted.score >= 60) fortune.overall = '⭐⭐⭐';
+                    else if (extracted.score >= 40) fortune.overall = '⭐⭐';
+                    else fortune.overall = '⭐';
+                }
+                if (extracted.luckyColor || extracted.luckyDirection || extracted.luckyItem) {
+                    const items = [];
+                    if (extracted.luckyColor) items.push(`🎨 ${extracted.luckyColor}`);
+                    if (extracted.luckyDirection) items.push(`🧭 ${extracted.luckyDirection}`);
+                    if (extracted.luckyItem) items.push(`🍀 ${extracted.luckyItem}`);
+                    fortune.luckyItems = items.join(' ');
+                }
+                
+                // 如果 summary 仍然以 ```json 開頭，清理它
+                if (fortune.summary && fortune.summary.startsWith('```')) {
+                    // 移除 markdown 標記，只保留純文字
+                    const cleanedSummary = fortune.summary
+                        .replace(/```json\s*/g, '')
+                        .replace(/```\s*/g, '')
+                        .replace(/^\s*\{\s*/, '')
+                        .replace(/\s*\}\s*$/, '')
+                        .replace(/"[^"]+"\s*:\s*"?/g, '')
+                        .trim();
+                    
+                    // 如果清理後為空或太短，嘗試從 extracted 獲取
+                    if (cleanedSummary.length >= 10) {
+                        fortune.summary = cleanedSummary;
+                    } else if (extracted.summary) {
+                        fortune.summary = extracted.summary;
                     }
                 }
                 
