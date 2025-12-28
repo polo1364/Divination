@@ -153,6 +153,7 @@ header {
     overflow: visible;
     width: 100%;
     min-width: 0;
+    box-sizing: border-box;
 }
 
 .marquee-date {
@@ -197,6 +198,8 @@ header {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    min-width: 0;
+    overflow: visible;
 }
 
 .zodiac-header {
@@ -242,6 +245,9 @@ header {
     overflow: visible;
     min-width: fit-content;
     word-break: keep-all;
+    flex-shrink: 0;
+    max-width: none;
+    width: auto;
 }
 
 .fortune-item:hover {
@@ -284,6 +290,9 @@ header {
         overflow: visible;
         min-width: fit-content;
         word-break: keep-all;
+        flex-shrink: 0;
+        max-width: none;
+        width: auto;
     }
 }
 
@@ -7026,6 +7035,9 @@ html {
         overflow: visible;
         min-width: fit-content;
         word-break: keep-all;
+        flex-shrink: 0;
+        max-width: none;
+        width: auto;
     }
     
     .temple-navigation {
