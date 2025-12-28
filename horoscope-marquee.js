@@ -87,12 +87,54 @@ class HoroscopeMarquee {
                 // 檢查緩存日期是否為今天
                 const cacheDate = new Date(data.timestamp).toISOString().split('T')[0];
                 if (cacheDate === today) {
-                    this.fortunes = new Map(data.fortunes);
+                    // 清理緩存數據中的錯誤格式
+                    const cleanedFortunes = new Map();
+                    const cleanText = (text) => {
+                        if (!text) return null;
+                        let cleaned = String(text).trim();
+                        
+                        // 處理 JSON 轉義格式 "情\": \"敞開心扉..."
+                        const jsonMatch1 = cleaned.match(/[^"]*["']?[^"']*["']?\s*[:：]\s*["']?([^"']+?)["']?/);
+                        if (jsonMatch1 && jsonMatch1[1]) {
+                            cleaned = jsonMatch1[1];
+                        }
+                        
+                        const jsonMatch2 = cleaned.match(/\\"([^"]+?)\\"/);
+                        if (jsonMatch2 && jsonMatch2[1]) {
+                            cleaned = jsonMatch2[1];
+                        }
+                        
+                        cleaned = cleaned.replace(/\\"/g, '"');
+                        cleaned = cleaned.replace(/\\'/g, "'");
+                        cleaned = cleaned.replace(/\\n/g, ' ');
+                        cleaned = cleaned.replace(/\\t/g, ' ');
+                        cleaned = cleaned.replace(/^["'「]|["'」]$/g, '');
+                        cleaned = cleaned.replace(/^[^a-zA-Z\u4e00-\u9fa50-9]+[:：]\s*["']?/g, '');
+                        cleaned = cleaned.replace(/["']?\s*[,，]?$/g, '');
+                        cleaned = cleaned.replace(/^[^a-zA-Z\u4e00-\u9fa50-9]+/g, '');
+                        
+                        if (!cleaned || cleaned.length === 0 || /^[^a-zA-Z\u4e00-\u9fa50-9]+$/.test(cleaned)) {
+                            return null;
+                        }
+                        
+                        return cleaned.trim() || null;
+                    };
+                    
+                    for (const [zodiacName, fortune] of data.fortunes) {
+                        const cleanedFortune = { ...fortune };
+                        cleanedFortune.love = cleanText(cleanedFortune.love);
+                        cleanedFortune.career = cleanText(cleanedFortune.career);
+                        cleanedFortune.wealth = cleanText(cleanedFortune.wealth);
+                        cleanedFortune.health = cleanText(cleanedFortune.health);
+                        cleanedFortunes.set(zodiacName, cleanedFortune);
+                    }
+                    
+                    this.fortunes = cleanedFortunes;
                     console.log(`從緩存載入今日運勢，共 ${this.fortunes.size} 個星座`);
                     // 調試：檢查緩存數據
                     if (this.fortunes.size > 0) {
                         const firstFortune = Array.from(this.fortunes.values())[0];
-                        console.log('緩存數據示例:', JSON.stringify(firstFortune, null, 2));
+                        console.log('緩存數據示例（清理後）:', JSON.stringify(firstFortune, null, 2));
                     }
                     // 如果正在運行，更新當前顯示
                     if (this.marqueeInterval) {
@@ -251,10 +293,17 @@ class HoroscopeMarquee {
                     let cleaned = String(text).trim();
                     
                     // 如果包含 JSON 轉義格式（如 "情\": \"敞開心扉..."），提取實際內容
-                    // 匹配模式：任何字符 + 引號 + 冒號 + 空格 + 引號 + 實際內容 + 引號
-                    const jsonMatch = cleaned.match(/[^"]*["']?[^"']*["']?\s*[:：]\s*["']?([^"']+?)["']?/);
-                    if (jsonMatch && jsonMatch[1]) {
-                        cleaned = jsonMatch[1];
+                    // 匹配模式：任何字符 + 引號 + 冒號 + 空格 + 引號 + 實際內容
+                    // 例如："情\": \"敞開心扉..." -> "敞開心扉..."
+                    const jsonMatch1 = cleaned.match(/[^"]*["']?[^"']*["']?\s*[:：]\s*["']?([^"']+?)["']?/);
+                    if (jsonMatch1 && jsonMatch1[1]) {
+                        cleaned = jsonMatch1[1];
+                    }
+                    
+                    // 另一個匹配模式：處理 "key\": \"value" 格式
+                    const jsonMatch2 = cleaned.match(/\\"([^"]+?)\\"/);
+                    if (jsonMatch2 && jsonMatch2[1]) {
+                        cleaned = jsonMatch2[1];
                     }
                     
                     // 移除 JSON 轉義的引號（先處理轉義字符）
@@ -267,11 +316,17 @@ class HoroscopeMarquee {
                     cleaned = cleaned.replace(/^["'「]|["'」]$/g, '');
                     
                     // 移除可能的 JSON 格式殘留（如 "key\": \"value" 或 情\": \"value）
-                    cleaned = cleaned.replace(/^[^a-zA-Z\u4e00-\u9fa5]+[:：]\s*["']?/g, '');
+                    // 匹配：開頭的非文字字符 + 冒號 + 空格 + 引號
+                    cleaned = cleaned.replace(/^[^a-zA-Z\u4e00-\u9fa50-9]+[:：]\s*["']?/g, '');
                     cleaned = cleaned.replace(/["']?\s*[,，]?$/g, '');
                     
                     // 移除開頭的非文字字符（保留中英文和數字）
                     cleaned = cleaned.replace(/^[^a-zA-Z\u4e00-\u9fa50-9]+/g, '');
+                    
+                    // 如果清理後為空或只包含特殊字符，返回 null
+                    if (!cleaned || cleaned.length === 0 || /^[^a-zA-Z\u4e00-\u9fa50-9]+$/.test(cleaned)) {
+                        return null;
+                    }
                     
                     return cleaned.trim() || null;
                 };
