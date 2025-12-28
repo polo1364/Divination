@@ -89,6 +89,11 @@ class HoroscopeMarquee {
                 if (cacheDate === today) {
                     this.fortunes = new Map(data.fortunes);
                     console.log(`從緩存載入今日運勢，共 ${this.fortunes.size} 個星座`);
+                    // 調試：檢查緩存數據
+                    if (this.fortunes.size > 0) {
+                        const firstFortune = Array.from(this.fortunes.values())[0];
+                        console.log('緩存數據示例:', JSON.stringify(firstFortune, null, 2));
+                    }
                     // 如果正在運行，更新當前顯示
                     if (this.marqueeInterval) {
                         this.showCurrentZodiac();
@@ -211,8 +216,11 @@ class HoroscopeMarquee {
                     }
                 }
                 
+                // 調試：記錄原始數據
+                console.log(`[${zodiac.name}] 原始數據:`, JSON.stringify(resultData, null, 2));
+                
                 // 嘗試直接使用結構化數據
-                const fortune = {
+                let fortune = {
                     overall: resultData.overall || null,
                     love: resultData.love || resultData.愛情 || resultData['感情'] || null,
                     career: resultData.career || resultData.事業 || resultData.work || resultData['工作'] || null,
@@ -224,17 +232,21 @@ class HoroscopeMarquee {
                 // 檢查是否有有效的運勢數據
                 if (fortune.overall || fortune.love || fortune.career || fortune.wealth || fortune.health) {
                     // 確保所有文字都是完整的（移除可能的截斷）
-                    if (fortune.love && fortune.love.length > 0) {
+                    if (fortune.love) {
                         fortune.love = String(fortune.love).trim();
+                        console.log(`[${zodiac.name}] 愛情運勢:`, fortune.love);
                     }
-                    if (fortune.career && fortune.career.length > 0) {
+                    if (fortune.career) {
                         fortune.career = String(fortune.career).trim();
+                        console.log(`[${zodiac.name}] 事業運勢:`, fortune.career);
                     }
-                    if (fortune.wealth && fortune.wealth.length > 0) {
+                    if (fortune.wealth) {
                         fortune.wealth = String(fortune.wealth).trim();
+                        console.log(`[${zodiac.name}] 財運:`, fortune.wealth);
                     }
-                    if (fortune.health && fortune.health.length > 0) {
+                    if (fortune.health) {
                         fortune.health = String(fortune.health).trim();
+                        console.log(`[${zodiac.name}] 健康:`, fortune.health);
                     }
                     return fortune;
                 }
@@ -453,6 +465,9 @@ class HoroscopeMarquee {
         const content = document.getElementById('marqueeContent');
         if (!content) return;
 
+        // 調試：記錄要顯示的數據
+        console.log(`[${zodiac.name}] 顯示運勢數據:`, JSON.stringify(fortune, null, 2));
+
         // 添加淡出效果
         content.style.opacity = '0';
         content.style.transform = 'translateX(-20px)';
@@ -476,10 +491,10 @@ class HoroscopeMarquee {
                             ${fortune.overall ? `<span class="zodiac-rating">${fortune.overall}</span>` : ''}
                         </div>
                         <div class="zodiac-fortune">
-                            ${fortune.love ? `<span class="fortune-item">💕 ${fortune.love}</span>` : ''}
-                            ${fortune.career ? `<span class="fortune-item">💼 ${fortune.career}</span>` : ''}
-                            ${fortune.wealth ? `<span class="fortune-item">💰 ${fortune.wealth}</span>` : ''}
-                            ${fortune.health ? `<span class="fortune-item">💚 ${fortune.health}</span>` : ''}
+                            ${fortune.love ? `<span class="fortune-item">💕 ${String(fortune.love || '').trim()}</span>` : ''}
+                            ${fortune.career ? `<span class="fortune-item">💼 ${String(fortune.career || '').trim()}</span>` : ''}
+                            ${fortune.wealth ? `<span class="fortune-item">💰 ${String(fortune.wealth || '').trim()}</span>` : ''}
+                            ${fortune.health ? `<span class="fortune-item">💚 ${String(fortune.health || '').trim()}</span>` : ''}
                             ${!fortune.love && !fortune.career && !fortune.wealth && !fortune.health && fortune.summary ? 
                                 `<span class="fortune-item">${this.truncateText(fortune.summary, 100)}</span>` : ''}
                         </div>
