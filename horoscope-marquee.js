@@ -521,7 +521,14 @@ class HoroscopeMarquee {
                         fortune.opening = String(fortune.opening).trim();
                     }
                     
-                    console.log(`[${zodiac.name}] 最終運勢數據:`, JSON.stringify(fortune, null, 2));
+                    // 只顯示有效字段的日誌
+                    const validFields = {};
+                    for (const [key, value] of Object.entries(fortune)) {
+                        if (value !== null && value !== undefined) {
+                            validFields[key] = value;
+                        }
+                    }
+                    console.log(`[${zodiac.name}] ✅ 運勢數據:`, validFields);
                     return fortune;
                 }
                 
