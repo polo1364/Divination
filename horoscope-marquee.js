@@ -293,16 +293,61 @@ class HoroscopeMarquee {
                     career: resultData.career || resultData.事業 || resultData.work || resultData['工作'] || null,
                     wealth: resultData.wealth || resultData.財運 || resultData.finance || resultData['財富'] || resultData.money || null,
                     health: resultData.health || resultData.健康 || null,
-                    summary: resultData.summary || resultData.opening || resultData.analysis || null
+                    summary: null,
+                    opening: null,
+                    advice: null,
+                    luckyItems: null,
+                    score: null
                 };
                 
-                // 如果沒有具體運勢但有 summary/opening，使用它
-                if (!fortune.love && !fortune.career && !fortune.wealth && !fortune.health) {
-                    if (resultData.summary || resultData.opening) {
-                        fortune.summary = resultData.summary || resultData.opening;
-                        console.log(`[${zodiac.name}] 使用 summary/opening 作為運勢描述`);
+                // 處理 score（轉換為星級）
+                if (resultData.score) {
+                    const score = parseInt(resultData.score);
+                    if (score >= 90) fortune.overall = '⭐⭐⭐⭐⭐';
+                    else if (score >= 75) fortune.overall = '⭐⭐⭐⭐';
+                    else if (score >= 60) fortune.overall = '⭐⭐⭐';
+                    else if (score >= 40) fortune.overall = '⭐⭐';
+                    else fortune.overall = '⭐';
+                    fortune.score = score;
+                    console.log(`[${zodiac.name}] 分數 ${score} 轉換為 ${fortune.overall}`);
+                }
+                
+                // 處理 summary 和 opening
+                if (resultData.summary) {
+                    fortune.summary = resultData.summary;
+                }
+                if (resultData.opening) {
+                    fortune.opening = resultData.opening;
+                }
+                
+                // 處理 advice（建議數組）
+                if (resultData.advice && Array.isArray(resultData.advice) && resultData.advice.length > 0) {
+                    // 取第一條建議作為簡短提示
+                    fortune.advice = resultData.advice[0];
+                    // 如果建議太長，截取前 50 個字
+                    if (fortune.advice && fortune.advice.length > 80) {
+                        // 找到 : 或 ：的位置，只取標題部分
+                        const colonIdx = fortune.advice.indexOf('：');
+                        if (colonIdx > 0 && colonIdx < 20) {
+                            fortune.advice = fortune.advice.substring(0, colonIdx);
+                        } else {
+                            fortune.advice = fortune.advice.substring(0, 50) + '...';
+                        }
                     }
                 }
+                
+                // 處理 luckyItems（幸運物品）
+                if (resultData.luckyItems && typeof resultData.luckyItems === 'object') {
+                    const items = [];
+                    if (resultData.luckyItems['幸運色']) items.push(`🎨 ${resultData.luckyItems['幸運色']}`);
+                    if (resultData.luckyItems['幸運方位']) items.push(`🧭 ${resultData.luckyItems['幸運方位']}`);
+                    if (resultData.luckyItems['幸運小物']) items.push(`🍀 ${resultData.luckyItems['幸運小物']}`);
+                    if (items.length > 0) {
+                        fortune.luckyItems = items.join(' ');
+                    }
+                }
+                
+                console.log(`[${zodiac.name}] 處理後的運勢:`, fortune);
                 
                 // 清理數據：移除可能的 JSON 轉義字符和引號
                 const cleanText = (text) => {
@@ -410,16 +455,23 @@ class HoroscopeMarquee {
                     }
                 }
                 
-                // 檢查是否有有效的運勢數據（包括 summary）
-                if (fortune.overall || fortune.love || fortune.career || fortune.wealth || fortune.health || fortune.summary) {
+                // 檢查是否有有效的運勢數據（包括 summary、opening、advice、luckyItems）
+                const hasValidData = fortune.overall || fortune.love || fortune.career || fortune.wealth || 
+                                     fortune.health || fortune.summary || fortune.opening || 
+                                     fortune.advice || fortune.luckyItems || fortune.score;
+                
+                if (hasValidData) {
                     // 清理所有文字
                     fortune.love = cleanText(fortune.love);
                     fortune.career = cleanText(fortune.career);
                     fortune.wealth = cleanText(fortune.wealth);
                     fortune.health = cleanText(fortune.health);
-                    // summary 不需要 cleanText，因為它通常是完整的句子
+                    // summary 和 opening 不需要 cleanText，因為它們通常是完整的句子
                     if (fortune.summary) {
                         fortune.summary = String(fortune.summary).trim();
+                    }
+                    if (fortune.opening) {
+                        fortune.opening = String(fortune.opening).trim();
                     }
                     
                     console.log(`[${zodiac.name}] 最終運勢數據:`, JSON.stringify(fortune, null, 2));
@@ -662,6 +714,35 @@ class HoroscopeMarquee {
                      onclick="horoscopeMarquee.goToZodiac(${i})"></div>`
             ).join('');
             
+            // 判斷是否有具體運勢（love/career/wealth/health）
+            const hasDetailedFortune = fortune.love || fortune.career || fortune.wealth || fortune.health;
+            
+            // 構建運勢內容
+            let fortuneContent = '';
+            if (hasDetailedFortune) {
+                // 有具體運勢時顯示詳細信息
+                if (fortune.love) fortuneContent += `<span class="fortune-item">💕 感情：${String(fortune.love).trim()}</span>`;
+                if (fortune.career) fortuneContent += `<span class="fortune-item">💼 事業：${String(fortune.career).trim()}</span>`;
+                if (fortune.wealth) fortuneContent += `<span class="fortune-item">💰 財運：${String(fortune.wealth).trim()}</span>`;
+                if (fortune.health) fortuneContent += `<span class="fortune-item">💚 健康：${String(fortune.health).trim()}</span>`;
+            } else {
+                // 沒有具體運勢時，顯示 summary 和其他信息
+                if (fortune.summary) {
+                    fortuneContent += `<span class="fortune-item fortune-summary">✨ ${String(fortune.summary).trim()}</span>`;
+                }
+                if (fortune.advice) {
+                    fortuneContent += `<span class="fortune-item">💡 ${String(fortune.advice).trim()}</span>`;
+                }
+                if (fortune.luckyItems) {
+                    fortuneContent += `<span class="fortune-item fortune-lucky">${String(fortune.luckyItems).trim()}</span>`;
+                }
+            }
+            
+            // 如果運勢內容為空，顯示 opening 或預設文字
+            if (!fortuneContent && fortune.opening) {
+                fortuneContent = `<span class="fortune-item fortune-opening">🌟 ${String(fortune.opening).trim()}</span>`;
+            }
+            
             content.innerHTML = `
                 <div class="marquee-item">
                     <div class="marquee-date">
@@ -672,14 +753,10 @@ class HoroscopeMarquee {
                         <div class="zodiac-header">
                             <span class="zodiac-name">${zodiac.name} ${zodiac.emoji}</span>
                             ${fortune.overall ? `<span class="zodiac-rating">${fortune.overall}</span>` : ''}
+                            ${fortune.score ? `<span class="zodiac-score">${fortune.score}分</span>` : ''}
                         </div>
                         <div class="zodiac-fortune">
-                            ${fortune.love ? `<span class="fortune-item">💕 感情：${String(fortune.love || '').trim()}</span>` : ''}
-                            ${fortune.career ? `<span class="fortune-item">💼 事業：${String(fortune.career || '').trim()}</span>` : ''}
-                            ${fortune.wealth ? `<span class="fortune-item">💰 財運：${String(fortune.wealth || '').trim()}</span>` : ''}
-                            ${fortune.health ? `<span class="fortune-item">💚 健康：${String(fortune.health || '').trim()}</span>` : ''}
-                            ${fortune.summary ? 
-                                `<span class="fortune-item fortune-summary">✨ ${String(fortune.summary).trim()}</span>` : ''}
+                            ${fortuneContent}
                         </div>
                     </div>
                 </div>
