@@ -124,7 +124,7 @@ header {
     margin-bottom: 30px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
-    overflow: hidden;
+    overflow: visible;
 }
 
 .marquee-container {
@@ -134,12 +134,14 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: visible;
 }
 
 
 .marquee-content {
     width: 100%;
     transition: opacity 0.5s ease, transform 0.5s ease;
+    overflow: visible;
 }
 
 .marquee-item {
@@ -148,6 +150,9 @@ header {
     gap: 20px;
     padding: 10px;
     position: relative;
+    overflow: visible;
+    width: 100%;
+    min-width: 0;
 }
 
 .marquee-date {
@@ -220,6 +225,8 @@ header {
     gap: 15px;
     font-size: 0.95em;
     color: #e8e8e8;
+    overflow: visible;
+    width: 100%;
 }
 
 .fortune-item {
@@ -231,6 +238,10 @@ header {
     border-radius: 20px;
     border: 1px solid rgba(138, 43, 226, 0.3);
     transition: all 0.3s ease;
+    white-space: nowrap;
+    overflow: visible;
+    min-width: fit-content;
+    word-break: keep-all;
 }
 
 .fortune-item:hover {
@@ -264,10 +275,15 @@ header {
         flex-direction: column;
         gap: 10px;
         font-size: 0.9em;
+        overflow: visible;
     }
     
     .fortune-item {
         justify-content: center;
+        white-space: nowrap;
+        overflow: visible;
+        min-width: fit-content;
+        word-break: keep-all;
     }
 }
 
@@ -6999,12 +7015,17 @@ html {
         gap: 8px;
         font-size: 0.85em;
         width: 100%;
+        overflow: visible;
     }
     
     .fortune-item {
         justify-content: center;
         padding: 6px 10px;
         font-size: 0.9em;
+        white-space: nowrap;
+        overflow: visible;
+        min-width: fit-content;
+        word-break: keep-all;
     }
     
     .temple-navigation {
