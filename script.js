@@ -358,6 +358,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 初始化洗牌互動
     initShuffleInteraction();
     
+    // 從用戶檔案自動填充表單
+    prefillFormsFromProfile();
+    
     const spreadButtons = document.querySelectorAll('.spread-btn');
     const drawBtn = document.getElementById('drawBtn');
     const settingsBtn = document.getElementById('settingsBtn');
@@ -532,6 +535,98 @@ function getQuestionValue(selectId, customId) {
     
     return selectValue;
 }
+
+// 從用戶檔案自動填充表單
+function prefillFormsFromProfile() {
+    try {
+        const profileData = localStorage.getItem('userProfile');
+        if (!profileData) {
+            console.log('📝 沒有找到用戶檔案，表單將使用空值');
+            return;
+        }
+        
+        const profile = JSON.parse(profileData);
+        console.log('📝 從用戶檔案填充表單:', profile);
+        
+        // 格式化日期為 YYYY-MM-DD
+        const formatDate = (year, month, day) => {
+            if (!year || !month || !day) return '';
+            const y = String(year).padStart(4, '0');
+            const m = String(month).padStart(2, '0');
+            const d = String(day).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
+        
+        // 格式化時間為 HH:MM
+        const formatTime = (hour, minute) => {
+            const h = String(hour || 0).padStart(2, '0');
+            const m = String(minute || 0).padStart(2, '0');
+            return `${h}:${m}`;
+        };
+        
+        const birthDate = formatDate(profile.birthYear, profile.birthMonth, profile.birthDay);
+        const birthTime = formatTime(profile.birthHour, profile.birthMinute);
+        
+        // 填充八字/紫微表單
+        const baziName = document.getElementById('baziName');
+        const baziGender = document.getElementById('gender');
+        const baziBirthDate = document.getElementById('birthDate');
+        const baziBirthTime = document.getElementById('birthTime');
+        
+        if (baziName && profile.name) baziName.value = profile.name;
+        if (baziGender && profile.gender) baziGender.value = profile.gender;
+        if (baziBirthDate && birthDate) baziBirthDate.value = birthDate;
+        if (baziBirthTime && birthTime) baziBirthTime.value = birthTime;
+        
+        // 填充占星表單
+        const astrologyBirthDate = document.getElementById('astrologyBirthDate');
+        const astrologyBirthPlace = document.getElementById('astrologyBirthPlace');
+        
+        if (astrologyBirthDate && birthDate) astrologyBirthDate.value = birthDate;
+        if (astrologyBirthPlace && profile.birthPlace) astrologyBirthPlace.value = profile.birthPlace;
+        
+        console.log('✅ 表單已自動填充：', {
+            birthDate,
+            birthTime,
+            birthPlace: profile.birthPlace,
+            name: profile.name,
+            gender: profile.gender
+        });
+        
+        // 顯示提示（可選）
+        showPrefillNotice();
+        
+    } catch (e) {
+        console.warn('⚠️ 填充表單時發生錯誤:', e);
+    }
+}
+
+// 顯示表單已預填的提示
+function showPrefillNotice() {
+    // 找到出生信息區域並添加提示
+    const birthInfoSections = document.querySelectorAll('.birth-info-section');
+    birthInfoSections.forEach(section => {
+        // 檢查是否已經有提示
+        if (section.querySelector('.prefill-notice')) return;
+        
+        const notice = document.createElement('div');
+        notice.className = 'prefill-notice';
+        notice.innerHTML = '✅ 已從您的檔案自動填入出生資料';
+        section.insertBefore(notice, section.firstChild);
+        
+        // 3秒後淡出
+        setTimeout(() => {
+            notice.style.opacity = '0';
+            setTimeout(() => notice.remove(), 500);
+        }, 3000);
+    });
+}
+
+// 當用戶檔案更新時重新填充表單
+window.addEventListener('profileUpdated', () => {
+    console.log('📝 用戶檔案已更新，重新填充表單');
+    prefillFormsFromProfile();
+});
 
 // 處理問題選擇變化
 function handleQuestionChange(selectId, customId) {

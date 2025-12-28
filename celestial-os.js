@@ -241,6 +241,9 @@ class CelestialOS {
             // 計算所有命理資料
             await dataCenter.calculateAll(userProfile);
             
+            // 觸發事件通知表單更新
+            window.dispatchEvent(new CustomEvent('profileUpdated'));
+            
             this.showSuccess('檔案已更新並重新計算命盤！');
             
             // 刷新顯示
@@ -850,6 +853,9 @@ class CelestialOS {
             // 隱藏設置界面，顯示神殿
             document.getElementById('profileSetup').classList.add('hidden');
             document.getElementById('templeNavigation').classList.remove('hidden');
+            
+            // 觸發事件通知表單更新
+            window.dispatchEvent(new CustomEvent('profileUpdated'));
             
             this.showSuccess('檔案建立成功！命盤已計算完成');
         } catch (error) {
