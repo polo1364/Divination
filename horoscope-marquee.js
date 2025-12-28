@@ -334,23 +334,43 @@ class HoroscopeMarquee {
                 // 處理 summary 字段（可能包含 JSON 字符串）
                 if (fortune.summary && typeof fortune.summary === 'string') {
                     // 嘗試從 summary 中提取 JSON
+                    let jsonStr = fortune.summary;
+                    
+                    // 提取 ```json ... ``` 中的內容
                     const jsonMatch = fortune.summary.match(/```json\s*([\s\S]*?)\s*```/);
                     if (jsonMatch) {
-                        try {
-                            const summaryData = JSON.parse(jsonMatch[1]);
-                            // 如果 summary 中包含完整的運勢數據，使用它
-                            if (summaryData.love || summaryData.career || summaryData.wealth || summaryData.health) {
-                                fortune.love = cleanText(summaryData.love || summaryData.愛情 || summaryData['感情']) || fortune.love;
-                                fortune.career = cleanText(summaryData.career || summaryData.事業 || summaryData.work || summaryData['工作']) || fortune.career;
-                                fortune.wealth = cleanText(summaryData.wealth || summaryData.財運 || summaryData.finance || summaryData['財富']) || fortune.wealth;
-                                fortune.health = cleanText(summaryData.health || summaryData.健康) || fortune.health;
-                                fortune.overall = summaryData.overall || fortune.overall;
-                                fortune.summary = summaryData.summary || summaryData.opening || null;
-                            } else {
-                                fortune.summary = summaryData.summary || summaryData.opening || fortune.summary;
-                            }
-                        } catch (e) {
-                            console.warn(`[${zodiac.name}] 解析 summary JSON 失敗:`, e);
+                        jsonStr = jsonMatch[1];
+                    } else {
+                        // 嘗試提取 {...} 部分
+                        const braceMatch = fortune.summary.match(/\{[\s\S]*\}/);
+                        if (braceMatch) {
+                            jsonStr = braceMatch[0];
+                        }
+                    }
+                    
+                    try {
+                        const summaryData = JSON.parse(jsonStr);
+                        console.log(`[${zodiac.name}] 從 summary 解析的數據:`, JSON.stringify(summaryData, null, 2));
+                        
+                        // 如果 summary 中包含完整的運勢數據，使用它
+                        if (summaryData.love || summaryData.career || summaryData.wealth || summaryData.health) {
+                            fortune.love = cleanText(summaryData.love || summaryData.愛情 || summaryData['感情']) || fortune.love;
+                            fortune.career = cleanText(summaryData.career || summaryData.事業 || summaryData.work || summaryData['工作']) || fortune.career;
+                            fortune.wealth = cleanText(summaryData.wealth || summaryData.財運 || summaryData.finance || summaryData['財富']) || fortune.wealth;
+                            fortune.health = cleanText(summaryData.health || summaryData.健康) || fortune.health;
+                            fortune.overall = summaryData.overall || fortune.overall;
+                            // 使用 opening 或 summary，優先使用 opening（通常更完整）
+                            fortune.summary = summaryData.opening || summaryData.summary || null;
+                        } else {
+                            // 使用 opening 或 summary，優先使用 opening（通常更完整）
+                            fortune.summary = summaryData.opening || summaryData.summary || fortune.summary;
+                        }
+                    } catch (e) {
+                        console.warn(`[${zodiac.name}] 解析 summary JSON 失敗:`, e);
+                        // 如果解析失敗，嘗試直接提取文字內容
+                        const textMatch = fortune.summary.match(/"opening":\s*"([^"]+)"/);
+                        if (textMatch && textMatch[1]) {
+                            fortune.summary = textMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"');
                         }
                     }
                 }
@@ -595,6 +615,14 @@ class HoroscopeMarquee {
         const weekday = weekdays[today.getDay()];
 
         setTimeout(() => {
+            // 生成指示器
+            const indicators = this.zodiacs.map((z, i) => 
+                `<div class="zodiac-dot ${i === this.currentIndex ? 'active' : ''}" 
+                     data-index="${i}" 
+                     title="${z.name}"
+                     onclick="horoscopeMarquee.goToZodiac(${i})"></div>`
+            ).join('');
+            
             content.innerHTML = `
                 <div class="marquee-item">
                     <div class="marquee-date">
@@ -607,15 +635,17 @@ class HoroscopeMarquee {
                             ${fortune.overall ? `<span class="zodiac-rating">${fortune.overall}</span>` : ''}
                         </div>
                         <div class="zodiac-fortune">
-                            ${fortune.love ? `<span class="fortune-item">💕 ${String(fortune.love || '').trim()}</span>` : ''}
-                            ${fortune.career ? `<span class="fortune-item">💼 ${String(fortune.career || '').trim()}</span>` : ''}
-                            ${fortune.wealth ? `<span class="fortune-item">💰 ${String(fortune.wealth || '').trim()}</span>` : ''}
-                            ${fortune.health ? `<span class="fortune-item">💚 ${String(fortune.health || '').trim()}</span>` : ''}
+                            ${fortune.love ? `<span class="fortune-item">💕 感情：${String(fortune.love || '').trim()}</span>` : ''}
+                            ${fortune.career ? `<span class="fortune-item">💼 事業：${String(fortune.career || '').trim()}</span>` : ''}
+                            ${fortune.wealth ? `<span class="fortune-item">💰 財運：${String(fortune.wealth || '').trim()}</span>` : ''}
+                            ${fortune.health ? `<span class="fortune-item">💚 健康：${String(fortune.health || '').trim()}</span>` : ''}
                             ${fortune.summary && (!fortune.love && !fortune.career && !fortune.wealth && !fortune.health) ? 
-                                `<span class="fortune-item">${this.truncateText(String(fortune.summary).trim(), 100)}</span>` : ''}
+                                `<span class="fortune-item">✨ ${String(fortune.summary).trim()}</span>` : ''}
                         </div>
                     </div>
                 </div>
+                <div class="zodiac-indicators">${indicators}</div>
+                <div class="marquee-progress"></div>
             `;
 
             // 添加淡入效果
