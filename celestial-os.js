@@ -568,6 +568,133 @@ class CelestialOS {
                         </div>
                     </div>
                     
+                    <!-- 完整問題選單 -->
+                    <div class="quick-questions">
+                        <label class="question-label">請選擇或輸入您的問題：</label>
+                        <select id="quickQuestionSelect" class="quick-question-select" onchange="celestialOS.selectQuickQuestion(this.value)">
+                            <option value="">-- 請選擇問題類別 --</option>
+                            <optgroup label="💕 愛情">
+                                <option value="我最近的愛情運勢如何？">我最近的愛情運勢如何？</option>
+                                <option value="我和他/她的關係會如何發展？">我和他/她的關係會如何發展？</option>
+                                <option value="我應該如何改善我的感情生活？">我應該如何改善我的感情生活？</option>
+                                <option value="我是否應該主動追求心儀的對象？">我是否應該主動追求心儀的對象？</option>
+                                <option value="這段感情是否值得繼續？">這段感情是否值得繼續？</option>
+                                <option value="我何時會遇到真愛？">我何時會遇到真愛？</option>
+                                <option value="我應該如何挽回失去的感情？">我應該如何挽回失去的感情？</option>
+                                <option value="我與伴侶的未來會如何？">我與伴侶的未來會如何？</option>
+                                <option value="我是否應該接受這段新戀情？">我是否應該接受這段新戀情？</option>
+                                <option value="我如何知道對方是否真心？">我如何知道對方是否真心？</option>
+                                <option value="我應該如何處理感情中的衝突？">我應該如何處理感情中的衝突？</option>
+                                <option value="我的桃花運如何？">我的桃花運如何？</option>
+                                <option value="我是否應該告白？">我是否應該告白？</option>
+                                <option value="這段遠距離戀愛會成功嗎？">這段遠距離戀愛會成功嗎？</option>
+                            </optgroup>
+                            <optgroup label="💼 工作">
+                                <option value="我最近的工作運勢如何？">我最近的工作運勢如何？</option>
+                                <option value="我是否應該換工作？">我是否應該換工作？</option>
+                                <option value="我在職場上會遇到什麼機會？">我在職場上會遇到什麼機會？</option>
+                                <option value="我與同事/上司的關係如何？">我與同事/上司的關係如何？</option>
+                                <option value="我應該如何提升工作表現？">我應該如何提升工作表現？</option>
+                                <option value="這個專案/計劃會成功嗎？">這個專案/計劃會成功嗎？</option>
+                                <option value="我這次面試會成功嗎？">我這次面試會成功嗎？</option>
+                                <option value="我應該如何處理職場衝突？">我應該如何處理職場衝突？</option>
+                                <option value="我何時會有升職加薪的機會？">我何時會有升職加薪的機會？</option>
+                                <option value="我應該跳槽到新公司嗎？">我應該跳槽到新公司嗎？</option>
+                                <option value="我適合創業嗎？">我適合創業嗎？</option>
+                                <option value="我的職場人際關係如何改善？">我的職場人際關係如何改善？</option>
+                                <option value="我應該接受這個工作機會嗎？">我應該接受這個工作機會嗎？</option>
+                                <option value="我應該轉換跑道嗎？">我應該轉換跑道嗎？</option>
+                            </optgroup>
+                            <optgroup label="💰 財運">
+                                <option value="我最近的財運如何？">我最近的財運如何？</option>
+                                <option value="我應該如何理財？">我應該如何理財？</option>
+                                <option value="這個投資機會適合我嗎？">這個投資機會適合我嗎？</option>
+                                <option value="我何時會有好的財運？">我何時會有好的財運？</option>
+                                <option value="我應該買房/買車嗎？">我應該買房/買車嗎？</option>
+                                <option value="我的偏財運如何？">我的偏財運如何？</option>
+                                <option value="我應該如何規劃財務？">我應該如何規劃財務？</option>
+                                <option value="這個合夥投資會賺錢嗎？">這個合夥投資會賺錢嗎？</option>
+                                <option value="我應該借錢給別人嗎？">我應該借錢給別人嗎？</option>
+                                <option value="我如何增加收入來源？">我如何增加收入來源？</option>
+                                <option value="我的債務問題會解決嗎？">我的債務問題會解決嗎？</option>
+                            </optgroup>
+                            <optgroup label="📚 學業">
+                                <option value="我最近的學業運勢如何？">我最近的學業運勢如何？</option>
+                                <option value="我這次考試會順利嗎？">我這次考試會順利嗎？</option>
+                                <option value="我應該選擇哪個科系/方向？">我應該選擇哪個科系/方向？</option>
+                                <option value="我如何提升學習效率？">我如何提升學習效率？</option>
+                                <option value="我應該出國留學嗎？">我應該出國留學嗎？</option>
+                                <option value="我這次論文/報告會通過嗎？">我這次論文/報告會通過嗎？</option>
+                                <option value="我應該轉系/轉學嗎？">我應該轉系/轉學嗎？</option>
+                                <option value="我如何克服學習困難？">我如何克服學習困難？</option>
+                                <option value="我應該繼續升學還是就業？">我應該繼續升學還是就業？</option>
+                            </optgroup>
+                            <optgroup label="👥 人際關係">
+                                <option value="我的人際關係運勢如何？">我的人際關係運勢如何？</option>
+                                <option value="我應該如何改善與他人的關係？">我應該如何改善與他人的關係？</option>
+                                <option value="這個朋友值得深交嗎？">這個朋友值得深交嗎？</option>
+                                <option value="我如何修復破裂的友誼？">我如何修復破裂的友誼？</option>
+                                <option value="我應該如何處理人際衝突？">我應該如何處理人際衝突？</option>
+                                <option value="我的人緣會變好嗎？">我的人緣會變好嗎？</option>
+                                <option value="我應該信任這個人嗎？">我應該信任這個人嗎？</option>
+                                <option value="我如何建立新的友誼？">我如何建立新的友誼？</option>
+                            </optgroup>
+                            <optgroup label="🏠 家庭">
+                                <option value="我的家庭運勢如何？">我的家庭運勢如何？</option>
+                                <option value="我與家人的關係會如何發展？">我與家人的關係會如何發展？</option>
+                                <option value="我應該如何改善家庭和諧？">我應該如何改善家庭和諧？</option>
+                                <option value="我應該搬家嗎？">我應該搬家嗎？</option>
+                                <option value="我與父母的關係會改善嗎？">我與父母的關係會改善嗎？</option>
+                                <option value="我的家庭財務會改善嗎？">我的家庭財務會改善嗎？</option>
+                                <option value="我如何處理家庭糾紛？">我如何處理家庭糾紛？</option>
+                            </optgroup>
+                            <optgroup label="💪 健康">
+                                <option value="我最近的健康運勢如何？">我最近的健康運勢如何？</option>
+                                <option value="我應該如何保持身體健康？">我應該如何保持身體健康？</option>
+                                <option value="我的身體狀況會改善嗎？">我的身體狀況會改善嗎？</option>
+                                <option value="我應該改變生活習慣嗎？">我應該改變生活習慣嗎？</option>
+                                <option value="我的心理健康如何？">我的心理健康如何？</option>
+                            </optgroup>
+                            <optgroup label="🎯 決策">
+                                <option value="我應該做出這個決定嗎？">我應該做出這個決定嗎？</option>
+                                <option value="這個選擇對我好嗎？">這個選擇對我好嗎？</option>
+                                <option value="我應該如何面對這個困境？">我應該如何面對這個困境？</option>
+                                <option value="我應該現在行動還是等待？">我應該現在行動還是等待？</option>
+                                <option value="我如何做出正確的選擇？">我如何做出正確的選擇？</option>
+                                <option value="我應該改變現狀嗎？">我應該改變現狀嗎？</option>
+                                <option value="我如何克服內心的恐懼？">我如何克服內心的恐懼？</option>
+                            </optgroup>
+                            <optgroup label="✈️ 旅行">
+                                <option value="我這次旅行會順利嗎？">我這次旅行會順利嗎？</option>
+                                <option value="我應該去這個地方旅行嗎？">我應該去這個地方旅行嗎？</option>
+                                <option value="我這次出差會成功嗎？">我這次出差會成功嗎？</option>
+                                <option value="我應該搬家到新城市嗎？">我應該搬家到新城市嗎？</option>
+                            </optgroup>
+                            <optgroup label="🎨 創作">
+                                <option value="我的創作靈感會來嗎？">我的創作靈感會來嗎？</option>
+                                <option value="我這個作品會成功嗎？">我這個作品會成功嗎？</option>
+                                <option value="我應該繼續這個創作方向嗎？">我應該繼續這個創作方向嗎？</option>
+                                <option value="我如何突破創作瓶頸？">我如何突破創作瓶頸？</option>
+                            </optgroup>
+                            <optgroup label="🏆 比賽/競賽">
+                                <option value="我這次比賽會獲勝嗎？">我這次比賽會獲勝嗎？</option>
+                                <option value="我應該參加這個競賽嗎？">我應該參加這個競賽嗎？</option>
+                                <option value="我的表現會如何？">我的表現會如何？</option>
+                            </optgroup>
+                            <optgroup label="🛒 購物/消費">
+                                <option value="我應該購買這個物品嗎？">我應該購買這個物品嗎？</option>
+                                <option value="我這次購物會滿意嗎？">我這次購物會滿意嗎？</option>
+                                <option value="我應該進行這筆交易嗎？">我應該進行這筆交易嗎？</option>
+                            </optgroup>
+                            <optgroup label="🔮 靈性成長">
+                                <option value="我的靈性成長方向如何？">我的靈性成長方向如何？</option>
+                                <option value="我應該開始冥想/修行嗎？">我應該開始冥想/修行嗎？</option>
+                                <option value="我如何找到人生意義？">我如何找到人生意義？</option>
+                                <option value="我的直覺準確嗎？">我的直覺準確嗎？</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    
                     <div class="chat-input-area">
                         <input type="text" id="questionInput" placeholder="輸入你的問題..." class="chat-input" 
                                onkeypress="if(event.key === 'Enter') celestialOS.sendQuestion()">
@@ -1168,6 +1295,21 @@ class CelestialOS {
         this.displayDestinyDashboard();
     }
 
+    // 選擇快捷問題（靈犀殿）
+    selectQuickQuestion(question) {
+        if (!question) return;
+        
+        const input = document.getElementById('questionInput');
+        if (input) {
+            input.value = question;
+            // 重置下拉選單
+            const select = document.getElementById('quickQuestionSelect');
+            if (select) select.value = '';
+            // 自動聚焦到輸入框
+            input.focus();
+        }
+    }
+    
     // 發送問題（靈犀殿）
     sendQuestion() {
         // 重新獲取元素（防止 DOM 更新後引用失效）

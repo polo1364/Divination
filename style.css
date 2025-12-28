@@ -3240,6 +3240,60 @@ html {
     margin-top: 10px !important;
 }
 
+/* 快捷問題選單 */
+.quick-questions {
+    padding: 15px 20px;
+    background: rgba(26, 26, 46, 0.8);
+    border-bottom: 1px solid rgba(138, 43, 226, 0.2);
+}
+
+.quick-questions .question-label {
+    display: block;
+    color: #ffd700;
+    font-weight: 600;
+    margin-bottom: 10px;
+    font-size: 0.95em;
+}
+
+.quick-question-select {
+    width: 100%;
+    padding: 12px 15px;
+    background: rgba(138, 43, 226, 0.15);
+    border: 2px solid rgba(138, 43, 226, 0.4);
+    border-radius: 12px;
+    color: #e8e8e8;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffd700' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+}
+
+.quick-question-select:hover {
+    border-color: #ffd700;
+    background-color: rgba(138, 43, 226, 0.25);
+}
+
+.quick-question-select:focus {
+    outline: none;
+    border-color: #ffd700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.quick-question-select option {
+    background: #1a1a2e;
+    color: #e8e8e8;
+    padding: 10px;
+}
+
+.quick-question-select optgroup {
+    background: #1a1a2e;
+    color: #ffd700;
+    font-weight: bold;
+}
+
 .chat-input-area {
     display: flex;
     gap: 10px;
